@@ -1,44 +1,44 @@
 import socket
 
-class HTTPD:
+class uHTTPsrv:
 
-    def __init__(self,address='', port=80, backlog=3, in_buffer_len=1024):
+	#methods and properties that we don't want to be called from the internet
+	PROTECTED = [b'__init__', b'listen_once', b'listen', b'response_header', b'__qualname__', b'__module__', \
+	             b'address', b'port', b'backlog', b'in_buffer_len', b'debug']
+
+    def __init__(self,address='', port=80, backlog=3, in_buffer_len=1024, debug=False):
         self.address = address
         self.port = port
         self.backlog=backlog
         self.in_buffer_len = in_buffer_len
+		self.debug = debug
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._socket.bind((self.address, self.port))
+		self._socket.listen(self.backlog)
 
-    def listen(self):
-        self._socket.listen(self.backlog)
-        while True:
-            conn,addr = self._socket.accept()
-            request = conn.recv(self.in_buffer_len)
-            request = request.rsplit(b'\r\n')
-            method = request[0].rsplit(b' ')[0]
-            if   method == b'GET':     response = self.GET(request[0][1])
-            elif method == b'HEAD':    response = self.HEAD(request[0][1])
-            elif method == b'POST':    response = self.POST(request)
-            elif method == b'PUT':     response = self.PUT(request)
-            elif method == b'DELETE':  response = self.DELETE(request)
-            elif method == b'TRACE':   response = self.TRACE(request)
-            elif method == b'CONNECT': response = self.CONNECT(request)
-            else:                      response = self.UNKNOWN(request)
-            conn.send(response)
-            conn.close()
+    def serve_one(self):
+        conn,addr = self._socket.accept()
+        request = conn.recv(self.in_buffer_len)
+        request = request.rsplit(b'\r\n')
+		if self.debug:
+			for line in request:
+				print(line)
+        method = request[0].rsplit(b' ')[0]
+		if method.lower not in PROTECTED_METHODS and hasattr(self, method):
+			response = eval('self.'+method+'(self,request)')
+		else:
+			response = self.response_header(501)
+        conn.send(response)
+        conn.close()
 
-    def GET(self, url):         return self.response_header(501)
-    def HEAD(self,url):         return self.response_header(501)
-    def POST(self, request):    return self.response_header(501)
-    def PUT(self, request):     return self.response_header(501)
-    def DELETE(self, request):  return self.response_header(501)
-    def TRACE(self, request):   return self.response_header(501)
-    def CONNECT(self, request): return self.response_header(501)
+	def serve(self):
+		while True:
+			self.listen_once(self)
 
     def response_header(self, code):
-        response = b'HTTP/1.1 '
-        if    code==200: response += b'200 OK'
-        elif  code==404: response += b'404 Not Found'
-        else:            response += b'501 Not Implemented'
-        return response + b'\nConnection: close\n\n'
+        #response = b'HTTP/1.1 '
+        #if    code==200: response += b'200 OK'
+        #elif  code==404: response += b'404 Not Found'
+        #else:            response += b'501 Not Implemented'
+        #return response + b'\nConnection: close\n\n'
+		return b'HTTP/1.1 ' + str(code) + b'\nConnection: close\n\n'
