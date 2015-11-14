@@ -25,7 +25,8 @@ class uHTTPsrv:
 		print(method)
 		if method.lower() not in self.PROTECTED:
 			if hasattr(self, method):
-				response = eval('self.'+method+'(self,request)')
+				response = self.response_header(200) + \
+				    		eval('self.'+method+'(self,request)')
 			else:
 				response=self.response_header(501)
 		else:
