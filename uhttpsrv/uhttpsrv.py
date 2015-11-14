@@ -39,7 +39,7 @@ class uHTTPsrv:
 
 	def serve(self):
 		while True:
-			self.listen_once(self)
+			self.serve_one(self)
 
 	def response_header(self, code):
 		return b'HTTP/1.1 ' + str(code) + b'\nConnection: close\n\n'
