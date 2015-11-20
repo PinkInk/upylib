@@ -4,7 +4,7 @@ class uHTTPsrv:
 
 	PROTECTED = ['__init__', 'serve_once', 'serve', 'response_header', '__qualname__', '__module__', 'address', 'port', 'backlog', 'in_buffer_len', 'debug']
 
-	def __init__(self, address='', port=80, backlog=1, in_buffer_len=1024, DEBUG=False):
+	def __init__(self, address='', port=80, backlog=0, in_buffer_len=1024, DEBUG=False):
 		self.address = address
 		self.port = port
 		self.backlog = backlog
