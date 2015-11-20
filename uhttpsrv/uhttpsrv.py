@@ -15,32 +15,28 @@ class uHTTPsrv:
 		self._socket.listen(self.backlog)
 
 	def serve_one(self):
-		conn,addr = self._socket.accept()
+		conn, addr = self._socket.accept()
 		request = conn.recv(self.in_buffer_len)
 		request = request.rsplit(b'\r\n')
 		if self.DEBUG:
-			for line in request:
-				print(line)
-		#decode as hasattr doesn't like bytearray
+			print('REQUEST ', addr)
+			for line in request: print(line)
 		method = request[0].rsplit(b' ')[0].decode('utf-8')
 		if method.lower() not in self.PROTECTED:
-			if hasattr(self, method):
-				response = self.response_header(200) + eval('self.'+method+'(self,request)')
+			call = getattr(self, method.upper(), False)
+			if call:
+				response, data = call(request)
 			else:
-				response=self.response_header(501)
-		else:
-			response = self.response_header(501)
-		print(response)
+				response, data = 501, ''
 		if self.DEBUG:
-			for line in response:
-				print(line)
-		conn.send(response)
+			print('RESPONSE ', response)
+			for line in data: print(line)
+		conn.send(self.response_header(response) + data)
 		conn.close()
 
 	def serve(self):
 		while True:
-			self.serve_one(self)
+			self.serve_one()
 
-	#may not work, response code may require trailing descriptive string
 	def response_header(self, code):
 		return b'HTTP/1.1 ' + str(code) + b'\nConnection: close\n\n'
