@@ -1,5 +1,5 @@
 Minimal micropython http server for the WiPy.
 
-Doesn't currently actually work ;o)
+Subclass and implement required HTTP responses, for e.g. GET, as methods.
 
-Subclass and implement required HTTP responses, for e.g. GET, as method.
+Methods are passed request as list of bytearray lines in incoming request and must return tuple of HTTP response code as int, and body of response as string.
