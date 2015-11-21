@@ -16,3 +16,5 @@ Configured for pyskin with TI 754410 in the following configuration;
            Pin Y3 -> |9  3,4EN    +ve Bat 8| -> +ve Bat
                      -----------------------
 ```
+
+21/11/15 partial implementation of timer/channel driven PWM
