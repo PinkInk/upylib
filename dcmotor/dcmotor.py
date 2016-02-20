@@ -1,71 +1,45 @@
-import pyb, pwm
+import pyb
 
-FORWARDS  =  255
-BACKWARDS = -FORWARDS
-STOP      = 0
-
-#possible dcmotor configurations, depends on skin orientation
-Y1 = {'enable_pin':pyb.Pin.board.Y8, 'enable_timer':12, 'enable_channel':2, 'control0':pyb.Pin.board.Y6,'control1':pyb.Pin.board.Y7}
-Y2 = {'enable_pin':pyb.Pin.board.Y3, 'enable_timer':10, 'enable_channel':1, 'control0':pyb.Pin.board.Y2,'control1':pyb.Pin.board.Y1}
-X1 = {'enable_pin':pyb.Pin.board.X8, 'enable_timer':14, 'enable_channel':1, 'control0':pyb.Pin.board.X6,'control1':pyb.Pin.board.X7}
-X2 = {'enable_pin':pyb.Pin.board.X3, 'enable_timer':9,  'enable_channel':1, 'control0':pyb.Pin.board.X2,'control1':pyb.Pin.board.X1}
+#<skin_position><motor>=enable pin, enable pin timer, channel, control0, control1
+Y1='Y8', 12, 2, 'Y6', 'Y7'
+Y2='Y3', 10, 1, 'Y1', 'Y2'
+X1='X8', 14, 1, 'X6', 'X7'
+X2='X3', 9, 1, 'X1', 'X2'
 
 class DCMOTOR:
-	"""dirty DC Motor Class"""
+    """dirty DC Motor Class"""
 
-	def __init__(self, pins_dict, reverse_pols=False, pwm_freq=100):
+    def __init__(self, params, reverse=False, freq=1000):
+        self._enable = pyb.Pin(params[0])
+        self._timer = pyb.Timer(params[1], freq=freq)
+        self._channel = self._timer.channel(params[2], pyb.Timer.PWM, pin=self._enable)
+        self._c0 = pyb.Pin(params[3] if not reverse else params[4], pyb.Pin.OUT_PP)
+        self._c0.low()
+        self._c1 = pyb.Pin(params[4] if not reverse else params[3], pyb.Pin.OUT_PP)
+        self._c0.low()
 
-		self._enable_pin     = pins_dict['enable_pin']
-		self._enable_timer   = pins_dict['enable_timer']
-		self._enable_channel = pins_dict['enable_channel']
-		self._pwm_freq       = pwm_freq
-		self._control0       = pins_dict['control0'] if not reverse_pols else pins_dict['control1']
-		self._control1       = pins_dict['control1'] if not reverse_pols else pins_dict['control0']
+    def freq(self, val=None):
+        """set pwm frequency"""
+        if val != None:
+            self._timer.freq(val)
+        return self._timer.freq()
 
-		self._timer          = pyb.Timer(self._enable_timer, freq=self._pwm_freq)
-		self._timer_channel  = self._timer.channel(self._enable_channel, pyb.Timer, pin=self._enable_pin, pulse_width=0)
-		self._control0.init(pyb.Pin.OUT_PP)
-		self._control0.low()
-		self._control1.init(pyb.Pin.OUT_PP)
-		self._control1.low()
-
-	def state(self,value=None):
-		"""get or set motor state as -ve|0|+ve as backwards|stop|forwards"""
-		if value == None:
-			if self._pwm.duty() > 0:
-				if self._control0.value() and not self._control1.value():
-					return -self._pwm.duty()
-				elif not self._control0.value() and self._control1.value():
-					return self._pwm.duty()
-				else:
-					raise ValueError('Inconsistent state')
-				else:
-					return 0
-			elif value < 0:
-				self._control0.high()
-				self._control1.low()
-				self._pwm.duty(abs(value))
-			elif value > 0:
-				self._control0.low()
-				self._control1.high()
-				self._pwm.duty(value)
-			elif value == 0:
-				self._pwm.duty(0)
-		else:
-			raise ValueError('Invalid state value passed')
-
-	def backwards(self,value=-BACKWARDS):
-		self.state(-value)
-
-	def forwards(self,value=FORWARDS):
-		self.state(value)
-
-	def stop(self):
-		self.state(STOP)
-
-	def emergency_stop(self,brakes_for=50):
-		if self.state() != 0:
-			self._control0.value(int(not(self._control0.value())))
-			self._control1.value(int(not(self._control1.value())))
-			pyb.delay(brakes_for)
-			self.stop()
+    def state(self, val=None):
+        """set (and/or get) motor state between +ve/-ve 100%"""
+        if val != None:
+            if val == 0:
+                self._channel.pulse_width_percent(0)
+            elif 0 < val <= 100:
+                self._channel.pulse_width_percent(val)
+                self._c0.low()
+                self._c1.high()
+            elif 0 > val >= -100:
+                self._channel.pulse_width_percent(abs(val))
+                self._c0.high()
+                self._c1.low()
+            else:
+                raise ValueError('-100<=state<=100 only')
+        if self._c1.value() or self._channel.pulse_width_percent() == 0:
+            return self._channel.pulse_width_percent()
+        else:
+            return -self._channel.pulse_width_percent()

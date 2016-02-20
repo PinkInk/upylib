@@ -1,11 +1,12 @@
-Quad H-Bridge MotorDriver Class
-===
-*relies on micropython pre-timers PWM module, needs updating*
+# Quad H-Bridge MotorDriver Class
+Driver for a pyboard v1.1 pyskin dc motor driver utilising a TI 754410 quad h-bridge.
 
-Configured for pyskin with TI 754410 in the following configuration;
+Has proved useful for driving multiple dc motor's, steppers and as a simple audio amplifier.
 
+(c) Tim Pelling 2016, released under MIT License.
 ```
-	                   -----------------------
+Skin in Y position:
+                     -----------------------
           Pin Vin -> |16 +ve        1,2EN 1| -> Pin Y8
            Pin Y1 -> |15 4A            1A 2| -> Pin Y7
           Motor 2 -> |14 4Y            1Y 3| -> Motor 1
@@ -16,5 +17,32 @@ Configured for pyskin with TI 754410 in the following configuration;
            Pin Y3 -> |9  3,4EN    +ve Bat 8| -> +ve Bat
                      -----------------------
 ```
-
-21/11/15 partial implementation of timer/channel driven PWM
+## example
+```python
+>>> import dcmotor
+>>> y1 = dcmotor.DCMOTOR(dcmotor.Y1)
+>>> y1.state(50) #50% duty, forward
+50.0
+>>> y1.state(-50) #50% duty, backwards
+-50.0
+>>> y1.state() #report state
+-50.0
+>>> y1.state(0) #stop
+0.0
+```
+## specify pwm frequency or reverse motor pols
+```python
+>>> import dcmotor
+>>> y1 = dcmotor.DCMOTOR(dcmotor.Y1, freq=2000, reverse=True)
+>>> y2.freq()
+2000
+>>> y2.freq(1000)
+1000
+```
+## h-bridge motor configs defined
+```
+Y1 = enable pin Y8 tim12_ch2, control = pins Y6 & Y7
+Y2 = enable pin Y3 tim10_ch1, control = pins Y1 & Y2
+X1 = enable pin X8 tim14_ch1, control = pins X6 & X7
+X2 = enable pin X3 tim9_ch1, control = pins X1 & X2
+```
