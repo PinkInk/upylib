@@ -107,6 +107,18 @@ def pack_tlv(t, v):
         raise Exception("SNMP, OPAQUE and NSAPADDR encoding not implemented")
     return bytearray([t]) + pack_len(len(b)) + b
 
+def pack_len(l):
+    #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
+    #indicates encoding that differs from observation, for snmp
+    #length of 0 valid for ASN1_NULL type
+    if 0 <= l < 0x7f:
+        return bytearray([l])
+    #check RFC's for correct upperbound
+    elif 0x7f < l < 0x7fff:
+        return bytearray([l//0x80+0x80, l&0x7f])
+    else:
+        raise Exception("SNMP, length out of bounds")
+
 def unpack(b):
     ptr = 0
     t,l,v = unpack_tlv(b)
@@ -171,18 +183,6 @@ def unpack_tlv(b):
     else:
         raise Exception("SNMP invalid block code to decode")
     return t, 1+l+l_incr, v
-
-def pack_len(l):
-    #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
-    #indicates encoding that differs from observation, for snmp
-    #length of 0 valid for ASN1_NULL type
-    if 0 <= l < 0x7f:
-        return bytearray([l])
-    #check RFC's for correct upperbound
-    elif 0x7f < l < 0x7fff:
-        return bytearray([l//0x80+0x80, l&0x7f])
-    else:
-        raise Exception("SNMP, length out of bounds")
 
 def unpack_len(v):
     #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
