@@ -59,7 +59,7 @@ class GetRequest():
 def pack(packet):
     pass
 
-def encode_tlv(t, v):
+def pack_tlv(t, v):
     b=bytearray()
     #sequence types
     if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE):
@@ -105,11 +105,11 @@ def encode_tlv(t, v):
             b.append(byte)
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("SNMP, OPAQUE and NSAPADDR encoding not implemented")
-    return bytearray([t]) + encode_len(len(b)) + b
+    return bytearray([t]) + pack_len(len(b)) + b
 
 def unpack(b):
     ptr = 0
-    t,l,v = decode_tlv(b)
+    t,l,v = unpack_tlv(b)
     if type(v) is list:
         packet = [t]+v
     else:
@@ -121,17 +121,17 @@ def unpack(b):
             packet[1+i] = unpack(val)
     return packet
 
-def decode_tlv(b):
+def unpack_tlv(b):
     #should this return length of data, or of v?
     ptr = 0
     t = b[ptr]
-    l, l_incr = decode_len(b)
+    l, l_incr = unpack_len(b)
     ptr +=  1 + l_incr
     #sequence types
     if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE):
         v = []
         while ptr < len(b):
-            lb, lb_incr = decode_len( b[ptr:] )
+            lb, lb_incr = unpack_len( b[ptr:] )
             v.append( b[ptr : ptr+1+lb_incr+lb] )
             ptr += 1 + lb + lb_incr
     #octet string
@@ -172,7 +172,7 @@ def decode_tlv(b):
         raise Exception("SNMP invalid block code to decode")
     return t, 1+l+l_incr, v
 
-def encode_len(l):
+def pack_len(l):
     #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
     #indicates encoding that differs from observation, for snmp
     #length of 0 valid for ASN1_NULL type
@@ -184,7 +184,7 @@ def encode_len(l):
     else:
         raise Exception("SNMP, length out of bounds")
 
-def decode_len(v):
+def unpack_len(v):
     #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
     #indicates encoding that differs from observation, for snmp
     ptr=1
