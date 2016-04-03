@@ -32,7 +32,7 @@ SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
 class GetRequest():
-    #should this, and other types be derivitive of GetPrimitive or similar?
+    #should request classes derive from "SnmpPacket" or similar?
     def __init__(self, data=None, \
                        ver=SNMP_VER1, community="public", request_id=1, mibs=[]
                 ):
@@ -89,6 +89,7 @@ def encode_tlv(t, v):
     elif t == ASN1_OID:
         oid = v.split(".")
         oid = list(map(int, oid))
+        #first two indexes are encoded in single byte
         b.append(oid[0]*40 + oid[1])
         for id in oid[2:]:
             if 0 <= id < 0x7f:
@@ -151,7 +152,7 @@ def decode_tlv(b):
         else:
             raise Exception("SNMP, bad null encoding")
     elif t == ASN1_OID:
-        #first 2 indexes are incoded in single byte
+        #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
         ptr += 1
         high_septet = 0
