@@ -29,16 +29,35 @@ SNMP_ERR_TOOBIG = 0x01
 SNMP_ERR_NOSUCHNAME = 0x02
 SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
-SNMP_ERR_GENERR = 0x05
+SNMP_ERR_GENERR = 0x05v
 
 class GetRequest():
     #should this, and other types be derivitive of GetPrimitive or similar?
-    def __init__(self, data=None \
+    def __init__(self, data=None, \
                        ver=SNMP_VER1, community="public", request_id=1, mibs=[]
                 ):
-        pass
+        if type(data) is bytearray:
+            self._rawpacket = data
+            unpacked = unpack(data)
+            self.ver = unpacked[1][1]
+            self.community = unpacked[2][1]
+            self.request_id = unpacked[3][1][1]
+            self.error_status = unpacked[3][2][1]
+            self.index = unpacked[3][3][1]
+            if self.error_status == SNMP_ERR_NOERROR:
+                self.mibs = []
+                for seq in unpacked[3][4][1:]:
+                    self.mibs.append(seq[1][1])
+        else:
+            self.ver = ver
+            self.community = community
+            self.request_id = request_id
+            self.error_status = SNMP_ERR_NOERROR
+            self.index = 0
+            self.mibs = mibs
 
 def pack(packet):
+    pass
 
 def encode_tlv(t, v):
     b=bytearray()
