@@ -116,7 +116,9 @@ def decode_tlv(b):
             ptr += 1 + lb + lb_incr
     #octet string
     elif t == ASN1_OCTSTR:
-        v = b[ptr : ptr+l].decode()
+        #v = b[ptr : ptr+l].decode()
+        #no bytearray.decode in micropython
+        v = bytes(b[ptr : ptr+l]).decode()
     #integer types
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         #can't decode -ve values
