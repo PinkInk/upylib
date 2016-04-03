@@ -29,7 +29,7 @@ SNMP_ERR_TOOBIG = 0x01
 SNMP_ERR_NOSUCHNAME = 0x02
 SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
-SNMP_ERR_GENERR = 0x05v
+SNMP_ERR_GENERR = 0x05
 
 class GetRequest():
     #should this, and other types be derivitive of GetPrimitive or similar?
