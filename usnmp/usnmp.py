@@ -55,6 +55,34 @@ class GetRequest():
             self.error_status = SNMP_ERR_NOERROR
             self.index = 0
             self.mibs = mibs
+    @property
+    def ver(self):
+        return self._ver
+    @ver.setter
+    def ver(self, ver):
+        if ver != SNMP_VER1:
+            raise Exception("unsupported value")
+        else:
+            return self._ver
+
+class _SnmpPacket():
+    def __init__(self, ver=SNMP_VER1, community="public", request_id=1):
+        pass
+
+class _MibCollection():
+    def __init__(self):
+        self._mibs = {}
+    def __setitem__(self, mib, tv):
+        if type(tv) not in (tuple, list):
+            raise Exception("__setitem__ requires tuple")
+        self._mibs[mib] = tv
+    def __getitem__(self, mib):
+        if callable(self._mibs[mib][1]):
+            return self._mibs[mib][0], self._mibs[mib][1]()
+        else:
+            return self._mibs[mib]
+    def pack(self):
+        pass
 
 def pack(packet):
     pass
