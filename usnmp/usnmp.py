@@ -111,8 +111,12 @@ class _MibCollection():
     def pack(self):
         pass
 
-def pack(packet):
-    pass
+def pack(p):
+    t,v = p
+    if type(v) is list:
+        for i, val in enumerate(v):
+            v[i] = pack(val)
+    return pack_tlv(t,v)
 
 def pack_tlv(t, v):
     b=bytearray()
@@ -181,18 +185,13 @@ def pack_len(l):
         raise Exception("SNMP, length out of bounds")
 
 def unpack(b):
-    ptr = 0
     t,l,v = unpack_tlv(b)
     if type(v) is list:
-        packet = [t]+v
-    else:
-        packet = [t,v]
-    if type(v) is bytearray:
-        packet[1] = unpack(v)
-    elif type(v) is list:
-        for i,val in enumerate(packet[1:]):
-            packet[1+i] = unpack(val)
-    return packet
+        for i, val in enumerate(v):
+            v[i] = unpack(val)
+    elif type(v) is bytearray:
+        v = unpack(v)
+    return [t,v]
 
 def unpack_tlv(b):
     ptr = 0
