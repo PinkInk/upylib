@@ -267,3 +267,11 @@ def unpack_len(v):
         return ((v[ptr]-0x80)*0x80) + v[ptr+1], 2
     else:
         return v[ptr], 1
+
+def hex2str(v):
+    ptr = 0
+    s = ""
+    while ptr<len(v):
+        s += chr( s[ptr:ptr+2] )
+        ptr += 2
+    return s
