@@ -8,6 +8,13 @@ ASN1_OID = 0x06 #ObjectIdentifier
 ASN1_NULL = 0x05
 ASN1_SEQ = 0x30 #sequence
 
+#library fudge specific binary octstr
+#------------------------------------
+#labelling of binary decoded ocstr vals
+#as discrete from string decoded is req'd
+#to allow unpack/pack to return same result
+ASN1_OCTSTR_BIN = 0xff
+
 #SNMP specific SEQUENCE types
 SNMP_GETREQUEST = 0xa0
 SNMP_GETRESPONSE = 0xa2
@@ -66,8 +73,28 @@ class GetRequest():
             return self._ver
 
 class _SnmpPacket():
-    def __init__(self, ver=SNMP_VER1, community="public", request_id=1):
-        pass
+    def __init__(self, version, community, type, request_id):
+        self.version(version)
+        self.community(community)
+        self.type(type)
+    @property
+    def version(self):
+        return self._version
+    @version.setter
+    def version(self, version)
+        self._version = version
+    @property
+    def community(self):
+        return self._community
+    @community.setter
+    def community(self, community)
+        self._community = community
+    @property
+    def type(self):
+        return self._type
+    @type.setter
+    def type(self, type):
+        self._type = type
 
 class _MibCollection():
     def __init__(self):
@@ -89,17 +116,23 @@ def pack(packet):
 
 def pack_tlv(t, v):
     b=bytearray()
-    #sequence types
-    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE):
+    if t in (ASN1_SEQ, \
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
         for block in v:
             b.extend(block)
-    #octet string
     elif t == ASN1_OCTSTR:
+        #octet strings that unpack as strings
         b = bytearray(map(ord, v))
-    #integer types
+    elif t == ASN1_OCTSTR_BIN:
+        #octet strings that string of hex pairs
+        ptr = 0
+        b = bytearray()
+        while ptr<len(v):
+            b.append( int(v[ptr:ptr+2], 16) )
+            ptr += 2
+        t = ASN1_OCTSTR
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #can't encode -ve values
-        #do -ve values occur in snmp?
+        #can't eecode -ve (do -ve values occur in snmp?)
         if v < 0:
             raise Exception("SNMP, -ve int")
         else:
@@ -127,7 +160,7 @@ def pack_tlv(t, v):
                 b.append(id//0x80+0x80)
                 b.append(id&0x7f)
             else:
-                raise Exception("SNMP, OID value out of range")
+                raise ValueError("SNMP, oid out of bounds")
     elif t == SNMP_IPADDR:
         for byte in map(int, v.split(".")):
             b.append(byte)
@@ -162,13 +195,13 @@ def unpack(b):
     return packet
 
 def unpack_tlv(b):
-    #should this return length of data, or of v?
     ptr = 0
     t = b[ptr]
     l, l_incr = unpack_len(b)
     ptr +=  1 + l_incr
     #sequence types
-    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE):
+    if t in (ASN1_SEQ, \
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
         v = []
         while ptr < len(b):
             lb, lb_incr = unpack_len( b[ptr:] )
@@ -176,13 +209,27 @@ def unpack_tlv(b):
             ptr += 1 + lb + lb_incr
     #octet string
     elif t == ASN1_OCTSTR:
-        #v = b[ptr : ptr+l].decode()
-        #no bytearray.decode in micropython
-        v = bytes(b[ptr : ptr+l]).decode()
-    #integer types
+        #commonly accepted fudge:
+        #if len == 6 or any 128>byte>31
+        #decode as string of hex vals (common case: mac address)
+        #else decode as string
+        printable = True
+        for byte in b[ptr:ptr+1]:
+            if not 128>byte>31:
+                printable = False
+                break
+        if l == 6 or not printable:
+            t = ASN1_OCTSTR_BIN
+            v = ""
+            for byte in b[ptr : ptr+l]:
+                if byte<0x10:
+                    v += '0' + hex(byte)[2:]
+                else:
+                    v += hex(byte)[2:]
+        else:
+            v = bytes(b[ptr : ptr+l]).decode()
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #can't decode -ve values
-        #do -ve values occur in snmp?
+        #can't decode -ve (do -ve values occur in snmp?)
         v=0
         for byte in b[ptr:]:
             v = v*0x100 + byte
@@ -190,7 +237,7 @@ def unpack_tlv(b):
         if b[1]==0 and len(b)==2:
             v=None
         else:
-            raise Exception("SNMP, bad null encoding")
+            raise Exception("SNMP, unpack - bad null encoding")
     elif t == ASN1_OID:
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
@@ -207,9 +254,9 @@ def unpack_tlv(b):
         for byte in b[ptr+1:]:
             v += "." + str(byte)
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
-        raise Exception("SNMP,OPAQUE and NSAPADDR decoding not implemented")
+        raise Exception("SNMP, unpack - OPAQUE & NSAPADDR not implemented")
     else:
-        raise Exception("SNMP invalid block code to decode")
+        raise Exception("SNMP, unpack - invalid block code encountered")
     return t, 1+l+l_incr, v
 
 def unpack_len(v):
