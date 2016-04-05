@@ -174,15 +174,14 @@ def pack_tlv(t, v):
 
 def pack_len(l):
     #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
-    #indicates encoding that differs from observation, for snmp
-    #length of 0 valid for ASN1_NULL type
-    if 0 <= l < 0x7f:
+    if l < 0x80:
         return bytearray([l])
-    #check RFC's for correct upperbound
-    elif 0x7f < l < 0x7fff:
-        return bytearray([l//0x80+0x80, l&0x7f])
     else:
-        raise Exception("SNMP, length out of bounds")
+        b = bytearray()
+        while l>0:
+            b = bytearray([l&0xff]) + b
+            l //= 0x100
+        return bytearray([0x80+len(b)]) + b
 
 def unpack(b):
     t,l,v = unpack_tlv(b)
@@ -202,7 +201,8 @@ def unpack_tlv(b):
     if t in (ASN1_SEQ, \
              SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
         v = []
-        while ptr < len(b):
+        #while ptr < len(b):
+        while ptr < l:
             lb, lb_incr = unpack_len( b[ptr:] )
             v.append( b[ptr : ptr+1+lb_incr+lb] )
             ptr += 1 + lb + lb_incr
@@ -260,12 +260,13 @@ def unpack_tlv(b):
 
 def unpack_len(v):
     #msdn.microsoft.com/en-us/library/windows/desktop/bb648641(v=vs.85).aspx
-    #indicates encoding that differs from observation, for snmp
-    ptr=1
-    if v[ptr]&0x80 == 0x80:
-        return ((v[ptr]-0x80)*0x80) + v[ptr+1], 2
+    if v[1]&0x80 == 0x80:
+        l = 0
+        for i in v[2 : 2+v[1]&0x7f]:
+            l = l*0x100 + i
+        return l, 1 + v[1]&0x7f
     else:
-        return v[ptr], 1
+        return v[1], 1
 
 def hex2str(v):
     ptr = 0
