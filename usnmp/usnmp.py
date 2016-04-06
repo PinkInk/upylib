@@ -115,6 +115,8 @@ class _SnmpPacket():
         oids = []
         for oid in self:
             t,v = self.getoid(oid)
+            if callable(v):
+                t,v = t, v()
             oids.append( pack_tlv(ASN1_SEQ, [
                                     pack_tlv(ASN1_OID, oid),
                                     pack_tlv(t,v)
