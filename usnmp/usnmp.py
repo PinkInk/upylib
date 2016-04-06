@@ -38,9 +38,39 @@ SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
+
+class GetResponse(_SnmpPacket):
+    def __init__(self, data=None, \
+                       ver=SNMP_VER1, community="public", id=1
+                ):
+        _SnmpPacket.__init__(self)
+        if data == None:
+            self.ver = ver
+            self.community = community
+            self.type = SNMP_GETRESPONSE
+            self.id = id
+        else:
+            self._packet = data
+            pl = unpack(data)
+            if self._unpacked_type(pl) != SNMP_GETRESPONSE:
+                raise Exception("not a GetResponse packet")
+            else:
+                self.ver = self._unpacked_ver(pl)
+                self.community = self._unpacked_community(pl)
+                self.type = SNMP_GETRESPONSE
+                self.id = self._unpacked_id(pl)
+                self.err_status = self._unpacked_err_status(pl)
+                self._err_id = self._unpacked_err_id(pl)
+                if self.err_status == SNMP_ERR_NOERROR:
+                    for seq_otv in self._unpacked_oids(pl):
+                        oid = self._unpacked_oids_oid(seq_otv)
+                        t = self._unpacked_oids_type(seq_otv)
+                        v = self._unpacked_oids_val(seq_otv)
+                        self.addoid(oid, (t,v))
+
 class GetRequest(_SnmpPacket):
     def __init__(self, data=None, \
-                       ver=SNMP_VER1, community="wibble", id=1, oids=[]
+                       ver=SNMP_VER1, community="public", id=1, oids=[]
                 ):
         _SnmpPacket.__init__(self)
         if data == None:
@@ -53,19 +83,20 @@ class GetRequest(_SnmpPacket):
         else:
             self._packet = data
             pl = unpack(data)
-            if pl[1][2][0] != SNMP_GETREQUEST:
-                raise Exception('not a getrequest packet')
+            if self._unpacked_type(pl) != SNMP_GETREQUEST:
+                raise Exception("not a GetRequest packet")
             else:
-                self.ver = pl[1][0][1]
-                self.community = pl[1][1][1]
-                self.type = pl[1][0][1]
-                self.id = pl[1][2][1][0][1]
-                self.err_status = pl[1][2][1][1][1]
-                self._err_id = pl[1][2][1][2][1]
+                self.ver = self._unpacked_ver(pl)
+                self.community = self._unpacked_community(pl)
+                self.type = SNMP_GETREQUEST
+                self.id = self._unpacked_id(pl)
+                self.err_status = self._unpacked_err_status(pl)
+                self._err_id = self._unpacked_err_id(pl)
                 if self.err_status == SNMP_ERR_NOERROR:
-                    for seqtv in pl[1][2][1][3][1]:
-                        oid = seqtv[1][0][1]
-                        t,v = seqtv[1][1][0],seqtv[1][1][1]
+                    for seq_otv in self._unpacked_oids(pl):
+                        oid = self._unpacked_oids_oid(seq_otv)
+                        t = self._unpacked_oids_type(seq_otv)
+                        v = self._unpacked_oids_val(seq_otv)
                         self.addoid(oid, (t,v))
 
 class _SnmpPacket():
@@ -78,6 +109,7 @@ class _SnmpPacket():
         self._err_id = 0x0
         self._oids = {}
         self._packet = None
+    #methods to add, set & get oid dictionary members
     def getoid(self, oid):
         try:
             return self._oids[oid]
@@ -90,14 +122,17 @@ class _SnmpPacket():
             self._oids[oid] = tv
     def setoid(self, oid, tv):
         self.addoid(self, oid, tv)
+    #method to itterate over oid dictionary
     def __iter__(self):
         return self._oids.__iter__()
+    #property to expose/compose packet
     @property
     def packet(self):
         if self._packet == None:
             return self._pack()
         else:
             return self._packet
+    #helper methods for packet assembly
     def _pack(self):
         return pack_tlv(ASN1_SEQ, [
                                 pack_tlv(ASN1_INT, self.ver),
@@ -127,42 +162,45 @@ class _SnmpPacket():
                                  ]) \
                        )
         return pack_tlv(ASN1_SEQ, oids)
+    #methods to  hide the ugliness of getting std
+    #values from a packet unpacked into nested lists
+    #Note to self: subset of these might change their
+    #behaviour on packet type, if necessary
+    def _unpacked_ver(self, pl): return pl[1][0][1]
+    def _unpacked_community(self,pl): return pl[1][1][1]
+    def _unpacked_type(self, pl): return pl[1][2][0]
+    def _unpacked_id(self, pl): return pl[1][0][1]
+    def _unpacked_err_status(self, pl): return pl[1][2][1][1][1]
+    def _unpacked_err_id(self, pl): return pl[1][2][1][2][1]
+    def _unpacked_oids(self, pl): return pl[1][2][1][3][1]
+    def _unpacked_oids_oid(self, pl): return pl[1][0][1]
+    def _unpacked_oids_type(self, pl): return pl[1][1][0]
+    def _unpacked_oids_val(self, pl): return pl[1][1][1]
+    #standard snmp public properties
     @property
-    def ver(self):
-        return self._ver
+    def ver(self): return self._ver
     @ver.setter
-    def ver(self, ver):
-        self._ver = ver
+    def ver(self, ver): self._ver = ver
     @property
-    def community(self):
-        return self._community
+    def community(self): return self._community
     @community.setter
-    def community(self, community):
-        self._community = community
+    def community(self, community): self._community = community
     @property
-    def type(self):
-        return self._type
+    def type(self): return self._type
     @type.setter
-    def type(self, type):
-        self._type = type
+    def type(self, type): self._type = type
     @property
-    def id(self):
-        return self._id
+    def id(self): return self._id
     @id.setter
-    def id(self, id):
-        self._id = id
+    def id(self, id): self._id = id
     @property
-    def err_status(self):
-        return self._err_status
+    def err_status(self): return self._err_status
     @err_status.setter
-    def err_status(self, err_status):
-        self._err_status = err_status
+    def err_status(self, err_status): self._err_status = err_status
     @property
-    def err_id(self):
-        return self._err_id
+    def err_id(self): return self._err_id
     @err_id.setter
-    def err_id(self, err_id):
-        self._err_id = err_id
+    def err_id(self, err_id): self._err_id = err_id
 
 def pack(p):
     t,v = p
@@ -177,11 +215,11 @@ def pack_tlv(t, v):
              SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
         for block in v:
             b.extend(block)
+    #octet strings that unpack as python strings
     elif t == ASN1_OCTSTR:
-        #octet strings that unpack as strings
         b = bytearray(map(ord, v))
+    #octet strings that unpack as string of hex value pairs
     elif t == ASN1_OCTSTR_BIN:
-        #octet strings that unpack as string of hex value pairs
         ptr = 0
         b = bytearray()
         while ptr<len(v):
@@ -259,11 +297,10 @@ def unpack_tlv(b):
             ptr += 1 + lb + lb_incr
     #octet string
     elif t == ASN1_OCTSTR:
-        #commonly accepted fudge:
-        #if len == 6 or any 128>byte>31
-        #decode as string of hex vals (common case: mac address)
-        #else decode as string
-        #Note: printable, but len==6 results in public encoded as hex
+        #if binary data contains unprintables (e.g. a mac-addr)
+        #  decode as a string of hex value pairs
+        #  return a non-standard type-code as a hint to pack_tlv
+        #else decode as python string
         printable = True
         for byte in b[ptr:ptr+1]:
             if not 128>byte>31:
