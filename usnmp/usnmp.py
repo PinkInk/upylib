@@ -114,7 +114,11 @@ class _SnmpPacket():
     def _pack_oids(self):
         oids = []
         for oid in self:
-            t,v = self.getoid(oid)
+            tv = self.getoid(oid)
+            if callable(tv):
+                t,v = tv()
+            else:
+                t,v = tv
             if callable(v):
                 t,v = t, v()
             oids.append( pack_tlv(ASN1_SEQ, [
