@@ -201,8 +201,7 @@ def unpack_tlv(b):
     if t in (ASN1_SEQ, \
              SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
         v = []
-        #while ptr < len(b):
-        while ptr < l:
+        while ptr < len(b):
             lb, lb_incr = unpack_len( b[ptr:] )
             v.append( b[ptr : ptr+1+lb_incr+lb] )
             ptr += 1 + lb + lb_incr
