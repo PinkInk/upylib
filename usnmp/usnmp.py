@@ -27,8 +27,8 @@ SNMP_TIMETICKS = 0x43
 
 #SNMP specific other types
 SNMP_IPADDR = 0x40
-SNMP_OPAQUE = 0x44 #not handled
-SNMP_NSAPADDR = 0x45 #not handled
+SNMP_OPAQUE = 0x44 #not implemented
+SNMP_NSAPADDR = 0x45 #not implemented
 
 #SNMP error codes
 SNMP_ERR_NOERROR = 0x00
@@ -54,6 +54,7 @@ class GetResponse(SNMPPacket):
             if self.err_status == SNMP_ERR_NOERROR:
                 self._unpacked_getoids(unpack(data))
 
+
 class GetRequest(SNMPPacket):
     def __init__(self, data=None, \
                        ver=SNMP_VER1, community="public", pid=1, oids=[]
@@ -70,6 +71,7 @@ class GetRequest(SNMPPacket):
                 raise Exception("not a GetRequest packet")
             if self.err_status == SNMP_ERR_NOERROR:
                 self._unpacked_getoids(unpack(data))
+
 
 class SNMPPacket():
     def __init__(self, data=None, \
@@ -94,13 +96,13 @@ class SNMPPacket():
             self.err_id = 0x0
         else:
             #self._packet = data
-            pl = unpack(data)
-            self.ver = self._unpacked_ver(pl)
-            self.community = self._unpacked_community(pl)
-            self.type = self._unpacked_type(pl)
-            self.id = self._unpacked_id(pl)
-            self.err_status = self._unpacked_err_status(pl)
-            self._err_id = self._unpacked_err_id(pl)
+            up = unpacked(unpack(data))
+            self.ver = up.ver
+            self.community = up.community
+            self.type = up.type
+            self.id = up.id
+            self.err_status = up.err_status
+            self._err_id = up.err_id
     #methods to get & set oid dictionary members
     def getoid(self, oid, evaluate=False):
         #-------------------------------------------------
@@ -150,26 +152,6 @@ class SNMPPacket():
                                  ]) \
                        )
         return pack_tlv(ASN1_SEQ, oids)
-    #methods to  hide the ugliness of getting std
-    #values from a packet unpacked into nested lists
-    #Note to self: subset of these might change their
-    #behaviour on packet type, if necessary
-    def _unpacked_ver(self, pl): return pl[1][0][1]
-    def _unpacked_community(self,pl): return pl[1][1][1]
-    def _unpacked_type(self, pl): return pl[1][2][0]
-    def _unpacked_id(self, pl): return pl[1][2][1][0][1]
-    def _unpacked_err_status(self, pl): return pl[1][2][1][1][1]
-    def _unpacked_err_id(self, pl): return pl[1][2][1][2][1]
-    def _unpacked_oids(self, pl): return pl[1][2][1][3][1]
-    def _unpacked_oids_oid(self, pl): return pl[1][0][1]
-    def _unpacked_oids_type(self, pl): return pl[1][1][0]
-    def _unpacked_oids_val(self, pl): return pl[1][1][1]
-    def _unpacked_getoids(self, pl):
-        for seq_otv in self._unpacked_oids(pl):
-            oid = self._unpacked_oids_oid(seq_otv)
-            t = self._unpacked_oids_type(seq_otv)
-            v = self._unpacked_oids_val(seq_otv)
-            self.setoid(oid, (t,v))
     #standard snmp public properties
     @property
     def ver(self): return self._ver
@@ -195,6 +177,40 @@ class SNMPPacket():
     def err_id(self): return self._err_id
     @err_id.setter
     def err_id(self, err_id): self._err_id = err_id
+
+class unpacked():
+    def __init__(self, pl):
+        self.packet = pl
+        self.mib = {}
+        for seq in pl[1][2][1][3][1]:
+            oid = seq[1][0][1]
+            t = seq[1][1][0]
+            v = seq[1][1][1]
+            self.mib[oid] = (t,v)
+    @property
+    def ver(self): return self.packet[1][0][1]
+    @ver.setter
+    def ver(self, v): self.packet[1][0][1]
+    @property
+    def community(self): return self.packet[1][1][1]
+    @community.setter
+    def community(self, v): self.packet[1][1][1] = v
+    @property
+    def type(self): return self.packet[1][2][0]
+    @type.setter
+    def type(self, v): self.packet[1][2][0] = v
+    @property
+    def id(self): return self.packet[1][2][1][0][1]
+    @id.setter
+    def id(self, v): self.packet[1][2][1][0][1] = v
+    @property
+    def err_status(self): return self.packet[1][2][1][1][1]
+    @err_status.setter
+    def err_status(self, v): self.packet[1][2][1][1][1]
+    @property
+    def err_id(self): return self.packet[1][2][1][2][1]
+    @err_id.setter
+    def err_id(self, v): self.packet [1][2][1][2][1] = v
 
 def pack(p):
     t,v = p
@@ -244,7 +260,7 @@ def pack_tlv(t, v):
         for id in oid[2:]:
             if 0 <= id < 0x7f:
                 b.append(id)
-                #check RFC's for correct upperbound
+            #check RFC's for correct upperbound
             elif 0x7f < id < 0x7fff:
                 b.append(id//0x80+0x80)
                 b.append(id&0x7f)
@@ -339,7 +355,7 @@ def unpack_tlv(b):
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("SNMP_[OPAQUE & NSAPADDR] not implemented")
     else:
-        raise Exception("invalid block code", t)
+        raise Exception("invalid type", t)
     return t, 1+l+l_incr, v
 
 def unpack_len(v):
