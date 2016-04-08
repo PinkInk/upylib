@@ -38,208 +38,81 @@ SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
+#template packet
+PROTO_PACKET = pack_tlv(ASN1_SEQ,[
+    pack_tlv(ASN1_INT,0),
+    pack_tlv(ASN1_OCTSTR, ""),
+    pack_tlv(SNMP_GETREQUEST,[
+        pack_tlv(ASN1_INT,1),
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_SEQ,[])
+    ])
+])
 
-class GetResponse(oldSNMPPacket):
-    def __init__(self, data=None, \
-                       ver=SNMP_VER1, community="public", pid=1
-                ):
-        if data == None:
-            SNMPPacket.__init__(self, \
-                ver=ver, ptype=SNMP_GETRESPONSE, community=community, pid=pid \
-            )
-        else:
-            SNMPPacket.__init__(self, data=data)
-            if self.type != SNMP_GETRESPONSE:
-                raise Exception("not a GetResponse packet")
-            if self.err_status == SNMP_ERR_NOERROR:
-                self._unpacked_getoids(unpack(data))
-
-
-class GetRequest(oldSNMPPacket):
-    def __init__(self, data=None, \
-                       ver=SNMP_VER1, community="public", pid=1, oids=[]
-                ):
-        if data == None:
-            SNMPPacket.__init__(self, \
-                ver=ver, ptype=SNMP_GETREQUEST, community=community, pid=pid \
-            )
-            for oid in oids:
-                self.setoid(oid)
-        else:
-            SNMPPacket.__init__(self, data=data)
-            if self.type != SNMP_GETREQUEST:
-                raise Exception("not a GetRequest packet")
-            if self.err_status == SNMP_ERR_NOERROR:
-                self._unpacked_getoids(unpack(data))
-
-
-class oldSNMPPacket():
-    def __init__(self, data=None, \
-                       ver=SNMP_VER1, ptype=None, community="public", pid=1
-                ):
-        self._ver = None
-        self._community = None
-        self._type = None
-        self._id = None
-        self._err_status = None
-        self._err_id = None
-        self._oids = {}
-        #self._packet = None
-        if data == None:
-            if ptype == None:
-                raise Exception("type not specified")
-            self.ver = ver
-            self.community = community
-            self.type = ptype
-            self.id = pid
-            self.err_status = SNMP_ERR_NOERROR
-            self.err_id = 0x0
-        else:
-            #self._packet = data
-            up = unpacked(unpack(data))
-            self.ver = up.ver
-            self.community = up.community
-            self.type = up.type
-            self.id = up.id
-            self.err_status = up.err_status
-            self._err_id = up.err_id
-    #methods to get & set oid dictionary members
-    def getoid(self, oid, evaluate=False):
-        #-------------------------------------------------
-        #TO IMPLEMENT
-        #if evaluate == True and tv or v is callable
-        # call and return results
-        #-------------------------------------------------
-        try:
-            return self._oids[oid]
-        except:
-            return None
-    def setoid(self, oid, tv=None):
-        if tv == None:
-            self._oids[oid] = ASN1_NULL, None
-        else:
-            self._oids[oid] = tv
-    #method to itterate over oid dictionary
-    def __iter__(self):
-        return self._oids.__iter__()
-    def getpacket(self):
-        return pack_tlv(ASN1_SEQ, [
-                                pack_tlv(ASN1_INT, self.ver),
-                                pack_tlv(ASN1_OCTSTR, self.community),
-                                self._pack_payload()
-        ])
-    #helper methods for packet assembly
-    def _pack_payload(self):
-        return pack_tlv(self.type, [
-                                pack_tlv(ASN1_INT, self.id),
-                                pack_tlv(ASN1_INT, self.err_status),
-                                pack_tlv(ASN1_INT, self.err_id),
-                                self._pack_oids()
-        ])
-    def _pack_oids(self):
-        oids = []
-        for oid in self:
-            tv = self.getoid(oid)
-            if callable(tv):
-                t,v = tv()
-            else:
-                t,v = tv
-            if callable(v):
-                t,v = t, v()
-            oids.append( pack_tlv(ASN1_SEQ, [
-                                    pack_tlv(ASN1_OID, oid),
-                                    pack_tlv(t,v)
-                                 ]) \
-                       )
-        return pack_tlv(ASN1_SEQ, oids)
-    #standard snmp public properties
-    @property
-    def ver(self): return self._ver
-    @ver.setter
-    def ver(self, ver): self._ver = ver
-    @property
-    def community(self): return self._community
-    @community.setter
-    def community(self, community): self._community = community
-    @property
-    def type(self): return self._type
-    @type.setter
-    def type(self, type): self._type = type
-    @property
-    def id(self): return self._id
-    @id.setter
-    def id(self, pid): self._id = pid
-    @property
-    def err_status(self): return self._err_status
-    @err_status.setter
-    def err_status(self, err_status): self._err_status = err_status
-    @property
-    def err_id(self): return self._err_id
-    @err_id.setter
-    def err_id(self, err_id): self._err_id = err_id
 
 class SnmpPacket():
-    def __init__(self, pl):
-        self._unpacked = None
-        self.unpacked = pl
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1:
+            self.unpacked = unpack(args[0])
+        else:
+            self.unpacked = unpack(PROTO_PACKET)
+        for arg in kwargs:
+            if arg not in ['mib', 'unpacked'] and hasattr(self, arg):
+                setattr(self, arg, kwargs[arg])
+        self.mib = SnmpPacketMib(self.unpacked[1][2][1][3][1])
     @property
-    def unpacked(self):
-        l = self._unpacked.copy()
-        l[1][2][1][3][1] = mib_to_list(l[1][2][1][3][1])
-        return l
-    @unpacked.setter
-    def unpacked(self, v):
-        v = v.copy()
-        v[1][2][1][3][1] = list_to_mib(v[1][2][1][3][1])
-        self._unpacked = v
+    def packed(self): return pack(self.unpacked)
     @property
-    def mib(self):
-        return self._unpacked[1][2][1][3][1]
-    @mib.setter
-    def mib(self, v):
-        if type(v) is list:
-            self._unpacked[1][2][1][3][1] = list_to_mib(v)
-        elif type(v) is dict:
-            self._unpacked[1][2][1][3][1] = v
-    @property
-    def ver(self): return self._unpacked[1][0][1]
+    def ver(self): return self.unpacked[1][0][1]
     @ver.setter
-    def ver(self, v): self._unpacked[1][0][1] = v
+    def ver(self, v): self.unpacked[1][0][1] = v
     @property
-    def community(self): return self._unpacked[1][1][1]
+    def community(self): return self.unpacked[1][1][1]
     @community.setter
-    def community(self, v): self._unpacked[1][1][1] = v
+    def community(self, v): self.unpacked[1][1][1] = v
     @property
-    def type(self): return self._unpacked[1][2][0]
+    def type(self): return self.unpacked[1][2][0]
     @type.setter
-    def type(self, v): self._unpacked[1][2][0] = v
+    def type(self, v): self.unpacked[1][2][0] = v
     @property
-    def id(self): return self._unpacked[1][2][1][0][1]
+    def id(self): return self.unpacked[1][2][1][0][1]
     @id.setter
-    def id(self, v): self._unpacked[1][2][1][0][1] = v
+    def id(self, v): self.unpacked[1][2][1][0][1] = v
     @property
-    def err_status(self): return self._unpacked[1][2][1][1][1]
+    def err_status(self): return self.unpacked[1][2][1][1][1]
     @err_status.setter
-    def err_status(self, v): self._unpacked[1][2][1][1][1] = v
+    def err_status(self, v): self.unpacked[1][2][1][1][1] = v
     @property
-    def err_id(self): return self._unpacked[1][2][1][2][1]
+    def err_id(self): return self.unpacked[1][2][1][2][1]
     @err_id.setter
-    def err_id(self, v): self._unpacked[1][2][1][2][1] = v
+    def err_id(self, v): self.unpacked[1][2][1][2][1] = v
 
-def mib_to_list(mib):
-    l = []
-    for k in mib:
-        l.append([ASN1_SEQ, [[ASN1_OID, k], list(mib[k])]])
-    return l
-
-def list_to_mib(data):
-    mib = {}
-    for oid_tv in data:
-        oid = oid_tv[1][0][1]
-        t = oid_tv[1][1][0]
-        v = oid_tv[1][1][1]
-        mib[oid] = (t, v)
-    return mib
+class SnmpPacketMib():
+    def __init__(self, mib):
+        self.mib = mib
+    def __getitem__(self, oid):
+        for oid_tv in self.mib:
+            if oid_tv[1][0][1] == oid:
+                return oid_tv[1][1][0], oid_tv[1][1][1]
+    def __setitem__(self, oid, tv):
+        for oid_tv in self.mib:
+            if oid_tv[1][0][1] == oid:
+                oid_tv[1][1] = tv
+                break
+    def __repr__(self):
+        s = "{"
+        for oid_tv in self.mib:
+            s += "'" + oid_tv[1][0][1] + "': " + \
+                 tuple(oid_tv[1][1]).__repr__() + ", "
+        return s + "}"
+    def __iter__(self):
+        for oid_tv in self.mib:
+            yield oid_tv[1][0][1]
+    def __delitem__(self, oid):
+        for i, oid_tv in enumerate(self.mib):
+            if oid_tv[1][0][1] == oid:
+                del(self.mib[i])
 
 def pack(p):
     t,v = p
