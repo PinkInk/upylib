@@ -39,7 +39,7 @@ SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
 
-class GetResponse(SNMPPacket):
+class GetResponse(oldSNMPPacket):
     def __init__(self, data=None, \
                        ver=SNMP_VER1, community="public", pid=1
                 ):
@@ -55,7 +55,7 @@ class GetResponse(SNMPPacket):
                 self._unpacked_getoids(unpack(data))
 
 
-class GetRequest(SNMPPacket):
+class GetRequest(oldSNMPPacket):
     def __init__(self, data=None, \
                        ver=SNMP_VER1, community="public", pid=1, oids=[]
                 ):
@@ -73,7 +73,7 @@ class GetRequest(SNMPPacket):
                 self._unpacked_getoids(unpack(data))
 
 
-class SNMPPacket():
+class oldSNMPPacket():
     def __init__(self, data=None, \
                        ver=SNMP_VER1, ptype=None, community="public", pid=1
                 ):
@@ -178,39 +178,68 @@ class SNMPPacket():
     @err_id.setter
     def err_id(self, err_id): self._err_id = err_id
 
-class unpacked():
+class SnmpPacket():
     def __init__(self, pl):
-        self.packet = pl
-        self.mib = {}
-        for seq in pl[1][2][1][3][1]:
-            oid = seq[1][0][1]
-            t = seq[1][1][0]
-            v = seq[1][1][1]
-            self.mib[oid] = (t,v)
+        self._unpacked = None
+        self.unpacked = pl
     @property
-    def ver(self): return self.packet[1][0][1]
+    def unpacked(self):
+        l = self._unpacked.copy()
+        l[1][2][1][3][1] = mib_to_list(l[1][2][1][3][1])
+        return l
+    @unpacked.setter
+    def unpacked(self, v):
+        v = v.copy()
+        v[1][2][1][3][1] = list_to_mib(v[1][2][1][3][1])
+        self._unpacked = v
+    @property
+    def mib(self):
+        return self._unpacked[1][2][1][3][1]
+    @mib.setter
+    def mib(self, v):
+        if type(v) is list:
+            self._unpacked[1][2][1][3][1] = list_to_mib(v)
+        elif type(v) is dict:
+            self._unpacked[1][2][1][3][1] = v
+    @property
+    def ver(self): return self._unpacked[1][0][1]
     @ver.setter
-    def ver(self, v): self.packet[1][0][1]
+    def ver(self, v): self._unpacked[1][0][1] = v
     @property
-    def community(self): return self.packet[1][1][1]
+    def community(self): return self._unpacked[1][1][1]
     @community.setter
-    def community(self, v): self.packet[1][1][1] = v
+    def community(self, v): self._unpacked[1][1][1] = v
     @property
-    def type(self): return self.packet[1][2][0]
+    def type(self): return self._unpacked[1][2][0]
     @type.setter
-    def type(self, v): self.packet[1][2][0] = v
+    def type(self, v): self._unpacked[1][2][0] = v
     @property
-    def id(self): return self.packet[1][2][1][0][1]
+    def id(self): return self._unpacked[1][2][1][0][1]
     @id.setter
-    def id(self, v): self.packet[1][2][1][0][1] = v
+    def id(self, v): self._unpacked[1][2][1][0][1] = v
     @property
-    def err_status(self): return self.packet[1][2][1][1][1]
+    def err_status(self): return self._unpacked[1][2][1][1][1]
     @err_status.setter
-    def err_status(self, v): self.packet[1][2][1][1][1]
+    def err_status(self, v): self._unpacked[1][2][1][1][1] = v
     @property
-    def err_id(self): return self.packet[1][2][1][2][1]
+    def err_id(self): return self._unpacked[1][2][1][2][1]
     @err_id.setter
-    def err_id(self, v): self.packet [1][2][1][2][1] = v
+    def err_id(self, v): self._unpacked[1][2][1][2][1] = v
+
+def mib_to_list(mib):
+    l = []
+    for k in mib:
+        l.append([ASN1_SEQ, [[ASN1_OID, k], list(mib[k])]])
+    return l
+
+def list_to_mib(data):
+    mib = {}
+    for oid_tv in data:
+        oid = oid_tv[1][0][1]
+        t = oid_tv[1][1][0]
+        v = oid_tv[1][1][1]
+        mib[oid] = (t, v)
+    return mib
 
 def pack(p):
     t,v = p
