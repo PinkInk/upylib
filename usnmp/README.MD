@@ -124,6 +124,13 @@ Walk the entire MIB tree of a device:
 ```
 *Note: this code relies (to exit) on the fact that when GetNextRequest reaches the end of an agents MIB it will return the same OID, not the next one.  Exiting the loop this way won't work for requests for multiple OIDs.*
 
+*Note: the above examples gloss over the fact that SNMP is a  UDP protocol and there is therefore no concept of a connection ... how did we know that the packet(s) we received were related to the packets we sent? ... Answer: we didn't, we just relied on timing.*
+
+*SNMP replies can be matched to requests via their request_id value - a reply has the same request_id (id) as the corresponding request.*
+
+*A quick fix might be to set .id on the request to an integer value based on the uptime of the MCU (time.ticks_us()
+for example) and check .id on the response matches.*
+
 Constants & related expectations
 ---
 ###SNMP Version
