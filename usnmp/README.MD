@@ -132,13 +132,10 @@ Walk the entire MIB tree of a device:
 
 Constants & related expectations
 ---
-###SNMP Version
 
 **SNMP_VER1** = 0x0
 
 Only SNMP Version 1 is supported.
-
-###ASN.1 primitive data types
 
 **ASN1_INT** = 0x02<BR>
 **SNMP_COUNTER** = 0x41<BR>
@@ -214,7 +211,7 @@ To create a custom packet from scratch.  Properties of the packet can either be 
 >>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
 ```
 
-###SnmpPacket.mib
+####SnmpPacket.mib
 
 An SnmpPackets' **mib** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding (t,v) tuple (t=Type, v=Value).  Sample manipulations:
 
@@ -258,7 +255,7 @@ You can delete a mib from the database;
 >>>
 ```
 
-###SnmpPacket.unpacked
+####SnmpPacket.unpacked
 
 Access to the internal nested list of lists represntation of the SNMP packet.  Don't mess with it directly, unless you're really sure you know what you're doing - the properties and .mib are better ways to manipulate it.
 
@@ -268,7 +265,7 @@ Access to the internal nested list of lists represntation of the SNMP packet.  D
 >>>
 ```
 
-###SnmpPacket.packed
+####SnmpPacket.packed
 
 Returns a bytearray representation of the current state of the object, fit for sending on the networkself.
 
@@ -277,7 +274,7 @@ Returns a bytearray representation of the current state of the object, fit for s
 bytearray(b'05\x02\x01\x00\x04\x06public\xa0(\x02\x03\x00\xfe\xe7\x02\x01\x00\x02\x01\x000\x1b0\x19\x06\n+\x06\x01\x02\x01\x01\t\x01\x04\x01\x04\x0bhello world')
 ```
 
-###general properties
+####SnmpPacket general properties
 
 **SnmpPacket.ver** _= int_ - get/set the SNMP Version (only Version 1 supported, via SNMP_VER1).
 
