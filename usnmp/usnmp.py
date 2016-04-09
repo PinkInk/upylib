@@ -109,8 +109,10 @@ class _SnmpPacketMib():
     def __repr__(self):
         s = "{"
         for oid_tv in self.mib:
+            if len(s) > 1:
+                s += ", "
             s += "'" + oid_tv[1][0][1] + "': " + \
-                 tuple(oid_tv[1][1]).__repr__() + ", "
+                 tuple(oid_tv[1][1]).__repr__()
         return s + "}"
     def __iter__(self):
         for oid_tv in self.mib:
