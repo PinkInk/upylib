@@ -128,8 +128,7 @@ Walk the entire MIB tree of a device:
 
 *SNMP replies can be matched to requests via their request_id value - a reply has the same request_id (id) as the corresponding request.*
 
-*A quick fix might be to set .id on the request to an integer value based on the uptime of the MCU (time.ticks_us()
-for example) and check .id on the response matches.*
+*A quick fix might be to set .id on the request to an integer value based on the uptime of the MCU (micropython time.ticks_us() for example) and check .id on the response matches.*
 
 Constants & related expectations
 ---
