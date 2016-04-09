@@ -25,20 +25,24 @@ Something **packed** is a bytearray of SNMP formatted data either received from 
 
 The action of **pack**ing something creates the **packed** form.
 
-Something **unpacked** is a nested list structure representing **packed** data in a python manipulatable format.  Each element of the **unpacked** structure is a list of two elements **[t,v]** where;
-- **t** is a code (for which there are Constants, refer hereunder) indicating the SNMP type of **v**
-- **v** is a value, whose python type depends on the SNMP type indicated by **t** (refer Constants hereunder)
+Something **unpacked** is a nested list structure representing valid SNMP data in a python manipulatable format.  Each element of the **unpacked** structure is a list of two elements **[t,v]** where;
+- **t** is a code (for which there are Constants & related expectations, refer hereunder) indicating the SNMP type of **v**
+- **v** is a value, whose python type depends on the SNMP type indicated by **t** (refer Constants & related expectations, hereunder)
 
 The action of **unpack**ing something creates the **unpacked** form.
 
 Examples
 ---
-It's always better by example ... import the library, and socket and create a UDP socket;
+It's always better by example ...
+
+Import the library, create a UDP socket;
 ```python
 >>> import socket
 >>> import usnmp
 >>> s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
->>> s.settimeout(1)```
+>>> s.settimeout(1)
+```
+
 Construct an SNMP GetRequest packet to query a device supporting a read-only community named 'public' for 3 OIDs;
 - ifInOctets - total octets of data received by the interface
 - ifOutOctets - total octets of data transmitted by the interface
