@@ -39,7 +39,7 @@ SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
 #template packet
-PROTO_PACKET = pack_tlv(ASN1_SEQ,[
+_SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
     pack_tlv(ASN1_INT,0),
     pack_tlv(ASN1_OCTSTR, ""),
     pack_tlv(SNMP_GETREQUEST,[
@@ -56,11 +56,11 @@ class SnmpPacket():
         if len(args) == 1:
             self.unpacked = unpack(args[0])
         else:
-            self.unpacked = unpack(PROTO_PACKET)
+            self.unpacked = unpack(_SNMP_PACKET_PROTO)
         for arg in kwargs:
             if arg not in ['mib', 'unpacked'] and hasattr(self, arg):
                 setattr(self, arg, kwargs[arg])
-        self.mib = SnmpPacketMib(self.unpacked[1][2][1][3][1])
+        self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
     @property
     def packed(self): return pack(self.unpacked)
     @property
@@ -88,7 +88,7 @@ class SnmpPacket():
     @err_id.setter
     def err_id(self, v): self.unpacked[1][2][1][2][1] = v
 
-class SnmpPacketMib():
+class _SnmpPacketMib():
     def __init__(self, mib):
         self.mib = mib
     def __getitem__(self, oid):
@@ -117,6 +117,8 @@ class SnmpPacketMib():
 def pack(p):
     t,v = p
     if type(v) is list:
+        #deepcopy the list
+        v = v[:]
         for i, val in enumerate(v):
             v[i] = pack(val)
     return pack_tlv(t,v)
