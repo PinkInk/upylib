@@ -3,20 +3,20 @@ usnmp (Micro Simple Network Management Protocol library)
 I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection and that they could therefore expect Steam to be 'laggy' (their words, not mine).  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
 
 Before you dig in, know this;
-- It only supports SNMP Version 1 - whilst this still seems to be supported by most, if not all, devices - you should be aware that it has no security, data is relayed (over the internet if you so choose) in the clear.
+- It only supports SNMP Version 1 - whilst this still seems to be supported by most, if not all, devices - you should be aware that it has no security; data is relayed (over the internet if you so choose) in the clear.
 - It's been tested on a WiPy, and will be tested on an esp8266 when the (as of writing) in-progress kickstarter bears first-fruit, if my shipment ever arrives from China.
 - It's based on an immature understanding of SNMP in general and very hasty skim-reading of the various RFC's and other references.
 - (as of date) It's only been tested on a limited set of SNMP poll operations (namely get-request, get-response, get-nextresponse),  it *may* be useable for traps, but I haven't tried that (yet).
 - It (as yet) has no concept of a MIB, just OIDs, - it would be unwieldy to implement an SNMP agent that could be polled for anything other than a small set of OIDs.
-- Due to its shortfalls it should probablyhave been called usnmppacket, usnmpv1packet, usnmpv1getpacket or similar, but I was feeling brave, and I *may* extend it someday.
+- Due to its shortfalls it should probably have been called usnmppacket, usnmpv1packet, usnmpv1getpacket or similar, but I was feeling brave, and I *may* extend it, someday.
 - It can't interpret Opaque or NsapAddr value encoding - I've yet to find a device that will generate samples (if you have such a device - please submit!)
-- I used 'micro' as an excuse not to implement any error traps ;o)
-- Then I ignored 'micro' and used recursion ...
-- Oh and I only dabble with Python occasionally, if you're a pro - pointers in the right direction would be appreciated.
+- I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
+- Oh, and I only dabble with Python occasionally; if you're a pro; pointers would be appreciated.
 
 TO DO:
 - compact MIB class
 - OIDs in MIBs as callables
+
 Concepts
 ---
 Derivatives of the words 'pack' and 'unpack' are used extensively throughout the library, conceptually;
