@@ -44,17 +44,18 @@ Import the library, create a UDP socket;
 ```
 
 Construct an SNMP GetRequest packet to query a device supporting a read-only community named 'public' for 3 OIDs;
-- ifInOctets - total octets of data received by the interface
-- ifOutOctets - total octets of data transmitted by the interface
-- sysUptime - number of 100th's of seconds the system has been up
+- ifInOctets (1.3.6.1.2.1.2.2.1.10.4) - total octets of data received by the interface
+- ifOutOctets (1.3.6.1.2.1.2.2.1.16.4)- total octets of data transmitted by the interface
+- sysUptime (1.3.6.1.2.1.1.3.0)- number of 100th's of seconds the system has been up
 
-Create the packet object;
+First; create the packet object;
 ```python
 >>> p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
 ```
+
 *Note: all SNMP packets contain a block of one or more OIDs (a MIB, in my terminology) each with an associated Type and Value pair.  When requesting (GetRequest or GetNextRequest) the values from an SNMP agent Type is ASN1_NULL the corresponding python type/value for which is None.*
 
-Load the packets objects mib with OIDs;
+Then load the packets objects mib with OIDs;
 ```python
 >>> mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
 >>> for mib in mibs:
