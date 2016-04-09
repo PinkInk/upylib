@@ -1,4 +1,5 @@
 import usnmp
+import socket
 
 #convert a packet copied from wireshark ... as a Hex Stream
 #to a bytearray
@@ -37,9 +38,34 @@ s="3081d20201000403414643a281c702043821eea10201000201003081b8300f060a2b060102010
 s=ws2ba(s)
 s==pack(unpack(s))
 
-#FAILS, current code
-
 #multi item get-next-request
 s="3081b00201000403414643a181a5020433783ac9020100020100308196300d06092b06010201020201010500300d06092b06010201020201020500300d06092b06010201020201030500300d06092b06010201020201040500300d06092b06010201020201050500300d06092b06010201020201060500300d06092b06010201020201070500300d06092b06010201020201080500300d06092b06010201020201090500300d06092b060102010202010a0500"
 s=ws2ba(s)
 s==pack(unpack(s))
+
+s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+
+p=usnmp.SnmpPacket(community="public", type=SNMP_GETREQUEST)
+mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
+for mib in mibs:
+    p.mib[mib] = (ASN1_NULL, None)
+s.sendto(p.packed, (b"192.168.1.1", 161))
+d=s.recvfrom(1024)
+r=SnmpPacket(d[0])
+print(r.type, r.mib)
+
+r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
+mib = "1.3.6.1.2.1.1.1"
+r.mib[mib]=(usnmp.ASN1_NULL,None)
+s.sendto(r.packed, (b'192.168.1.1',161))
+d=s.recvfrom(1024)
+while True:
+    r=usnmp.SnmpPacket(d[0])
+    if r.mib[mib] != None:
+        break
+    else:
+        for i in r.mib: mib=i
+    print(r.mib)
+    r.type=usnmp.SNMP_GETNEXTREQUEST
+    s.sendto(r.packed, (b'192.168.1.1',161))
+    d=s.recvfrom(1024)
