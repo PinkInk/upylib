@@ -38,18 +38,6 @@ SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
-#template packet
-_SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
-    pack_tlv(ASN1_INT, SNMP_VER1),
-    pack_tlv(ASN1_OCTSTR, ""),
-    pack_tlv(SNMP_GETREQUEST,[
-        pack_tlv(ASN1_INT,1),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_SEQ,[])
-    ])
-])
-
 
 class SnmpPacket():
     def __init__(self, *args, **kwargs):
@@ -286,3 +274,15 @@ def hex2str(v):
         s += chr( int(v[ptr:ptr+2], 16) )
         ptr += 2
     return s
+
+#template packet
+_SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
+    pack_tlv(ASN1_INT, SNMP_VER1),
+    pack_tlv(ASN1_OCTSTR, ""),
+    pack_tlv(SNMP_GETREQUEST,[
+        pack_tlv(ASN1_INT,1),
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_SEQ,[])
+    ])
+])
