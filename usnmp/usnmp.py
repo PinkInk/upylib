@@ -40,7 +40,7 @@ SNMP_ERR_GENERR = 0x05
 
 #template packet
 _SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
-    pack_tlv(ASN1_INT,0),
+    pack_tlv(ASN1_INT, SNMP_VER1),
     pack_tlv(ASN1_OCTSTR, ""),
     pack_tlv(SNMP_GETREQUEST,[
         pack_tlv(ASN1_INT,1),
@@ -58,7 +58,8 @@ class SnmpPacket():
         else:
             self.unpacked = unpack(_SNMP_PACKET_PROTO)
         for arg in kwargs:
-            if arg not in ['mib', 'unpacked'] and hasattr(self, arg):
+            if arg not in ['mib', 'unpacked', 'packed'] \
+                    and hasattr(self, arg):
                 setattr(self, arg, kwargs[arg])
         self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
     @property
@@ -88,6 +89,7 @@ class SnmpPacket():
     @err_id.setter
     def err_id(self, v): self.unpacked[1][2][1][2][1] = v
 
+
 class _SnmpPacketMib():
     def __init__(self, mib):
         self.mib = mib
@@ -96,10 +98,14 @@ class _SnmpPacketMib():
             if oid_tv[1][0][1] == oid:
                 return oid_tv[1][1][0], oid_tv[1][1][1]
     def __setitem__(self, oid, tv):
+        existing = False
         for oid_tv in self.mib:
             if oid_tv[1][0][1] == oid:
+                existing = True
                 oid_tv[1][1] = tv
                 break
+        if not existing:
+            self.mib.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
     def __repr__(self):
         s = "{"
         for oid_tv in self.mib:
