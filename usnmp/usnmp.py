@@ -85,6 +85,7 @@ class _SnmpPacketMib():
         for oid_tv in self.mib:
             if oid_tv[1][0][1] == oid:
                 return oid_tv[1][1][0], oid_tv[1][1][1]
+        return None
     def __setitem__(self, oid, tv):
         existing = False
         for oid_tv in self.mib:
