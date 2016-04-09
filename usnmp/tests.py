@@ -45,13 +45,13 @@ s==pack(unpack(s))
 
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 
-p=usnmp.SnmpPacket(community="public", type=SNMP_GETREQUEST)
+p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
 mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
 for mib in mibs:
-    p.mib[mib] = (ASN1_NULL, None)
+    p.mib[mib] = (usnmp.ASN1_NULL, None)
 s.sendto(p.packed, (b"192.168.1.1", 161))
 d=s.recvfrom(1024)
-r=SnmpPacket(d[0])
+r=usnmp.SnmpPacket(d[0])
 print(r.type, r.mib)
 
 r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
