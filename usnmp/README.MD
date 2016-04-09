@@ -126,7 +126,7 @@ Walk the entire MIB tree of a device:
 
 *Note: the above examples gloss over the fact that SNMP is a  UDP protocol and there is therefore no concept of a connection ... how did we know that the packet(s) we received were related to the packets we sent? ... Answer: we didn't, we just relied on timing.*
 
-*SNMP replies can be matched to requests via their request_id value - a reply has the same request_id (id) as the corresponding request.*
+*SNMP replies can be matched to requests via their request_id (.id) value - a reply has the same request_id (.id) as the corresponding request.*
 
 *A quick fix might be to set .id on the request to an integer value based on the uptime of the MCU (micropython time.ticks_us() for example) and check .id on the response matches.*
 
@@ -191,8 +191,105 @@ Unimplemented data types.
 
 SNMP error codes returned/set in SnmpPacket.err_status (or SnmpPacket.err_id?).
 
-Classes
--------
+SnmpPacket class
+---
+Represents an SNMP data packet and expects to be instantiated in one of two ways;
+
+**o=SnmpPacket(bytearray)**
+
+To manipulate a raw-packet (passed as bytearray) captured from the network.
+
+**o=SnmpPacket([property=val, propery=val, ...])**
+
+To create a custom packet from scratch.  Properties of the packet can either be set via the python properties of the returned object, or set in the call itself e.g. the following have the same net result:
+
+```python
+>>> o=usnmp.SnmpPacket()
+>>> o.community='public'
+>>> o.type=usnmp.SNMP_GETREQUEST
+>>> o.id=65255
+```
+
+```python
+>>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
+```
+
+###SnmpPacket.mib
+
+An SnmpPackets' **mib** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding (t,v) tuple (t=Type, v=Value).  Sample manipulations:
+
+```python
+>>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
+>>> o.mib
+{}
+>>> o.mib['1.3.6.1.2.1.1.9.1.3.9']=(usnmp.ASN1_INT, 0)
+>>> o.mib
+{'1.3.6.1.2.1.1.9.1.3.9': (2, 0)}
+>>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
+>>> o.mib
+{'1.3.6.1.2.1.1.9.1.3.9': (2, 0), '1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
+>>> for oid in o.mib:  print(oid, o.mib[oid])
+...
+1.3.6.1.2.1.1.9.1.3.9 (2, 0)
+1.3.6.1.2.1.1.9.1.4.1 (4, 'hello world')
+```
+
+Assignment to .mib will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
+
+```python
+>>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
+>>> o.mib
+{}
+>>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
+>>> o.mib
+{'1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
+>>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "goodbye cruel world")
+>>> o.mib
+{'1.3.6.1.2.1.1.9.1.4.1': (4, goodbye cruel world)}
+```
+
+You can delete a mib from the database;
+
+```python
+>>> o.mib['1.3.6.1.2.1.1.9.1.4.1']
+(4, 'goodbye cruel world')
+>>> del(o.mib['1.3.6.1.2.1.1.9.1.4.1'])
+>>> o.mib['1.3.6.1.2.1.1.9.1.4.1']
+>>>
+```
+
+###SnmpPacket.unpacked
+
+Access to the internal nested list of lists represntation of the SNMP packet.  Don't mess with it directly, unless you're really sure you know what you're doing - the properties and .mib are better ways to manipulate it.
+
+```python
+>>> o.unpacked
+[48, [[2, 0], [4, 'public'], [160, [[2, 65255], [2, 0], [2, 0], [48, [[48, [[6, '1.3.6.1.2.1.1.9.1.4.1'], [4, 'hello world']]]]]]]]]
+>>>
+```
+
+###SnmpPacket.packed
+
+Returns a bytearray representation of the current state of the object, fit for sending on the networkself.
+
+```python
+>>> o.packed
+bytearray(b'05\x02\x01\x00\x04\x06public\xa0(\x02\x03\x00\xfe\xe7\x02\x01\x00\x02\x01\x000\x1b0\x19\x06\n+\x06\x01\x02\x01\x01\t\x01\x04\x01\x04\x0bhello world')
+```
+
+###general properties
+
+**SnmpPacket.ver** _= int_ - get/set the SNMP Version (only Version 1 supported, via SNMP_VER1).
+
+**SnmpPacket.community** _=str_ - get/set the community string.
+
+**SnmpPacket.type** _=int_ - get/set the packet type (e.g. SNMP_GETREQUEST, SNMP_GETRESPONSE etc.).
+
+**SnmpPacket.id** _=int_ - get/set the packet request_id.
+
+**SnmpPacket.err_status** _=int_ - get/set the error_status (e.g. SNMP_ERR_NOERROR, SNMP_ERR_TOOBIG etc.).
+
+**SnmpPAcket.err_id** _=int_ - get/set the error_id.
 
 Functions
 ---------
