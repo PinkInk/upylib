@@ -45,32 +45,24 @@ class SnmpPacket():
             self.unpacked = unpack(args[0])
         elif 'type' in kwargs:
             self.unpacked = unpack(_SNMP_PACKET_PROTO)
+            #common properties
+            for arg in ['ver', 'community', 'type']:
+                if arg in kwargs:
+                    setattr(self, arg, kwargs[arg])
         else:
             raise Exception("bytearray data or type property required")
-        #common properties
-        for arg in ['ver', 'community', 'type']:
-            setattr(self, arg, kwargs[arg])
         if self.type in \
                 [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
             #set frames have same PDU format, when implemented
-            @property
-            def id(self): return self.unpacked[1][2][1][0][1]
-            @id.setter
-            def id(self, v): self.unpacked[1][2][1][0][1] = v
-            @property
-            def err_status(self): return self.unpacked[1][2][1][1][1]
-            @err_status.setter
-            def err_status(self, v): self.unpacked[1][2][1][1][1] = v
-            @property
-            def err_id(self): return self.unpacked[1][2][1][2][1]
-            @err_id.setter
-            def err_id(self, v): self.unpacked[1][2][1][2][1] = v
+            print(1)
             self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
             #specific properties
             for arg in ['id', 'err_status', 'err_id']:
-                setattr(self, arg, kwargs[arg])
+                if arg in kwargs:
+                    setattr(self, arg, kwargs[arg])
         else:
             #prepare to handle different format of SNMPv1 PDU
+            pass
     @property
     def packed(self): return pack(self.unpacked)
     @property
@@ -85,7 +77,44 @@ class SnmpPacket():
     def type(self): return self.unpacked[1][2][0]
     @type.setter
     def type(self, v): self.unpacked[1][2][0] = v
-
+    #get/set properties
+    @property
+    def id(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            return self.unpacked[1][2][1][0][1]
+        else:
+            return None
+    @id.setter
+    def id(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            self.unpacked[1][2][1][0][1] = v
+    @property
+    def err_status(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            return self.unpacked[1][2][1][1][1]
+        else:
+            return None
+    @err_status.setter
+    def err_status(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            self.unpacked[1][2][1][1][1] = v
+    @property
+    def err_id(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            return self.unpacked[1][2][1][2][1]
+        else:
+            return None
+    @err_id.setter
+    def err_id(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+        self.unpacked[1][2][1][2][1] = v
+    #SNMPv1 Trap properties
 
 class _SnmpPacketMib():
     def __init__(self, mib):
