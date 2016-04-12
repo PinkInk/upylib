@@ -41,15 +41,36 @@ SNMP_ERR_GENERR = 0x05
 
 class SnmpPacket():
     def __init__(self, *args, **kwargs):
-        if len(args) == 1:
+        if len(args) == 1 and type(args[0]) is bytearray:
             self.unpacked = unpack(args[0])
-        else:
+        elif 'type' in kwargs:
             self.unpacked = unpack(_SNMP_PACKET_PROTO)
-        for arg in kwargs:
-            if arg not in ['mib', 'unpacked', 'packed'] \
-                    and hasattr(self, arg):
+        else:
+            raise Exception("bytearray data or type property required")
+        #common properties
+        for arg in ['ver', 'community', 'type']:
+            setattr(self, arg, kwargs[arg])
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            #set frames have same PDU format, when implemented
+            @property
+            def id(self): return self.unpacked[1][2][1][0][1]
+            @id.setter
+            def id(self, v): self.unpacked[1][2][1][0][1] = v
+            @property
+            def err_status(self): return self.unpacked[1][2][1][1][1]
+            @err_status.setter
+            def err_status(self, v): self.unpacked[1][2][1][1][1] = v
+            @property
+            def err_id(self): return self.unpacked[1][2][1][2][1]
+            @err_id.setter
+            def err_id(self, v): self.unpacked[1][2][1][2][1] = v
+            self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
+            #specific properties
+            for arg in ['id', 'err_status', 'err_id']:
                 setattr(self, arg, kwargs[arg])
-        self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
+        else:
+            #prepare to handle different format of SNMPv1 PDU
     @property
     def packed(self): return pack(self.unpacked)
     @property
@@ -64,18 +85,6 @@ class SnmpPacket():
     def type(self): return self.unpacked[1][2][0]
     @type.setter
     def type(self, v): self.unpacked[1][2][0] = v
-    @property
-    def id(self): return self.unpacked[1][2][1][0][1]
-    @id.setter
-    def id(self, v): self.unpacked[1][2][1][0][1] = v
-    @property
-    def err_status(self): return self.unpacked[1][2][1][1][1]
-    @err_status.setter
-    def err_status(self, v): self.unpacked[1][2][1][1][1] = v
-    @property
-    def err_id(self): return self.unpacked[1][2][1][2][1]
-    @err_id.setter
-    def err_id(self, v): self.unpacked[1][2][1][2][1] = v
 
 
 class _SnmpPacketMib():

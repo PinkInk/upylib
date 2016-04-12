@@ -44,6 +44,8 @@ s=ws2ba(s)
 s==pack(unpack(s))
 
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+s.settimeout(1)
+
 
 p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
 mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
@@ -52,7 +54,11 @@ for mib in mibs:
 s.sendto(p.packed, (b"192.168.1.1", 161))
 d=s.recvfrom(1024)
 r=usnmp.SnmpPacket(d[0])
-print(r.type, r.mib)
+print(r.community)
+print(r.ver)
+for oid in r.mib:
+    print(oid, r.mib[oid])
+
 
 r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
 mib = "1.3.6.1.2.1.1.1"
