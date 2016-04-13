@@ -41,28 +41,15 @@ SNMP_ERR_GENERR = 0x05
 
 class SnmpPacket():
     def __init__(self, *args, **kwargs):
-        if len(args) == 1 and type(args[0]) is bytearray:
+        if len(args) == 1:
             self.unpacked = unpack(args[0])
-        elif 'type' in kwargs:
+        else:
             self.unpacked = unpack(_SNMP_PACKET_PROTO)
-            #common properties
-            for arg in ['ver', 'community', 'type']:
-                if arg in kwargs:
-                    setattr(self, arg, kwargs[arg])
-        else:
-            raise Exception("bytearray data or type property required")
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            #set frames have same PDU format, when implemented
-            print(1)
-            self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
-            #specific properties
-            for arg in ['id', 'err_status', 'err_id']:
-                if arg in kwargs:
-                    setattr(self, arg, kwargs[arg])
-        else:
-            #prepare to handle different format of SNMPv1 PDU
-            pass
+        for arg in kwargs:
+            if arg not in ['mib', 'unpacked', 'packed'] \
+                    and hasattr(self, arg):
+                setattr(self, arg, kwargs[arg])
+        self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
     @property
     def packed(self): return pack(self.unpacked)
     @property
@@ -77,44 +64,19 @@ class SnmpPacket():
     def type(self): return self.unpacked[1][2][0]
     @type.setter
     def type(self, v): self.unpacked[1][2][0] = v
-    #get/set properties
     @property
-    def id(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            return self.unpacked[1][2][1][0][1]
-        else:
-            return None
+    def id(self): return self.unpacked[1][2][1][0][1]
     @id.setter
-    def id(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            self.unpacked[1][2][1][0][1] = v
+    def id(self, v): self.unpacked[1][2][1][0][1] = v
     @property
-    def err_status(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            return self.unpacked[1][2][1][1][1]
-        else:
-            return None
+    def err_status(self): return self.unpacked[1][2][1][1][1]
     @err_status.setter
-    def err_status(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            self.unpacked[1][2][1][1][1] = v
+    def err_status(self, v): self.unpacked[1][2][1][1][1] = v
     @property
-    def err_id(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            return self.unpacked[1][2][1][2][1]
-        else:
-            return None
+    def err_id(self): return self.unpacked[1][2][1][2][1]
     @err_id.setter
-    def err_id(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-        self.unpacked[1][2][1][2][1] = v
-    #SNMPv1 Trap properties
+    def err_id(self, v): self.unpacked[1][2][1][2][1] = v
+
 
 class _SnmpPacketMib():
     def __init__(self, mib):
@@ -138,8 +100,10 @@ class _SnmpPacketMib():
         for oid_tv in self.mib:
             if len(s) > 1:
                 s += ", "
-            s += "'" + oid_tv[1][0][1] + "': " + \
-                 tuple(oid_tv[1][1]).__repr__()
+            s += "'" + oid_tv[1][0][1] + "': (" + \
+                 str(oid_tv[1][1][0]) + ", " + str(oid_tv[1][1][1]) + ")"
+                #micropython tuple has no __repr__()
+                #tuple(oid_tv[1][1]).__repr__()
         return s + "}"
     def __iter__(self):
         for oid_tv in self.mib:
