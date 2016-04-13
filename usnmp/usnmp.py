@@ -138,10 +138,8 @@ class _SnmpPacketMib():
         for oid_tv in self.mib:
             if len(s) > 1:
                 s += ", "
-            s += "'" + oid_tv[1][0][1] + "': (" + \
-                 str(oid_tv[1][1][0]) + ", " + str(oid_tv[1][1][1]) + ")"
-                #micropython tuple has no __repr__()
-                #tuple(oid_tv[1][1]).__repr__()
+            s += "'" + oid_tv[1][0][1] + "': " + \
+                 tuple(oid_tv[1][1]).__repr__()
         return s + "}"
     def __iter__(self):
         for oid_tv in self.mib:
