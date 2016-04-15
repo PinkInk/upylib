@@ -1,21 +1,19 @@
 usnmp (Micro Simple Network Management Protocol library)
 ===
-I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection and that they could therefore expect Steam to be 'laggy' (their words, not mine).  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
+I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection.  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
 
 Before you dig in, know this;
-- It only supports SNMP Version 1 - whilst this still seems to be supported by most, if not all, devices - you should be aware that it has no security; data is relayed (over the internet if you so choose) in the clear.
-- It's been tested on a WiPy, and will be tested on an esp8266 when the (as of writing) in-progress kickstarter bears first-fruit, if my shipment ever arrives from China.
-- It's based on an immature understanding of SNMP in general and very hasty skim-reading of the various RFC's and other references.
-- (as of date) It's only been tested on a limited set of SNMP poll operations (namely get-request, get-response, get-nextresponse),  it *may* be useable for traps, but I haven't tried that (yet).
-- It (as yet) has no concept of a MIB, just OIDs, - it would be unwieldy to implement an SNMP agent that could be polled for anything other than a small set of OIDs.
-- Due to its shortfalls it should probably have been called usnmppacket, usnmpv1packet, usnmpv1getpacket or similar, but I was feeling brave, and I *may* extend it, someday.
-- It can't interpret Opaque or NsapAddr value encoding - I've yet to find a device that will generate samples (if you have such a device - please submit!)
+- It only supports SNMP Version 1 (unsecure).
+- It's been (lightly) tested only on CPython and a WiPy, it'll be tested on an esp8266 when the (as of writing) in-progress kickstarter bears first-fruit, if my shipment ever arrives from China.
+- It's based on an immature understanding of SNMP in general.
+- It (as yet) has no concept of a MIB, just OIDs.
+- Due to its shortfalls it should probably have been called usnmppacket, usnmpv1packet or similar.
+- It can't interpret Opaque or NsapAddr encoding - I've yet to find a sample to analyse
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
-- Oh, and I only dabble with Python occasionally; if you're a pro; pointers would be appreciated.
 
 TO DO:
-- compact MIB class
-- OIDs in MIBs as callables
+- compact MIB class, def parser
+- OIDs in VarBinds as callables (SNMP agent)
 
 Concepts
 ---
@@ -53,13 +51,13 @@ First; create the packet object;
 >>> p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
 ```
 
-*Note: all SNMP packets contain a block of one or more OIDs (a MIB, in my terminology) each with an associated Type and Value pair.  When requesting (GetRequest or GetNextRequest) the values from an SNMP agent Type is ASN1_NULL, the corresponding python type/value for which is None.*
+*Note: SNMP packets contain a block ("VarBind"ings) of one or more OIDs each with an associated Type and Value pair.  When requesting (GetRequest or GetNextRequest) the values from an SNMP agent Type is ASN1_NULL, the corresponding python type/value for which is None.*
 
-Then load the packets objects mib with OIDs;
+Then load the packets objects varbindings with OIDs;
 ```python
->>> mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
->>> for mib in mibs:
-...     p.mib[mib] = (usnmp.ASN1_NULL, None)
+>>> oids=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
+>>> for oid in oids:
+...     p.varbinds[oid] = (usnmp.ASN1_NULL, None)
 ...
 ```
 Send a packed representation of the packet object to the agent (device) and (hopefully) receive its response;
@@ -78,16 +76,16 @@ public
 ```
 *Note:SNMP_VER1 == 0x0*
 
-Iterate over the good-stuff (aka the returned values against OIDs):
+Iterate over the good-stuff (aka the OIDs and values in the varbinding):
 ```python
->>> for oid in r.mib:
-...     print(oid, r.mib[oid])
+>>> for oid in r.varbinds:
+...     print(oid, r.varbinds[oid])
 ...
 1.3.6.1.2.1.2.2.1.10.4 (65, 1546470168)
 1.3.6.1.2.1.2.2.1.16.4 (65, 3249742414)
 1.3.6.1.2.1.1.3.0 (67, 105264014)
 ```
-For each OID in the MIB (my terminology) the device has returned a type and a value (first and second values in the tuple, respectively).
+For each OID in the VarBinding the device returned a type and a value (first and second values in the tuple, respectively).
 - 65 == 0x41 == SNMP_COUNTER, with an integer value
 - 67 == 0x43 == SNMP_TIMETICKS, with an integer value representing 100th's of seconds
 
@@ -96,18 +94,18 @@ For each OID in the MIB (my terminology) the device has returned a type and a va
 Walk the entire MIB tree of a device:
 ```python
 >>> r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
->>> mib = "1.3.6.1.2.1.1.1"
->>> r.mib[mib]=(usnmp.ASN1_NULL,None)
+>>> oid = "1.3.6.1.2.1.1.1"
+>>> r.varbinds[oid]=(usnmp.ASN1_NULL,None)
 >>> s.sendto(r.packed, (b'192.168.1.1',161))
 39
 >>> d=s.recvfrom(1024)
 >>> while True:
 ...     r=usnmp.SnmpPacket(d[0])
-...     if r.mib[mib] != None:
+...     if r.varbinds[oid] != None:
 ...         break
 ...     else:
-...         for i in r.mib: mib=i
-...     print(r.mib)
+...         for i in r.varbinds: oid=i
+...     print(r.varbinds)
 ...     r.type=usnmp.SNMP_GETNEXTREQUEST
 ...     s.sendto(r.packed, (b'192.168.1.1',161))
 ...     d=s.recvfrom(1024)
@@ -170,9 +168,12 @@ NULL data type, value reprsented by a python **None**.
 **ASN1_SEQ** = 0x30<BR>
 **SNMP_GETREQUEST** = 0xa0<BR>
 **SNMP_GETRESPONSE** = 0xa2<BR>
-**SNMP_GETNEXTREQUEST** = 0xa1
+**SNMP_GETNEXTREQUEST** = 0xa1<BR>
+**SNMP_TRAP** == 0xa4
 
 ASN.1 sequence of data blocks type and SNMP derived types, value represented by a python **List**.
+
+The sequence of sub-blocks required inside get/set sequences and trap sequences differs and is SNMP specific - the SnmpPacket class hides the implementation details from the library user.
 
 **SNMP_OPAQUE** = 0x44<BR>
 **SNMP_NSAPADDR** = 0x45
@@ -186,7 +187,16 @@ Unimplemented data types.
 **SNMP_ERR_READONLY** = 0x04<BR>
 **SNMP_ERR_GENERR** = 0x05
 
-SNMP error codes returned/set in SnmpPacket.err_status (or SnmpPacket.err_id?).
+SNMP error codes returned/set in SnmpPacket.err_status.
+
+**SNMP_TRAPGENERIC_COLDSTART** = 0x0<BR>
+**SNMP_TRAPGENERIC_WARMSTART** = 0x1<BR>
+**SNMP_TRAPGENERIC_LINKDOWN** = 0x2<BR>
+**SNMP_TRAPGENERIC_LINKUP** = 0x3<BR>
+**SNMP_TRAPGENERIC_AUTHENTICATIONFAILURE** = 0x4<BR>
+**SNMP_TRAPGENERIC_EGPNEIGHBORLOSS** = 0x5
+
+SNMP generic trap codes.
 
 SnmpPacket class
 ---
@@ -196,20 +206,24 @@ Represents an SNMP data packet and expects to be instantiated in one of two ways
 
 To manipulate a raw-packet (passed as bytearray) captured from the network.
 
-**o=SnmpPacket([property=val, propery=val, ...])**
+**o=SnmpPacket(type=val[,property=val,...)**
 
-To create a custom packet from scratch.  Properties of the packet can either be set via the python properties of the returned object, or set in the call itself e.g. the following have the same net result:
+To create a custom packet from scratch.  The **type** property *must* be specified, other properties *may* be specified.  The following have the same net result:
 
 ```python
->>> o=usnmp.SnmpPacket()
+>>> o=usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
 >>> o.community='public'
->>> o.type=usnmp.SNMP_GETREQUEST
 >>> o.id=65255
 ```
 
 ```python
->>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
+>>> o=usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST, community='public', id=65255)
 ```
+
+SNMP_GETxxx type packets have different properties from SNMP_TRAP packets;
+
+- **set**ing a property not associated with the packet type is silently ignorred
+- **get**ing a property not associated with the packet type, returns **None**
 
 ####SnmpPacket.mib
 
