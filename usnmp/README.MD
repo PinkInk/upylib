@@ -1,13 +1,12 @@
-usnmp (Micro Simple Network Management Protocol library)
-===
+###usnmp (Micro Simple Network Management Protocol library)
+
 I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection.  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
 
 Before you dig in, know this;
-- It only supports SNMP Version 1 (unsecure).
+- Supports SNMP Version 1 (unsecure) only.
 - It's been (lightly) tested only on CPython and a WiPy, it'll be tested on an esp8266 when the (as of writing) in-progress kickstarter bears first-fruit, if my shipment ever arrives from China.
 - It's based on an immature understanding of SNMP in general.
 - It (as yet) has no concept of a MIB, just OIDs.
-- Due to its shortfalls it should probably have been called usnmppacket, usnmpv1packet or similar.
 - It can't interpret Opaque or NsapAddr encoding - I've yet to find a sample to analyse
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
 
@@ -15,8 +14,8 @@ TO DO:
 - compact MIB class, def parser
 - OIDs in VarBinds as callables (SNMP agent)
 
-Concepts
----
+###Concepts
+
 Derivatives of the words 'pack' and 'unpack' are used extensively throughout the library, conceptually;
 
 Something **packed** is a bytearray of SNMP formatted data either received from the network (socket) or ready to send over the network.
@@ -29,9 +28,11 @@ Something **unpacked** is a nested list structure representing valid SNMP data i
 
 The action of **unpack**ing something creates the **unpacked** form.
 
-Examples
----
+###Examples
+
 It's always better by example ...
+
+##Get some data from an agent
 
 Import the library, create a UDP socket;
 ```python
@@ -48,10 +49,10 @@ Construct an SNMP GetRequest packet to query a device supporting a read-only com
 
 First; create the packet object;
 ```python
->>> p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
+>>> p=usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST, community="public")
 ```
 
-*Note: SNMP packets contain a block ("VarBind"ings) of one or more OIDs each with an associated Type and Value pair.  When requesting (GetRequest or GetNextRequest) the values from an SNMP agent Type is ASN1_NULL, the corresponding python type/value for which is None.*
+*Note: SNMP packets contain a block ("VarBind"ings) of one or more OIDs each with an associated Type and Value pair.  When requesting (GetRequest or GetNextRequest) values from an agent Type must be set to ASN1_NULL (the corresponding python type/value for which is None).*
 
 Then load the packets objects varbindings with OIDs;
 ```python
@@ -88,8 +89,6 @@ Iterate over the good-stuff (aka the OIDs and values in the varbinding):
 For each OID in the VarBinding the device returned a type and a value (first and second values in the tuple, respectively).
 - 65 == 0x41 == SNMP_COUNTER, with an integer value
 - 67 == 0x43 == SNMP_TIMETICKS, with an integer value representing 100th's of seconds
-
-*Repeat the above and calculate the delta between the returned values, and divide by the delta in time - and you know the average number of octets that passed through the interfaces each 100th of a second.*
 
 Walk the entire MIB tree of a device:
 ```python
