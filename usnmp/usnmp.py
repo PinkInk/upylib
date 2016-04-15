@@ -96,7 +96,6 @@ class SnmpPacket():
     def err_id(self, v):
         if self.type != SNMP_TRAP:
             self.unpacked[1][2][1][2][1] = v
-
     #trap specific properties
     @property
     def enterprise(self):
