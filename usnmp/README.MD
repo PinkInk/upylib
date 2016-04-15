@@ -90,7 +90,8 @@ For each OID in the VarBinding the device returned a type and a value (first and
 - 65 == 0x41 == SNMP_COUNTER, with an integer value
 - 67 == 0x43 == SNMP_TIMETICKS, with an integer value representing 100th's of seconds
 
-Walk the entire MIB tree of a device:
+####Walk the entire database of an agent
+
 ```python
 >>> r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
 >>> oid = "1.3.6.1.2.1.1.1"
@@ -197,13 +198,13 @@ SNMP error codes returned/set in SnmpPacket.err_status.
 
 SNMP generic trap codes.
 
-SnmpPacket class
----
+###SnmpPacket class
+
 Represents an SNMP data packet and expects to be instantiated in one of two ways;
 
 **o=SnmpPacket(bytearray)**
 
-To manipulate a raw-packet (passed as bytearray) captured from the network.
+To manipulate a raw-packet (passed as bytearray) captured from the network socket.
 
 **o=SnmpPacket(type=val[,property=val,...)**
 
@@ -224,53 +225,53 @@ SNMP_GETxxx type packets have different properties from SNMP_TRAP packets;
 - **set**ing a property not associated with the packet type is silently ignorred
 - **get**ing a property not associated with the packet type, returns **None**
 
-####SnmpPacket.mib
+####SnmpPacket.varbinds
 
-An SnmpPackets' **mib** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding (t,v) tuple (t=Type, v=Value).  Sample manipulations:
+An SnmpPackets' **varbinds** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding (t,v) tuple (t=Type, v=Value).  Sample manipulations:
 
 ```python
 >>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
->>> o.mib
+>>> o.varbinds
 {}
->>> o.mib['1.3.6.1.2.1.1.9.1.3.9']=(usnmp.ASN1_INT, 0)
->>> o.mib
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.3.9'] = (usnmp.ASN1_INT, 0)
+>>> o.varbinds
 {'1.3.6.1.2.1.1.9.1.3.9': (2, 0)}
->>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
->>> o.mib
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = (usnmp.ASN1_OCTSTR, "hello world")
+>>> o.varbinds
 {'1.3.6.1.2.1.1.9.1.3.9': (2, 0), '1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
->>> for oid in o.mib:  print(oid, o.mib[oid])
+>>> for oid in o.varbinds:  print(oid, o.varbinds[oid])
 ...
 1.3.6.1.2.1.1.9.1.3.9 (2, 0)
 1.3.6.1.2.1.1.9.1.4.1 (4, 'hello world')
 ```
 
-Assignment to .mib will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
+Assignment to .varbinds will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
 
 ```python
 >>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
 >>> o.mib
 {}
->>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
->>> o.mib
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
+>>> o.varbinds
 {'1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
->>> o.mib['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "goodbye cruel world")
->>> o.mib
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = (usnmp.ASN1_OCTSTR, "goodbye cruel world")
+>>> o.varbinds
 {'1.3.6.1.2.1.1.9.1.4.1': (4, goodbye cruel world)}
 ```
 
-You can delete a mib from the database;
+You can delete a varbinding from the varbinds database;
 
 ```python
->>> o.mib['1.3.6.1.2.1.1.9.1.4.1']
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']
 (4, 'goodbye cruel world')
->>> del(o.mib['1.3.6.1.2.1.1.9.1.4.1'])
->>> o.mib['1.3.6.1.2.1.1.9.1.4.1']
+>>> del(o.varbinds['1.3.6.1.2.1.1.9.1.4.1'])
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']
 >>>
 ```
 
 ####SnmpPacket.unpacked
 
-Access to the internal nested list of lists represntation of the SNMP packet.  Don't mess with it directly, unless you're really sure you know what you're doing - the properties and .mib are better ways to manipulate it.
+Access to the internal nested list of lists represntation of the SNMP packet.  Don't mess with it directly, unless you're really sure you know what you're doing - the properties and .varbinds database are better ways to manipulate it.
 
 ```python
 >>> o.unpacked
@@ -280,7 +281,7 @@ Access to the internal nested list of lists represntation of the SNMP packet.  D
 
 ####SnmpPacket.packed
 
-Returns a bytearray representation of the current state of the object, fit for sending on the networkself.
+Returns a bytearray representation of the current state of the object, fit for sending on the network.
 
 ```python
 >>> o.packed
@@ -291,15 +292,29 @@ bytearray(b'05\x02\x01\x00\x04\x06public\xa0(\x02\x03\x00\xfe\xe7\x02\x01\x00\x0
 
 **SnmpPacket.ver** _= int_ - get/set the SNMP Version (only Version 1 supported, via SNMP_VER1).
 
-**SnmpPacket.community** _=str_ - get/set the community string.
+**SnmpPacket.community** _= str_ - get/set the community string.
 
-**SnmpPacket.type** _=int_ - get/set the packet type (e.g. SNMP_GETREQUEST, SNMP_GETRESPONSE etc.).
+**SnmpPacket.type** _= int_ - get/set the packet type (e.g. SNMP_GETREQUEST, SNMP_GETRESPONSE etc.).
 
-**SnmpPacket.id** _=int_ - get/set the packet request_id.
+####SnmpPacket get and set type packet specific properties
 
-**SnmpPacket.err_status** _=int_ - get/set the error_status (e.g. SNMP_ERR_NOERROR, SNMP_ERR_TOOBIG etc.).
+**SnmpPacket.id** _= int_ - get/set the packet request_id.
 
-**SnmpPAcket.err_id** _=int_ - get/set the error_id.
+**SnmpPacket.err_status** _= int_ - get/set the error_status (e.g. SNMP_ERR_NOERROR, SNMP_ERR_TOOBIG etc.).
+
+**SnmpPAcket.err_id** _= int_ - get/set the error_id.
+
+####SnnpPacket trap type packet specific properties
+
+**SnmpPacket.enterprise** _= str_ - get/set the trap packet enterprise OID.  A string in a dot-delimited OID standard format without leading dot e.g. 1.3.6.1.4.1.312785.1
+
+**SnmpPacket.agent_addr** _= str_ - get/set the trap packet agent IP address. A string in a dot delimited standard IP4 address format e.g. 127.0.0.1
+
+**SnmpPacket.generic_trap** _= int_ - get/set the trap packet generic trap type (e.g. SNMP_TRAPGENERIC_COLDSTART, SNMP_TRAPGENERIC_WARMSTART, etc.)
+
+**SnmpPacket.specific_trap** _= int_ - get/set the trap packet specific trap type.
+
+**SnmpPacket.time_stamp** _= int_ - get/set the the trap packet time stamp.
 
 Functions
 ---------
