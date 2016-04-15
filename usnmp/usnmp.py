@@ -19,6 +19,7 @@ ASN1_OCTSTR_BIN = 0xff
 SNMP_GETREQUEST = 0xa0
 SNMP_GETRESPONSE = 0xa2
 SNMP_GETNEXTREQUEST = 0xa1
+SNMP_TRAP = 0xff #placeholder, don't know trap typecode
 
 #SNMP specific integer types
 SNMP_COUNTER = 0x41
@@ -43,34 +44,65 @@ class SnmpPacket():
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) is bytearray:
             self.unpacked = unpack(args[0])
-        elif 'type' in kwargs:
-            self.unpacked = unpack(_SNMP_PACKET_PROTO)
+        elif "type" in kwargs:
+            if kwargs["type"] in \
+                    [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+                self.unpacked = unpack(_SNMP_GETSET_PROTOTYPE)
+                self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
+            elif kwargs["type"] == 'SNMP_TRAP':
+                raise Exception("Trap type not implememnted")
+                #self.unpacked = unpack(_SNMP_TUPLE_PROTOTYPE)
+                #self.mib = _SnmpPacketMib(self.unpacked[--different path--])
+            else:
+                raise Exception("Unrecognised type")
+            #non type specific kwargs silently ignored by properties
+            for arg in kwargs:
+                if arg not in ["mib", "unpacked", "packed"] \
+                        and hasattr(self, arg):
+                    setattr(self, arg, kwargs[arg])
         else:
-            raise Exception("bytearray data or type property required")
-        #common properties
-        for arg in ['ver', 'community', 'type']:
-            setattr(self, arg, kwargs[arg])
+            raise Exception("Bytearray data or type property required")
         if self.type in \
                 [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            #set frames have same PDU format, when implemented
-            @property
-            def id(self): return self.unpacked[1][2][1][0][1]
-            @id.setter
-            def id(self, v): self.unpacked[1][2][1][0][1] = v
-            @property
-            def err_status(self): return self.unpacked[1][2][1][1][1]
-            @err_status.setter
-            def err_status(self, v): self.unpacked[1][2][1][1][1] = v
-            @property
-            def err_id(self): return self.unpacked[1][2][1][2][1]
-            @err_id.setter
-            def err_id(self, v): self.unpacked[1][2][1][2][1] = v
             self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
-            #specific properties
-            for arg in ['id', 'err_status', 'err_id']:
-                setattr(self, arg, kwargs[arg])
+        elif self.type == SNMP_TRAP:
+            raise Exception("Trap type not implememnted")
         else:
-            #prepare to handle different format of SNMPv1 PDU
+            raise Exception("Unrecognised type")
+    #trap specific properties
+    #  -- to be implemented --
+    #get|set specific properties
+    @property
+    def id(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            return self.unpacked[1][2][1][0][1]
+    @id.setter
+    def id(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            self.unpacked[1][2][1][0][1] = v
+    @property
+    def err_status(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            return self.unpacked[1][2][1][1][1]
+    @err_status.setter
+    def err_status(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            self.unpacked[1][2][1][1][1] = v
+    @property
+    def err_id(self):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            return self.unpacked[1][2][1][2][1]
+    @err_id.setter
+    def err_id(self, v):
+        if self.type in \
+                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+            self.unpacked[1][2][1][2][1] = v
+    #common properties
     @property
     def packed(self): return pack(self.unpacked)
     @property
@@ -287,8 +319,8 @@ def hex2str(v):
         ptr += 2
     return s
 
-#template packet
-_SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
+#template packets
+_SNMP_GETSET_PROTOTYPE = pack_tlv(ASN1_SEQ,[
     pack_tlv(ASN1_INT, SNMP_VER1),
     pack_tlv(ASN1_OCTSTR, ""),
     pack_tlv(SNMP_GETREQUEST,[
@@ -298,3 +330,4 @@ _SNMP_PACKET_PROTO = pack_tlv(ASN1_SEQ,[
         pack_tlv(ASN1_SEQ,[])
     ])
 ])
+_SNMP_TUPLE_PROTOTYPE = None #not implemented yet
