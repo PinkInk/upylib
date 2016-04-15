@@ -19,7 +19,7 @@ ASN1_OCTSTR_BIN = 0xff
 SNMP_GETREQUEST = 0xa0
 SNMP_GETRESPONSE = 0xa2
 SNMP_GETNEXTREQUEST = 0xa1
-SNMP_TRAP = 0xff #placeholder, don't know trap typecode
+SNMP_TRAP = 0xa4
 
 #SNMP specific integer types
 SNMP_COUNTER = 0x41
@@ -39,106 +39,144 @@ SNMP_ERR_BADVALUE = 0x03
 SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
+#SNMP Generic Trap codes
+SNMP_TRAPGENERIC_COLDSTART = 0x0
 
 class SnmpPacket():
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) is bytearray:
             self.unpacked = unpack(args[0])
         elif "type" in kwargs:
-            if kwargs["type"] in \
-                    [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
+            if kwargs["type"] != SNMP_TRAP:
+                #get/set types
                 self.unpacked = unpack(_SNMP_GETSET_PROTOTYPE)
-                self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
-            elif kwargs["type"] == 'SNMP_TRAP':
-                raise Exception("Trap type not implememnted")
-                #self.unpacked = unpack(_SNMP_TUPLE_PROTOTYPE)
-                #self.mib = _SnmpPacketMib(self.unpacked[--different path--])
+            elif kwargs["type"] == SNMP_TRAP:
+                self.unpacked = unpack(_SNMP_TUPLE_PROTOTYPE)
             else:
-                raise Exception("Unrecognised type")
-            #non type specific kwargs silently ignored by properties
+                raise Exception("Invalid type")
             for arg in kwargs:
-                if arg not in ["mib", "unpacked", "packed"] \
+                if arg not in ["varbinds", "unpacked", "packed"] \
                         and hasattr(self, arg):
+                    #non type specific kwargs silently ignored by properties
                     setattr(self, arg, kwargs[arg])
         else:
-            raise Exception("Bytearray data or type property required")
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST]:
-            self.mib = _SnmpPacketMib(self.unpacked[1][2][1][3][1])
-        elif self.type == SNMP_TRAP:
-            raise Exception("Trap type not implememnted")
+            raise Exception("Bytearray or type=xxx required")
+        if self.type != SNMP_TRAP:
+            #get/set types
+            self.varbinds = _VarBinds(self.unpacked[1][2][1][3][1])
         else:
-            raise Exception("Unrecognised type")
-    #trap specific properties
-    #  -- to be implemented --
+            self.varbinds = _VarBinds(self.unpacked[1][2][1][5][1])
     #get|set specific properties
     @property
     def id(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             return self.unpacked[1][2][1][0][1]
     @id.setter
     def id(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             self.unpacked[1][2][1][0][1] = v
     @property
     def err_status(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             return self.unpacked[1][2][1][1][1]
     @err_status.setter
     def err_status(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             self.unpacked[1][2][1][1][1] = v
     @property
     def err_id(self):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             return self.unpacked[1][2][1][2][1]
     @err_id.setter
     def err_id(self, v):
-        if self.type in \
-                [SNMP_GETREQUEST, SNMP_GETNEXTREQUEST, SNMP_GETRESPONSE]:
+        if self.type != SNMP_TRAP:
             self.unpacked[1][2][1][2][1] = v
+
+    #trap specific properties
+    @property
+    def enterprise(self):
+        if self.type == SNMP_TRAP:
+            return self.unpacked[1][2][1][0][1]
+    @enterprise.setter
+    def enterprise(self, v):
+        if self.type == SNMP_TRAP:
+            self.unpacked[1][2][1][0][1] = v
+    @property
+    def agent_addr(self):
+        if self.type == SNMP_TRAP:
+            return self.unpacked[1][2][1][1][1]
+    @agent_addr.setter
+    def agent_addr(self, v):
+        if self.type == SNMP_TRAP:
+            self.unpacked[1][2][1][1][1] = v
+    @property
+    def generic_trap(self):
+        if self.type == SNMP_TRAP:
+            return self.unpacked[1][2][1][2][1]
+    @generic_trap.setter
+    def generic_trap(self, v):
+        if self.type == SNMP_TRAP:
+            self.unpacked[1][2][1][2][1] = v
+    @property
+    def specific_trap(self):
+        if self.type == SNMP_TRAP:
+            return self.unpacked[1][2][1][3][1]
+    @specific_trap.setter
+    def specific_trap(self, v):
+        if self.type == SNMP_TRAP:
+            self.unpacked[1][2][1][3][1] = v
+    @property
+    def time_stamp(self):
+        if self.type == SNMP_TRAP:
+            return self.unpacked[1][2][1][4][1]
+    @time_stamp.setter
+    def time_stamp(self, v):
+        if self.type == SNMP_TRAP:
+            self.unpacked[1][2][1][4][1] = v
     #common properties
     @property
-    def packed(self): return pack(self.unpacked)
+    def packed(self):
+        return pack(self.unpacked)
     @property
-    def ver(self): return self.unpacked[1][0][1]
+    def ver(self):
+        return self.unpacked[1][0][1]
     @ver.setter
-    def ver(self, v): self.unpacked[1][0][1] = v
+    def ver(self, v):
+        self.unpacked[1][0][1] = v
     @property
-    def community(self): return self.unpacked[1][1][1]
+        def community(self):
+        return self.unpacked[1][1][1]
     @community.setter
-    def community(self, v): self.unpacked[1][1][1] = v
+    def community(self, v):
+        self.unpacked[1][1][1] = v
     @property
-    def type(self): return self.unpacked[1][2][0]
+    def type(self):
+        return self.unpacked[1][2][0]
     @type.setter
-    def type(self, v): self.unpacked[1][2][0] = v
+    def type(self, v):
+        self.unpacked[1][2][0] = v
 
 
-class _SnmpPacketMib():
-    def __init__(self, mib):
-        self.mib = mib
+class _VarBinds():
+    def __init__(self, vbs):
+        self.vbs = vbs
     def __getitem__(self, oid):
-        for oid_tv in self.mib:
+        for oid_tv in self.vbs:
             if oid_tv[1][0][1] == oid:
                 return oid_tv[1][1][0], oid_tv[1][1][1]
         return None
     def __setitem__(self, oid, tv):
         existing = False
-        for oid_tv in self.mib:
+        for oid_tv in self.vbs:
             if oid_tv[1][0][1] == oid:
                 existing = True
                 oid_tv[1][1] = tv
                 break
         if not existing:
-            self.mib.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
+            self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
     def __repr__(self):
         s = "{"
-        for oid_tv in self.mib:
+        for oid_tv in self.vbs:
             if len(s) > 1:
                 s += ", "
             s += "'" + oid_tv[1][0][1] + "': (" + \
@@ -147,12 +185,12 @@ class _SnmpPacketMib():
                 #tuple(oid_tv[1][1]).__repr__()
         return s + "}"
     def __iter__(self):
-        for oid_tv in self.mib:
+        for oid_tv in self.vbs:
             yield oid_tv[1][0][1]
     def __delitem__(self, oid):
-        for i, oid_tv in enumerate(self.mib):
+        for i, oid_tv in enumerate(self.vbs):
             if oid_tv[1][0][1] == oid:
-                del(self.mib[i])
+                del(self.vbs[i])
 
 def pack(p):
     t,v = p
@@ -166,7 +204,7 @@ def pack(p):
 def pack_tlv(t, v):
     b=bytearray()
     if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_TRAP):
         for block in v:
             b.extend(block)
     #octet strings that unpack as python strings
@@ -243,7 +281,7 @@ def unpack_tlv(b):
     ptr +=  1 + l_incr
     #sequence types
     if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST):
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_TRAP):
         v = []
         while ptr < len(b):
             lb, lb_incr = unpack_len( b[ptr:] )
@@ -311,6 +349,7 @@ def unpack_len(v):
     else:
         return v[1], 1
 
+#utilities
 def hex2str(v):
     ptr = 0
     s = ""
@@ -319,7 +358,16 @@ def hex2str(v):
         ptr += 2
     return s
 
-#template packets
+#convert a packet from wireshark (Hex Stream string) to bytearray
+def wireshark_hexstream(s):
+    b = bytearray()
+    ptr = 0
+    while ptr<len(s):
+        b.append(int(s[ptr:ptr+2],16))
+        ptr += 2
+    return b
+
+#internals - template packets
 _SNMP_GETSET_PROTOTYPE = pack_tlv(ASN1_SEQ,[
     pack_tlv(ASN1_INT, SNMP_VER1),
     pack_tlv(ASN1_OCTSTR, ""),
@@ -330,4 +378,16 @@ _SNMP_GETSET_PROTOTYPE = pack_tlv(ASN1_SEQ,[
         pack_tlv(ASN1_SEQ,[])
     ])
 ])
-_SNMP_TUPLE_PROTOTYPE = None #not implemented yet
+_SNMP_TUPLE_PROTOTYPE = pack_tlv(ASN1_SEQ,[
+    pack_tlv(ASN1_INT, SNMP_VER1),
+    pack_tlv(ASN1_OCTSTR, ""),
+    pack_tlv(SNMP_TRAP,[
+        pack_tlv(ASN1_OID,"1.3.6.1.4.1"),
+        pack_tlv(SNMP_IPADDR,'127.0.0.1'),
+        pack_tlv(ASN1_INT,0),
+
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_INT,0),
+        pack_tlv(ASN1_SEQ,[])
+    ])
+])
