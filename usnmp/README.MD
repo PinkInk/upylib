@@ -316,35 +316,54 @@ bytearray(b'05\x02\x01\x00\x04\x06public\xa0(\x02\x03\x00\xfe\xe7\x02\x01\x00\x0
 
 **SnmpPacket.time_stamp** _= int_ - get/set the the trap packet time stamp.
 
-Functions
----------
+###Utility Functions
 
-The library contains a few exposed functions normally used by the internals of the  SnmpPacket class to pack/unpack binary data from/to the nested list format.  These are exposed because they may be useful for more refined manipulation of SNMP data.
+#####hex2str(str)
+
+Accepts an ASN1_OCSTR unpacked string as a list of pairs of hex values for character codes and returns a python string.
+
+#####wireshark_hexstream(str)
+
+Accepts a string of hex values copied from a Wireshark SNMP packet capture, without the IP header, as a Hex Streamself.
+
+Returns a bytearray suitable for unpacking with this library.
+
+```python
+>>> s="3081d20201000403414643a281c702043821eea10201000201003081b8300f060a2b0601020102020101010201013013060a2b0601020102020102010405566c616e31300f060a2b0601020102020103010201353010060a2b060102010202010401020205dc3012060a2b06010201020201050142043b9aca003014060a2b0601020102020106010406001b8ff4d1c0300f060a2b060102010202010701020102300f060a2b0601020102020108010201023010060a2b06010201020201090143022c06300f060a2b060102010202010a01410100"
+>>> s=usnmp.wireshark_hexstream(s)
+>>> p=usnmp.SnmpPacket(s)
+>>> p.varbinds
+{'1.3.6.1.2.1.2.2.1.1.1': (2, 1), '1.3.6.1.2.1.2.2.1.2.1': (4, Vlan1), '1.3.6.1.2.1.2.2.1.3.1': (2, 53), '1.3.6.1.2.1.2.2.1.4.1': (2, 1500), '1.3.6.1.2.1.2.2.1.5.1': (66, 1000000000), '1.3.6.1.2.1.2.2.1.6.1': (255, 001b8ff4d1c0), '1.3.6.1.2.1.2.2.1.7.1': (2, 2), '1.3.6.1.2.1.2.2.1.8.1': (2, 2), '1.3.6.1.2.1.2.2.1.9.1': (67, 11270), '1.3.6.1.2.1.2.2.1.10.1': (65, 0)}
+>>>
+```  
+
+###Raw packing and unpacking functions
+The library contains a few exposed functions normally used by the internals of the SnmpPacket class to pack/unpack binary data from/to the nested list format.  These are exposed because they may be useful for more refined manipulation of SNMP data.
 
 Data is encoded in SNMP packets as nested Type,Length,Value blocks (nested by the ASN1_SEQ and its SNMP specfic derived types), these functions convert between data in this raw format and python lists of Type,Value.
 
-####unpack_len(bytearray)
+#####unpack_len(bytearray)
 
 Passed a bytearray representing a raw-packet, or a subset of one on a valid boundary and returns a tuple of the length of the first payload in bytes and the length of the length encoding itself in bytes.  The length of the length encoding is required to allow the next level unpacker to skip past the length to the payload (length in bytes of length encoding can vary).
 
-####unpack_tlv(bytearray)
+#####unpack_tlv(bytearray)
 
 Passed a bytearray representing a raw-packet, or a subset of one on a valid boundary and returns a list of Type, Value (as a python object - refer Constants & related considerations).
 
-####unpack(bytearray)
+#####unpack(bytearray)
 
 Passed a bytearray representing a raw-packet, or a subset of one on a valid boundary, recursively passes it through unpack_tlv and returns a fully unpacked list of nested lists.
 
-####pack_len(int)
+#####pack_len(int)
 
 Passed a payload length as integer and returns a bytearray encoding of that length.
 
-####pack_tlv(int, payload)
+#####pack_tlv(int, payload)
 
 Passed an SNMP type as integer and a payload as a relevant python object and returns an bytearray encoding of the blockself.
 
 For ASN1_SEQ, and its related SNMP specific derived types, payload must be a list of pre-packed bytearrays, via pack_tlv.
 
-####pack(list)
+#####pack(list)
 
 Passed an unpacked python list of nested lists representation of an SNMP packet, recursively calls pack_tlv and returns a bytearray.
