@@ -1,3 +1,18 @@
+import socket
+from sys import implementation
+
+if implementation.name == "micropython":
+    from machine import rng
+    def _id(): 
+        return machine.rng()
+elif implementation.name == "cpython":
+    from random import random
+    def _id():
+        return int(random()*0xffffffff)
+else:
+    raise Exception("unknown python implementation")
+
+
 #SNMP versions
 SNMP_VER1 = 0x00
 
@@ -47,7 +62,30 @@ SNMP_TRAPGENERIC_LINKUP = 0x3
 SNMP_TRAPGENERIC_AUTHENTICATIONFAILURE = 0x4
 SNMP_TRAPGENERIC_EGPNEIGHBORLOSS = 0x5
 
-class SnmpPacket():
+def poll(agent=None, community="", oids=None, timeout=1):
+    if agent==None or community=="" or oids==None:
+        raise Exception("agent ip, community and oid to poll required")
+    req = SnmpPacket(type=SNMP_GETREQUEST, community=community)
+    if type(oids) is list:
+        for oid in oids:
+            req.varbinds[oid] = ASN1_NULL, None
+    else:
+        req.varbinds[oids] = ASN1_NULL, None
+    req.id = _id()
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(timeout)
+    s.sendto(req.packed, (agent, 161))
+    d = s.recvfrom(1024)
+    resp = SnmpPacket(d[0])
+    if resp.id != req.id:
+        raise Exception("invalid request_id from agent")
+    v = {}
+    for oid in resp.varbinds:
+        v[oid] = resp.varbinds[oid]
+    return v
+    
+
+class SnmpPacket:
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray):
             self.unpacked = unpack(args[0])
@@ -161,7 +199,7 @@ class SnmpPacket():
         self.unpacked[1][2][0] = v
 
 
-class _VarBinds():
+class _VarBinds:
     def __init__(self, vbs):
         self.vbs = vbs
     def __getitem__(self, oid):
