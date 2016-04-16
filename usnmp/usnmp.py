@@ -49,7 +49,7 @@ SNMP_TRAPGENERIC_EGPNEIGHBORLOSS = 0x5
 
 class SnmpPacket():
     def __init__(self, *args, **kwargs):
-        if len(args) == 1 and type(args[0]) is bytearray:
+        if len(args) == 1 and type(args[0]) in (bytes, bytearray):
             self.unpacked = unpack(args[0])
         elif "type" in kwargs:
             if kwargs["type"] != SNMP_TRAP:

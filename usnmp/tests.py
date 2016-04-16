@@ -44,30 +44,30 @@ s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.settimeout(1)
 
 p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
-mibs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
-for mib in mibs:
-    p.mib[mib] = (usnmp.ASN1_NULL, None)
+vbs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
+for vb in vbs:
+    p.varbinds[vb] = (usnmp.ASN1_NULL, None)
 s.sendto(p.packed, (b"192.168.1.1", 161))
 d=s.recvfrom(1024)
 r=usnmp.SnmpPacket(d[0])
 print(r.community)
 print(r.ver)
-for oid in r.mib:
-    print(oid, r.mib[oid])
+for oid in r.varbinds:
+    print(oid, r.varbinds[oid])
 
 
 r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
-mib = "1.3.6.1.2.1.1.1"
-r.mib[mib]=(usnmp.ASN1_NULL,None)
+oid = "1.3.6.1.2.1.1.1"
+r.varbinds[oid]=(usnmp.ASN1_NULL,None)
 s.sendto(r.packed, (b'192.168.1.1',161))
 d=s.recvfrom(1024)
 while True:
     r=usnmp.SnmpPacket(d[0])
-    if r.mib[mib] != None:
+    if r.varbinds[oid] != None:
         break
     else:
-        for i in r.mib: mib=i
-    print(r.mib)
+        for i in r.varbinds: oid=i
+    print(r.varbinds)
     r.type=usnmp.SNMP_GETNEXTREQUEST
-    s.sendto(r.usnmp.packed, (b'192.168.1.1',161))
+    s.sendto(r.packed, (b'192.168.1.1',161))
     d=s.recvfrom(1024)
