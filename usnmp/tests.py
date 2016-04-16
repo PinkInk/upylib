@@ -1,4 +1,4 @@
-import "..\\usnmp.py"
+import usnmp
 import socket
 
 #single item get-request
