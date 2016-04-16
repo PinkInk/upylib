@@ -148,7 +148,7 @@ class SnmpPacket():
     def ver(self, v):
         self.unpacked[1][0][1] = v
     @property
-        def community(self):
+    def community(self):
         return self.unpacked[1][1][1]
     @community.setter
     def community(self, v):
