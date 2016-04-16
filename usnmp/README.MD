@@ -12,7 +12,6 @@ Before you dig in, know this;
 
 TO DO:
 - compact MIB class, def parser
-- OIDs in VarBinds as callables (SNMP agent)
 
 ###Concepts
 
