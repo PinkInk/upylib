@@ -227,36 +227,41 @@ SNMP_GETxxx type packets have different properties from SNMP_TRAP packets;
 
 ####SnmpPacket.varbinds
 
-An SnmpPackets' **varbinds** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding (t,v) tuple (t=Type, v=Value).  Sample manipulations:
+An SnmpPackets' **varbinds** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding;
+
+- (t,v) tuple (t=Type, v=Value), or
+- a callable that returns a (t,v) tuple  
+
+Assignment to .varbinds will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
+
+Sample manipulations:
 
 ```python
 >>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
 >>> o.varbinds
 {}
->>> o.varbinds['1.3.6.1.2.1.1.9.1.3.9'] = (usnmp.ASN1_INT, 0)
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.3.9'] = usnmp.ASN1_INT, 0
 >>> o.varbinds
 {'1.3.6.1.2.1.1.9.1.3.9': (2, 0)}
->>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = (usnmp.ASN1_OCTSTR, "hello world")
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = usnmp.ASN1_OCTSTR, "hello world"
 >>> o.varbinds
-{'1.3.6.1.2.1.1.9.1.3.9': (2, 0), '1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
+{'1.3.6.1.2.1.1.9.1.3.9': (2, 0), '1.3.6.1.2.1.1.9.1.4.1': (4, 'hello world')}
 >>> for oid in o.varbinds:  print(oid, o.varbinds[oid])
 ...
 1.3.6.1.2.1.1.9.1.3.9 (2, 0)
 1.3.6.1.2.1.1.9.1.4.1 (4, 'hello world')
-```
-
-Assignment to .varbinds will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
-
-```python
->>> o=usnmp.SnmpPacket(community='public', type=usnmp.SNMP_GETREQUEST, id=65255)
->>> o.mib
-{}
->>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']=(usnmp.ASN1_OCTSTR, "hello world")
+>>> def test(): return usnmp.ASN1_OCTSTR, "goodbye cruel world"
+...
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = test
 >>> o.varbinds
-{'1.3.6.1.2.1.1.9.1.4.1': (4, hello world)}
->>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1'] = (usnmp.ASN1_OCTSTR, "goodbye cruel world")
->>> o.varbinds
-{'1.3.6.1.2.1.1.9.1.4.1': (4, goodbye cruel world)}
+{'1.3.6.1.2.1.1.9.1.3.9': (2, 0), '1.3.6.1.2.1.1.9.1.4.1': <function test at 0x200366e0>}
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']
+<function test at 0x200366e0>
+>>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']()
+(4, 'goodbye cruel world')
+>>> usnmp.unpack(o.packed)
+[48, [[2, 0], [4, 'public'], [160, [[2, 65255], [2, 0], [2, 0], [48, [[48, [[6, '1.3.6.1.2.1.1.9.1.3.9'], [2, 0]]], [48, [[6, '1.3.6.1.2.1.1.9.1.4.1'], [4, 'goodbye cruel world']]]]]]]]]
+>>>
 ```
 
 You can delete a varbinding from the varbinds database;
@@ -268,6 +273,7 @@ You can delete a varbinding from the varbinds database;
 >>> o.varbinds['1.3.6.1.2.1.1.9.1.4.1']
 >>>
 ```
+
 
 ####SnmpPacket.unpacked
 
@@ -287,6 +293,8 @@ Returns a bytearray representation of the current state of the object, fit for s
 >>> o.packed
 bytearray(b'05\x02\x01\x00\x04\x06public\xa0(\x02\x03\x00\xfe\xe7\x02\x01\x00\x02\x01\x000\x1b0\x19\x06\n+\x06\x01\x02\x01\x01\t\x01\x04\x01\x04\x0bhello world')
 ```
+
+If the SnmpPacket.varbinds database contains callables, they will be evaluated and the point-in-time values returned by the callable(s) will be packed into the bytearray.
 
 ####SnmpPacket general properties
 
@@ -359,8 +367,12 @@ Passed a bytearray representing a raw-packet, or a subset of one on a valid boun
 Passed a payload length as integer and returns a bytearray encoding of that length.
 
 #####pack_tlv(int, payload)
+#####pack_tlv(callable)
 
-Passed an SNMP type as integer and a payload as a relevant python object and returns an bytearray encoding of the blockself.
+Passed an SNMP type as integer and a payload as a relevant python object and returns a bytearray encoding of the block.
+
+**Or;** passed a callable that returns an SNMP type as integer and payload as relevant python objecct type and returns a bytearray encoding of the block.
+
 
 For ASN1_SEQ, and its related SNMP specific derived types, payload must be a list of pre-packed bytearrays, via pack_tlv.
 

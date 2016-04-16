@@ -167,7 +167,10 @@ class _VarBinds():
     def __getitem__(self, oid):
         for oid_tv in self.vbs:
             if oid_tv[1][0][1] == oid:
-                return oid_tv[1][1][0], oid_tv[1][1][1]
+                if callable(oid_tv[1][1]):
+                    return oid_tv[1][1]
+                else:
+                    return oid_tv[1][1][0], oid_tv[1][1][1]
         return None
     def __setitem__(self, oid, tv):
         existing = False
@@ -177,16 +180,21 @@ class _VarBinds():
                 oid_tv[1][1] = tv
                 break
         if not existing:
-            self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
+            if callable(tv):
+                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], tv]])            
+            else:
+                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
     def __repr__(self):
         s = "{"
         for oid_tv in self.vbs:
             if len(s) > 1:
                 s += ", "
-            s += "'" + oid_tv[1][0][1] + "': (" + \
-                 str(oid_tv[1][1][0]) + ", " + str(oid_tv[1][1][1]) + ")"
-                #micropython tuple has no __repr__()
-                #tuple(oid_tv[1][1]).__repr__()
+            s += "'" + oid_tv[1][0][1] + "': "
+            if callable(oid_tv[1][1]):
+                s += repr(oid_tv[1][1])
+            else:
+                #force to look like tuple returned by __getitem__
+                s += repr(oid_tv[1][1]).replace('[','(').replace(']',')')
         return s + "}"
     def __iter__(self):
         for oid_tv in self.vbs:
@@ -197,7 +205,10 @@ class _VarBinds():
                 del(self.vbs[i])
 
 def pack(p):
-    t,v = p
+    if callable(p):
+        t,v = p()
+    else:
+        t,v = p
     if type(v) is list:
         #deepcopy the list
         v = v[:]
@@ -205,8 +216,10 @@ def pack(p):
             v[i] = pack(val)
     return pack_tlv(t,v)
 
-def pack_tlv(t, v):
+def pack_tlv(t, v=None):
     b=bytearray()
+    if callable(t) and v==None:
+        t,v = t()
     if t in (ASN1_SEQ, \
              SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_TRAP):
         for block in v:
