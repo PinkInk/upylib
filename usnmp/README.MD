@@ -229,9 +229,9 @@ SNMP_GETxxx type packets have different properties from SNMP_TRAP packets;
 An SnmpPackets' **varbinds** property behaves similarly to a dictionary (although it is actually manipulating the structure in SnmpPacket.unpacked) and stores OIDs and their corresponding;
 
 - (t,v) tuple (t=Type, v=Value), or
-- a callable that returns a (t,v) tuple  
+- a callable that returns a (t,v) tuple
 
-Assignment to .varbinds will add an oid to the database if it doesn't exist, or change it's (t,v) if it does:
+Assignment to .varbinds will add an oid to the database if it doesn't exist, or change it's (t,v), or callable, if it does.
 
 Sample manipulations:
 
@@ -287,6 +287,8 @@ Access to the internal nested list of lists represntation of the SNMP packet.  D
 ####SnmpPacket.packed
 
 Returns a bytearray representation of the current state of the object, fit for sending on the network.
+
+If .varbinds contains callables they are evaluated when you get this property, and whatever value the callable returned is packed into the bytearray.
 
 ```python
 >>> o.packed
