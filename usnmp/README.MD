@@ -166,8 +166,9 @@ NULL data type, value reprsented by a python **None**.
 
 **ASN1_SEQ** = 0x30<BR>
 **SNMP_GETREQUEST** = 0xa0<BR>
-**SNMP_GETRESPONSE** = 0xa2<BR>
 **SNMP_GETNEXTREQUEST** = 0xa1<BR>
+**SNMP_GETRESPONSE** = 0xa2<BR>
+**SNMP_SETREQUEST** = 0xa3<BR>
 **SNMP_TRAP** == 0xa4
 
 ASN.1 sequence of data blocks type and SNMP derived types, value represented by a python **List**.
