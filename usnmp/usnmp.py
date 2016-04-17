@@ -17,8 +17,9 @@ ASN1_OCTSTR_BIN = 0xff
 
 #SNMP specific SEQUENCE types
 SNMP_GETREQUEST = 0xa0
-SNMP_GETRESPONSE = 0xa2
 SNMP_GETNEXTREQUEST = 0xa1
+SNMP_GETRESPONSE = 0xa2
+SNMP_SETREQUEST = 0xa3
 SNMP_TRAP = 0xa4
 
 #SNMP specific integer types
@@ -40,7 +41,7 @@ SNMP_ERR_READONLY = 0x04
 SNMP_ERR_GENERR = 0x05
 
 #SNMP Generic Trap codes
-SNMP_TRAPGENERIC_COLDSTART = 0x0
+SNMP_TRAPGENERIC_COLDSTART =0x0
 SNMP_TRAPGENERIC_WARMSTART = 0x1
 SNMP_TRAPGENERIC_LINKDOWN = 0x2
 SNMP_TRAPGENERIC_LINKUP = 0x3
@@ -222,7 +223,8 @@ def pack_tlv(t, v=None):
     if callable(t) and v==None:
         t,v = t()
     if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_TRAP):
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, \
+             SNMP_SETREQUEST, SNMP_TRAP):
         for block in v:
             b.extend(block)
     #octet strings that unpack as python strings
@@ -299,7 +301,8 @@ def unpack_tlv(b):
     ptr +=  1 + l_incr
     #sequence types
     if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_TRAP):
+             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, \
+             SNMP_SETREQUEST, SNMP_TRAP):
         v = []
         while ptr < len(b):
             lb, lb_incr = unpack_len( b[ptr:] )
