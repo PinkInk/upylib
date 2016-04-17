@@ -182,7 +182,7 @@ class _VarBinds:
                 break
         if not existing:
             if callable(tv):
-                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], tv]])            
+                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], tv]])
             else:
                 self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
     def __repr__(self):
@@ -258,7 +258,7 @@ def pack_tlv(t, v=None):
         #first two indexes are encoded in single byte
         b.append(oid[0]*40 + oid[1])
         for id in oid[2:]:
-            if 0 <= id < 0x7f:
+            if 0 <= id <= 0x7f:
                 b.append(id)
             #check RFC's for correct upperbound
             elif 0x7f < id < 0x7fff:
@@ -312,7 +312,7 @@ def unpack_tlv(b):
         #  return a non-standard type-code as a hint to pack_tlv
         #else decode as python string
         printable = True
-        for byte in b[ptr:ptr+1]:
+        for byte in b[ptr:]:
             if not 128>byte>31:
                 printable = False
                 break
@@ -409,3 +409,4 @@ _SNMP_TUPLE_PROTOTYPE = pack_tlv(ASN1_SEQ,[
         pack_tlv(ASN1_SEQ,[])
     ])
 ])
+
