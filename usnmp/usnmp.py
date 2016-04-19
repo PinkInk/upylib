@@ -1,52 +1,57 @@
+from sys import implementation
+if implementation.name == "cpython":
+    def const(val):
+        return val
+
 #SNMP versions
-SNMP_VER1 = 0x00
+SNMP_VER1 = const(0x00)
 
 #ASN.1 primitives
-ASN1_INT = 0x02
-ASN1_OCTSTR = 0x04 #OctetString
-ASN1_OID = 0x06 #ObjectIdentifier
-ASN1_NULL = 0x05
-ASN1_SEQ = 0x30 #sequence
+ASN1_INT = const(0x02)
+ASN1_OCTSTR = const(0x04)
+ASN1_OID = const(0x06)
+ASN1_NULL = const(0x05)
+ASN1_SEQ = const(0x30)
 
 #library fudge specific binary octstr
 #------------------------------------
 #labelling of binary decoded ocstr vals
 #as discrete from string decoded is req'd
 #to allow unpack/pack to return same result
-ASN1_OCTSTR_BIN = 0xff
+ASN1_OCTSTR_BIN = const(0xff)
 
 #SNMP specific SEQUENCE types
-SNMP_GETREQUEST = 0xa0
-SNMP_GETNEXTREQUEST = 0xa1
-SNMP_GETRESPONSE = 0xa2
-SNMP_SETREQUEST = 0xa3
-SNMP_TRAP = 0xa4
+SNMP_GETREQUEST = const(0xa0)
+SNMP_GETNEXTREQUEST = const(0xa1)
+SNMP_GETRESPONSE = const(0xa2)
+SNMP_SETREQUEST = const(0xa3)
+SNMP_TRAP = const(0xa4)
 
 #SNMP specific integer types
-SNMP_COUNTER = 0x41
-SNMP_GUAGE = 0x42
-SNMP_TIMETICKS = 0x43
+SNMP_COUNTER = const(0x41)
+SNMP_GUAGE = const(0x42)
+SNMP_TIMETICKS = const(0x43)
 
 #SNMP specific other types
-SNMP_IPADDR = 0x40
-SNMP_OPAQUE = 0x44 #not implemented
-SNMP_NSAPADDR = 0x45 #not implemented
+SNMP_IPADDR = const(0x40)
+SNMP_OPAQUE = const(0x44) #not implemented
+SNMP_NSAPADDR = const(0x45) #not implemented
 
 #SNMP error codes
-SNMP_ERR_NOERROR = 0x00
-SNMP_ERR_TOOBIG = 0x01
-SNMP_ERR_NOSUCHNAME = 0x02
-SNMP_ERR_BADVALUE = 0x03
-SNMP_ERR_READONLY = 0x04
-SNMP_ERR_GENERR = 0x05
+SNMP_ERR_NOERROR = const(0x00)
+SNMP_ERR_TOOBIG = const(0x01)
+SNMP_ERR_NOSUCHNAME = const(0x02)
+SNMP_ERR_BADVALUE = const(0x03)
+SNMP_ERR_READONLY = const(0x04)
+SNMP_ERR_GENERR = const(0x05)
 
 #SNMP Generic Trap codes
-SNMP_TRAPGENERIC_COLDSTART =0x0
-SNMP_TRAPGENERIC_WARMSTART = 0x1
-SNMP_TRAPGENERIC_LINKDOWN = 0x2
-SNMP_TRAPGENERIC_LINKUP = 0x3
-SNMP_TRAPGENERIC_AUTHENTICATIONFAILURE = 0x4
-SNMP_TRAPGENERIC_EGPNEIGHBORLOSS = 0x5
+SNMP_TRAPGENERIC_COLDSTART = const(0x0)
+SNMP_TRAPGENERIC_WARMSTART = const(0x10)
+SNMP_TRAPGENERIC_LINKDOWN = const(0x2)
+SNMP_TRAPGENERIC_LINKUP = const(0x3)
+SNMP_TRAPGENERIC_AUTHENTICATIONFAILURE = const(0x4)
+SNMP_TRAPGENERIC_EGPNEIGHBORLOSS = const(0x5)
 
 
 class SnmpPacket:
