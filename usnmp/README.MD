@@ -11,6 +11,7 @@ Before you dig in, know this;
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
 
 TO DO:
+- re-implement to replace list of nested list exclusively with pointers to memoryview (challenging)
 - compact MIB class, def parser
 
 ###Concepts
