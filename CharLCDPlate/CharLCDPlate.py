@@ -1,4 +1,4 @@
-import pyb
+import machine
 
 class CharLCDPlate():
 
@@ -45,17 +45,18 @@ class CharLCDPlate():
   LCD_MOVELEFT            = 0x00
 
   def __init__(self, busnum, addr):
-      self.i2c = pyb.I2C(busnum,pyb.I2C.MASTER)
+      self.i2c = machine.I2C(busnum, machine.I2C.MASTER)
+      
       self.address = addr
       self.porta, self.portb, self.ddrb = 0, 0, 0b00010000
-      self.i2c.mem_write(0,self.address,self.MCP23017_IOCON_BANK1)
+      self.i2c.writeto_mem(0,self.address,self.MCP23017_IOCON_BANK1)
       registers =[ 0b00111111, self.ddrb, 0b00111111, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 
                    0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00000000, 0b00111111, 0b00000000, 
                    0b00000000, 0b00000000, 0b00000000, 0b00000000, self.porta, self.portb, self.porta, 
                    self.portb ]
       for register in registers:
-        self.i2c.mem_write(0,self.address,register)
-      self.i2c.mem_write(0b10100000, self.address, self.MCP23017_IOCON_BANK0)
+        self.i2c.writeto_mem(0,self.address,register)
+      self.i2c.writeto_mem(0b10100000, self.address, self.MCP23017_IOCON_BANK0)
       self.displayshift   = (self.LCD_CURSORMOVE | self.LCD_MOVERIGHT)
       self.displaymode    = (self.LCD_ENTRYLEFT | self.LCD_ENTRYSHIFTDECREMENT)
       self.displaycontrol = (self.LCD_DISPLAYON | self.LCD_CURSOROFF | self.LCD_BLINKOFF)
@@ -84,15 +85,15 @@ class CharLCDPlate():
     if self.ddrb & 0b00010000:
       lo = (self.portb & 0b00000001) | 0b01000000
       hi = lo | 0b00100000
-      self.i2c.mem_write(lo,self.address,self.MCP23017_GPIOB)
+      self.i2c.writeto_mem(lo,self.address,self.MCP23017_GPIOB)
       while True:
-        self.i2c.send(hi,self.address)
-        bits = self.i2c.recv(1,self.address)
-        self.i2c.mem_write(bytearray([lo,hi,lo]),self.address,self.MCP23017_GPIOB)
+        self.i2c.writeto(hi,self.address)
+        bits = self.i2c.readfrom(1,self.address)
+        self.i2c.writeto_mem(bytearray([lo,hi,lo]),self.address,self.MCP23017_GPIOB)
         if (bits[0] & 0b00000010) == 0: break
       self.portb = lo
       self.ddrb &= 0b11101111
-      self.i2c.mem_write(self.ddrb,self.address,self.MCP23017_IODIRB)
+      self.i2c.writeto_mem(self.ddrb,self.address,self.MCP23017_IODIRB)
     bitmask = self.portb & 0b00000001
     if char_mode: bitmask |= 0b10000000
     if isinstance(value, str):
@@ -101,7 +102,7 @@ class CharLCDPlate():
       for i, v in enumerate(value):
         data.extend(self.out4(bitmask, ord(v)))
         if (len(data) >= 32) or (i == last):
-          self.i2c.mem_write(bytearray(data),self.address,self.MCP23017_GPIOB)
+          self.i2c.writeto_mem(bytearray(data),self.address,self.MCP23017_GPIOB)
           self.portb = data[-1]
           data       = []
     elif isinstance(value, list):
@@ -110,16 +111,16 @@ class CharLCDPlate():
       for i, v in enumerate(value):
         data.extend(self.out4(bitmask, v))
         if (len(data) >= 32) or (i == last):
-          self.i2c.mem_write(data,self.address,self.MCP23017_GPIOB)
+          self.i2c.writeto_mem(data,self.address,self.MCP23017_GPIOB)
           self.portb = data[-1]
           data       = []
     else:
       data = self.out4(bitmask, value)
-      self.i2c.mem_write(bytearray(data),self.address,self.MCP23017_GPIOB)
+      self.i2c.writeto_mem(bytearray(data),self.address,self.MCP23017_GPIOB)
       self.portb = data[-1]
     if (not char_mode) and (value in self.pollables):
       self.ddrb |= 0b00010000
-      self.i2c.mem_write(self.ddrb,self.address,self.MCP23017_IODIRB)
+      self.i2c.writeto_mem(self.ddrb,self.address,self.MCP23017_IODIRB)
 
   def begin(self, cols, lines):
     self.currline = 0
@@ -211,11 +212,11 @@ class CharLCDPlate():
     c          = ~color
     self.porta = (self.porta & 0b00111111) | ((c & 0b011) << 6)
     self.portb = (self.portb & 0b11111110) | ((c & 0b100) >> 2)
-    self.i2c.mem_write(self.porta,self.address,self.MCP23017_GPIOA)
-    self.i2c.mem_write(self.portb,self.address,self.MCP23017_GPIOB)
+    self.i2c.writeto_mem(self.porta,self.address,self.MCP23017_GPIOA)
+    self.i2c.writeto_mem(self.portb,self.address,self.MCP23017_GPIOB)
 
   def buttonPressed(self, b):
-    return (self.i2c.mem_read(1,self.address,self.MCP23017_GPIOA,timeout=100)[0] >> b) & 1
+    return (self.i2c.read_from(1,self.address,self.MCP23017_GPIOA,timeout=100)[0] >> b) & 1
 
   def buttons(self):
-    return self.i2c.mem_read(1,self.address,self.MCP23017_GPIOA,timeout=100)[0] & 0b11111
+    return self.i2c.read_from(1,self.address,self.MCP23017_GPIOA,timeout=100)[0] & 0b11111
