@@ -48,6 +48,7 @@ p=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETREQUEST)
 vbs=["1.3.6.1.2.1.2.2.1.10.4", "1.3.6.1.2.1.2.2.1.16.4", "1.3.6.1.2.1.1.3.0"]
 for vb in vbs:
     p.varbinds[vb] = (usnmp.ASN1_NULL, None)
+
 s.sendto(p.packed, (b"192.168.1.1", 161))
 d=s.recvfrom(1024)
 r=usnmp.SnmpPacket(d[0])
