@@ -327,27 +327,6 @@ If the SnmpPacket.varbinds database contains callables, they will be evaluated a
 
 **SnmpPacket.time_stamp** _= int_ - get/set the the trap packet time stamp.
 
-###Utility Functions
-
-#####hex2str(str)
-
-Accepts an ASN1_OCSTR unpacked string as a list of pairs of hex values for character codes and returns a python string.
-
-#####wireshark_hexstream(str)
-
-Accepts a string of hex values copied from a Wireshark SNMP packet capture, without the IP header, as a Hex Streamself.
-
-Returns a bytearray suitable for unpacking with this library.
-
-```python
->>> s="3081d20201000403414643a281c702043821eea10201000201003081b8300f060a2b0601020102020101010201013013060a2b0601020102020102010405566c616e31300f060a2b0601020102020103010201353010060a2b060102010202010401020205dc3012060a2b06010201020201050142043b9aca003014060a2b0601020102020106010406001b8ff4d1c0300f060a2b060102010202010701020102300f060a2b0601020102020108010201023010060a2b06010201020201090143022c06300f060a2b060102010202010a01410100"
->>> s=usnmp.wireshark_hexstream(s)
->>> p=usnmp.SnmpPacket(s)
->>> p.varbinds
-{'1.3.6.1.2.1.2.2.1.1.1': (2, 1), '1.3.6.1.2.1.2.2.1.2.1': (4, Vlan1), '1.3.6.1.2.1.2.2.1.3.1': (2, 53), '1.3.6.1.2.1.2.2.1.4.1': (2, 1500), '1.3.6.1.2.1.2.2.1.5.1': (66, 1000000000), '1.3.6.1.2.1.2.2.1.6.1': (255, 001b8ff4d1c0), '1.3.6.1.2.1.2.2.1.7.1': (2, 2), '1.3.6.1.2.1.2.2.1.8.1': (2, 2), '1.3.6.1.2.1.2.2.1.9.1': (67, 11270), '1.3.6.1.2.1.2.2.1.10.1': (65, 0)}
->>>
-```  
-
 ###Raw packing and unpacking functions
 The library contains a few exposed functions normally used by the internals of the SnmpPacket class to pack/unpack binary data from/to the nested list format.  These are exposed because they may be useful for more refined manipulation of SNMP data.
 

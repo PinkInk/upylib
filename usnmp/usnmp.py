@@ -376,24 +376,6 @@ def unpack_len(v):
     else:
         return v[1], 1
 
-#utilities
-def hex2str(v):
-    ptr = 0
-    s = ""
-    while ptr<len(v):
-        s += chr( int(v[ptr:ptr+2], 16) )
-        ptr += 2
-    return s
-
-#convert a packet from wireshark (Hex Stream string) to bytearray
-def wireshark_hexstream(s):
-    b = bytearray()
-    ptr = 0
-    while ptr<len(s):
-        b.append(int(s[ptr:ptr+2],16))
-        ptr += 2
-    return b
-
 #internals - template packets
 _SNMP_GETSET_PROTOTYPE = pack_tlv(ASN1_SEQ,[
     pack_tlv(ASN1_INT, SNMP_VER1),
