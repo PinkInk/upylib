@@ -65,6 +65,7 @@ class SnmpPacket:
             self._b = bytearray(buflen)
             self._mb = memoryview(self._b)
             self._mb[0:len(b)] = b
+            #self.varbinds = _VarBinds(self._mb[13:26])
         else:
             buflen = ((buf-1)//self._blocksize+1)*self._blocksize
             self._b = bytearray(buflen)
@@ -181,6 +182,9 @@ class SnmpPacket:
             else:
                 self._mb[pl-i] = self._mb[pl+l-i]
 
+class _VarBinds:
+    def __init__(self, mb):
+        print(len(mb))
 
 class InvalidType(Exception):
     pass
