@@ -71,21 +71,18 @@ class SnmpPacket:
             self._mb = memoryview(self._b)
 
     def _get_lenat(self, ptr):
-        mb = self._mb
-        if mb[ptr+1]&0x80 == 0x80:
+        if self._mb[ptr+1]&0x80 == 0x80:
             l = 0
-            offset = 2+mb[ptr+1]&0x7f
-            for i in mb[2 : offset]:
+            offset = 2+self._mb[ptr+1]&0x7f
+            for i in self._mb[2 : offset]:
                 l = l*0x100 + i
         else:
-            l = mb[ptr+1]
+            l = self._mb[ptr+1]
             offset = 2
-        del(mb)
         return l, offset
 
     def _get_payloadat(self, ptr):
-        mb = self._mb
-        t = mb[ptr]
+        t = self._mb[ptr]
         l, offset = self._get_lenat(ptr)
         end = ptr + offset + l
         ptr += offset
@@ -96,7 +93,7 @@ class SnmpPacket:
             v = []
             while ptr < end:
                 lb, lb_offset = self._get_lenat(ptr)
-                v.append( bytes( mb[ptr : ptr+lb_offset+lb]) )
+                v.append( bytes( self._mb[ptr : ptr+lb_offset+lb]) )
                 ptr += lb + lb_offset
         #octet string
         elif t == ASN1_OCTSTR:
@@ -104,28 +101,28 @@ class SnmpPacket:
             #decode as a string of hex value pairs
             #else decode as python string
             printable = True
-            for byte in mb[ptr:end]:
+            for byte in self._mb[ptr:end]:
                 if not 128>byte>31:
                     printable = False
                     break
             if not printable:
                 v = ""
-                for byte in mb[ptr : ptr+l]:
+                for byte in self._mb[ptr : ptr+l]:
                     if byte < 0x10:
                         v += '0' + hex(byte)[2:]
                     else:
                         v += hex(byte)[2:]
             else:
-                v = bytes(mb[ptr : ptr+l]).decode()
+                v = bytes(self._mb[ptr : ptr+l]).decode()
         #integers
         elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
             v = 0
             #for byte in mb[ptr : ptr+l]:
-            for byte in mb[ptr:end]:
+            for byte in self._mb[ptr:end]:
                 v = v*0x100 + byte
         #null
         elif t == ASN1_NULL:
-            if mb[ptr-1]==0 and l==0:
+            if self._mb[ptr-1]==0 and l==0:
                 v = None
             else:
                 raise BadNullEncoding
@@ -135,7 +132,7 @@ class SnmpPacket:
             v = str( self._mb[ptr]//0x28 ) + "." + str( self._mb[ptr]%0x28 )
             ptr += 1
             high_septet = 0
-            for byte in mb[ptr:end]:
+            for byte in self._mb[ptr:end]:
                 if byte&0x80 == 0x80:
                         high_septet = byte - 0x80
                 else:
@@ -144,7 +141,7 @@ class SnmpPacket:
         #ip address
         elif t == SNMP_IPADDR:
             v = ""
-            for byte in mb[ptr:end]:
+            for byte in self._mb[ptr:end]:
                 if len(v) > 0:
                     v += "." + str(byte)
                 else:
@@ -153,7 +150,6 @@ class SnmpPacket:
             raise UnimplementedType(t)
         else:
             raise InvalidType(t)
-        del(mb)
         return t, v
 
     def __len__(self):
@@ -164,26 +160,26 @@ class SnmpPacket:
 
     #extend buffer (if necessary) to nearest multiple
     #of _blocksize that will accomodate size
+    ### SUPPORT FOR SHRINKING, INCLUDING AGGRESSIVE ###
     def _buf_extend(self, size):
-        idealsize = ((size-1)//self._blocksize+1)*self._blocksize
-        if idealsize > len(self._b):
+        newsize = ((size-1)//self._blocksize+1)*self._blocksize
+        if newsize > len(self._b):
             del(self._mb)
-            self._b.extend( bytearray(size-len(self._b)) )
+            self._b.extend( bytearray(newsize-len(self._b)) )
             self._mb = memoryview(self._b)
 
     #serves _insertat if passed l=0
     #serves _cutat if passed b where len(b)==0 aka b''
     def _replaceat(self, ptr, l, b):
         pl, poffset = self._get_lenat(0)
-        self._buf_extend( pl+offset+l )
-        mb = self._mb
+        self._buf_extend( len(self)-l+len(b) )
         vector = l-len(b)
+        print(vector)
         for i in range(abs(vector)):
             if vector>0:
-                mb[pl+l-i] = mb[pl-i]
+                self._mb[pl+l-i] = self._mb[pl-i]
             else:
-                mb[pl-i] = mb[pl+l-i]
-        del(mb)
+                self._mb[pl-i] = self._mb[pl+l-i]
 
 
 class InvalidType(Exception):
