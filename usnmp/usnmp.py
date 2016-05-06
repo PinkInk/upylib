@@ -291,8 +291,9 @@ def pack_len(l):
         return bytearray([0x80+len(b)]) + b
 
 def unpack(b):
-    mb = memoryview(b)
-    t,l,v = unpack_tlv(mb)
+    #bugfix: doesn't work with memoryview in micropython?
+    #mb = memoryview(b)
+    #t,l,v = unpack_tlv(mb)
     if type(v) is list:
         for i, val in enumerate(v):
             v[i] = unpack(val)
