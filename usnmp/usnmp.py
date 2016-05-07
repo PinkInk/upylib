@@ -16,7 +16,7 @@ ASN1_SEQ = const(0x30)
 #library fudge specific binary octstr
 #------------------------------------
 #labelling of binary decoded ocstr vals
-#as discrete from string decoded is req'd
+#as discrete from string decoded is reqd
 #to allow unpack/pack to return same result
 ASN1_OCTSTR_BIN = const(0xff)
 
@@ -196,12 +196,12 @@ class _VarBinds:
         for oid_tv in self.vbs:
             if len(s) > 1:
                 s += ", "
-            s += "'" + oid_tv[1][0][1] + "': "
+            s += "\'" + oid_tv[1][0][1] + "\': "
             if callable(oid_tv[1][1]):
                 s += repr(oid_tv[1][1])
             else:
                 #force to look like tuple returned by __getitem__
-                s += repr(oid_tv[1][1]).replace('[','(').replace(']',')')
+                s += repr(oid_tv[1][1]).replace( "[", "(" ).replace( "]", ")" )
         return s + "}"
     def __iter__(self):
         for oid_tv in self.vbs:
@@ -244,7 +244,7 @@ def pack_tlv(t, v=None):
             ptr += 2
         t = ASN1_OCTSTR
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #can't eecode -ve (do -ve values occur in snmp?)
+        #cant eecode -ve (do -ve values occur in snmp?)
         if v < 0:
             raise Exception("-ve int")
         else:
@@ -267,7 +267,7 @@ def pack_tlv(t, v=None):
         for id in oid[2:]:
             if 0 <= id <= 0x7f:
                 b.append(id)
-            #check RFC's for correct upperbound
+            #check RFCs for correct upperbound
             elif 0x7f < id < 0x7fff:
                 b.append(id//0x80+0x80)
                 b.append(id&0x7f)
@@ -291,7 +291,7 @@ def pack_len(l):
         return bytearray([0x80+len(b)]) + b
 
 def unpack(b):
-    #bugfix: doesn't work with memoryview in micropython?
+    #bugfix: waiting upy fix for memoryview?
     #mb = memoryview(b)
     #t,l,v = unpack_tlv(mb)
     if type(v) is list:
@@ -332,13 +332,13 @@ def unpack_tlv(b):
             v = ""
             for byte in b[ptr : ptr+l]:
                 if byte<0x10:
-                    v += '0' + hex(byte)[2:]
+                    v += "0" + hex(byte)[2:]
                 else:
                     v += hex(byte)[2:]
         else:
             v = bytes(b[ptr : ptr+l]).decode()
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #can't decode -ve (do -ve values occur in snmp?)
+        #cant decode -ve (do -ve values occur in snmp?)
         v=0
         for byte in b[ptr:]:
             v = v*0x100 + byte
@@ -393,7 +393,7 @@ _SNMP_TUPLE_PROTOTYPE = pack_tlv(ASN1_SEQ,[
     pack_tlv(ASN1_OCTSTR, ""),
     pack_tlv(SNMP_TRAP,[
         pack_tlv(ASN1_OID,"1.3.6.1.4.1"),
-        pack_tlv(SNMP_IPADDR,'127.0.0.1'),
+        pack_tlv(SNMP_IPADDR,"127.0.0.1"),
         pack_tlv(ASN1_INT,0),
 
         pack_tlv(ASN1_INT,0),
