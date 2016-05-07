@@ -11,7 +11,8 @@ Before you dig in, know this;
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
 
 TO DO:
-- re-implement to replace list of nested list exclusively with pointers to memoryview (challenging)
+- diagnose, and submit as bug, micropython specific issue with nested memoryview corruption
+- re-implement to replace list of nested list exclusively with pointers to memoryview (challenging), or file io on bytearray(?)
 - compact MIB class, def parser
 
 ###Concepts
