@@ -1,30 +1,33 @@
-###usnmp (Micro Simple Network Management Protocol library)
+###usnmp.py (micro Simple Network Management Protocol library)
 
-I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection.  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
+I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection (I still haven't achieved that goal ;o).  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
 
 Before you dig in, know this;
-- Supports SNMP Version 1 (unsecure) only.
-- It's been (lightly) tested only on CPython and a WiPy, it'll be tested on an esp8266 when the (as of writing) in-progress kickstarter bears first-fruit, if my shipment ever arrives from China.
-- It's based on an immature understanding of SNMP in general.
-- It (as yet) has no concept of a MIB, just OIDs.
-- It can't interpret Opaque or NsapAddr encoding - I've yet to find a sample to analyse
-- I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
+- Supports SNMP Version 1 (unsecure) only
+- It's been (lightly) tested only on CPython and a WiPy
+- It's been (lightly) tested (in a stripped down form; ref hereunder) on micropython ga1.8 for esp8266 (on a bare 12e module only)
+- It's based on an immature understanding of SNMP in general
+- It has no concept of a MIB, just OIDs
+- It can't interpret Opaque or NsapAddr encoding - I've yet to find a sample to analyse, not sure if they exist in the 'real world'
+- I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion, just to make it work ;o)
 
 TO DO:
-- error classes
-- re-implement to replace list of nested list exclusively with pointers to memoryview buffer (challenging)
-- compact MIB class, def parser
+- library specific error classes
+- replace SnmpPacket properties with getter/setter functions (property implementation is ugly and unintuitive)
+- re-implement replacing list of nested lists exclusively with pointers to memoryview buffer, fileIO and/or ucstruct (challenging)
+- compact MIB-2 class
+- add documentation examples for use of pack/unpack (needed for esp8266) 
 
 ###usnmp_esp.py
 
-Slimmed down variant that works on the ga1.8 release of micropython for esp8266 (judicous, and regular, use of **gc.collect()** is recommended)
+Slimmed down variant that works on the ga1.8 release of micropython for esp8266 (judicous, and regular, use of **gc.collect()** is recommended).
 
-Hopefully, as the esp8266 port and/or this library matures (ref 'TODO: replace list of nested lists ...' above), more comprehensive functionality can achieved on this platform. 
+Hopefully, as the esp8266 port and/or this library matures (ref 'TODO: replacing list of nested lists ...' above), more comprehensive functionality can achieved on this platform. 
 
 This variant;
-- economises on constants
+- economises on constants (ditches non type-specific constants i.e. error and trap codes)
 - ditches the SnmpPacket class (i.e. only the pack/unpack functions are included and therefore an understanding of SNMP packet structure is required)
-- loses callable functionality 
+- loses callable functionality
 
 ###Concepts
 
@@ -202,6 +205,8 @@ Unimplemented data types.
 
 SNMP error codes returned/set in SnmpPacket.err_status.
 
+These constants are not available in **usnmp_esp.py**
+
 **SNMP_TRAPGENERIC_COLDSTART** = 0x0<BR>
 **SNMP_TRAPGENERIC_WARMSTART** = 0x1<BR>
 **SNMP_TRAPGENERIC_LINKDOWN** = 0x2<BR>
@@ -211,7 +216,11 @@ SNMP error codes returned/set in SnmpPacket.err_status.
 
 SNMP generic trap codes.
 
+These constants are not available in **usnmp_esp.py**
+
 ###SnmpPacket class
+
+**Class not available in usnmp_esp.py**
 
 Represents an SNMP data packet and expects to be instantiated in one of two ways;
 
@@ -340,7 +349,7 @@ If the SnmpPacket.varbinds database contains callables, they will be evaluated a
 **SnmpPacket.time_stamp** _= int_ - get/set the the trap packet time stamp.
 
 ###Raw packing and unpacking functions
-The library contains a few exposed functions normally used by the internals of the SnmpPacket class to pack/unpack binary data from/to the nested list format.  These are exposed because they may be useful for more refined manipulation of SNMP data.
+The library contains a few exposed functions normally used by the internals of the SnmpPacket class to pack/unpack binary data from/to the nested list format.  These are exposed because they may be useful for more refined manipulation of SNMP data, and are all that is available in **usnmp_esp.py**.
 
 Data is encoded in SNMP packets as nested Type,Length,Value blocks (nested by the ASN1_SEQ and its SNMP specfic derived types), these functions convert between data in this raw format and python lists of Type,Value.
 
