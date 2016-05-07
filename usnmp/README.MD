@@ -11,9 +11,20 @@ Before you dig in, know this;
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion ;o)
 
 TO DO:
-- diagnose, and submit as bug, micropython specific issue with nested memoryview corruption
-- re-implement to replace list of nested list exclusively with pointers to memoryview (challenging), or file io on bytearray(?)
+- error classes
+- re-implement to replace list of nested list exclusively with pointers to memoryview buffer (challenging)
 - compact MIB class, def parser
+
+###usnmp_esp.py
+
+Slimmed down variant that works on the ga1.8 release of micropython for esp8266 (judicous, and regular, use of **gc.collect()** is recommended)
+
+Hopefully, as the esp8266 port and/or this library matures (ref 'TODO: replace list of nested lists ...' above), more comprehensive functionality can achieved on this platform. 
+
+This variant;
+- economises on constants
+- ditches the SnmpPacket class (i.e. only the pack/unpack functions are included and therefore an understanding of SNMP packet structure is required)
+- loses callable functionality 
 
 ###Concepts
 
