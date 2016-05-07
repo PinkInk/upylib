@@ -243,6 +243,7 @@ def pack_tlv(t, v=None):
             b.append( int(v[ptr:ptr+2], 16) )
             ptr += 2
         t = ASN1_OCTSTR
+    #int types
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         #cant eecode -ve (do -ve values occur in snmp?)
         if v < 0:
@@ -257,8 +258,10 @@ def pack_tlv(t, v=None):
             #observed in snmp, indicating -ve snmp ints are possible?
             if b[0]&0x80==0x80:
                 b = bytearray([0x0]) + b
+    #null type
     elif t == ASN1_NULL:
         l = 0x0
+    #OIDs
     elif t == ASN1_OID:
         oid = v.split(".")
         oid = list(map(int, oid))
@@ -273,9 +276,11 @@ def pack_tlv(t, v=None):
                 b.append(id&0x7f)
             else:
                 raise ValueError("oid chunk out of bounds")
+    #IP addr
     elif t == SNMP_IPADDR:
         for byte in map(int, v.split(".")):
             b.append(byte)
+    #not implemented
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("SNMP_[OPAQUE & NSAPADDR] not implemented")
     return bytearray([t]) + pack_len(len(b)) + b
@@ -294,6 +299,7 @@ def unpack(b):
     #bugfix: waiting upy fix for memoryview?
     #mb = memoryview(b)
     #t,l,v = unpack_tlv(mb)
+    t,l,v = unpack_tlv(b)
     if type(v) is list:
         for i, val in enumerate(v):
             v[i] = unpack(val)
@@ -337,16 +343,19 @@ def unpack_tlv(b):
                     v += hex(byte)[2:]
         else:
             v = bytes(b[ptr : ptr+l]).decode()
+    #integer types
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         #cant decode -ve (do -ve values occur in snmp?)
         v=0
         for byte in b[ptr:]:
             v = v*0x100 + byte
+    #null type
     elif t == ASN1_NULL:
         if b[1]==0 and len(b)==2:
             v=None
         else:
             raise Exception("bad null encoding")
+    #OIDs
     elif t == ASN1_OID:
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
@@ -358,10 +367,12 @@ def unpack_tlv(b):
             else:
                 v += "." + str(high_septet*0x80 + byte)
                 high_septet = 0
+    #IP addr
     elif t == SNMP_IPADDR:
         v = str(b[ptr])
         for byte in b[ptr+1:]:
             v += "." + str(byte)
+    #unimplemented
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("SNMP_[OPAQUE & NSAPADDR] not implemented")
     else:
@@ -395,7 +406,6 @@ _SNMP_TUPLE_PROTOTYPE = pack_tlv(ASN1_SEQ,[
         pack_tlv(ASN1_OID,"1.3.6.1.4.1"),
         pack_tlv(SNMP_IPADDR,"127.0.0.1"),
         pack_tlv(ASN1_INT,0),
-
         pack_tlv(ASN1_INT,0),
         pack_tlv(ASN1_INT,0),
         pack_tlv(ASN1_SEQ,[])
