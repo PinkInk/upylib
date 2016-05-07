@@ -1,6 +1,6 @@
 ###usnmp.py (micro Simple Network Management Protocol library)
 
-I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection (I still haven't achieved that goal ;o).  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
+I thought it would be a nice idea to physically indicate to my kids that they were burning up our meager internet connection (~~I still haven't achieved that goal~~ [goal unlocked](https://youtu.be/XrMVpY_D1WY) ;o).  It got out of control.  It's not sane, extensible, complete or bug free - but it does seem to work.
 
 Before you dig in, know this;
 - Supports SNMP Version 1 (unsecure) only
@@ -12,6 +12,7 @@ Before you dig in, know this;
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion, just to make it work ;o)
 
 TO DO:
+- re-instate use of memoryview in unpack, when micropython memoryview bug fixed
 - library specific error classes
 - replace SnmpPacket properties with getter/setter functions (property implementation is ugly and unintuitive)
 - re-implement replacing list of nested lists exclusively with pointers to memoryview buffer, fileIO and/or ucstruct (challenging)
