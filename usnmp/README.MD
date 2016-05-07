@@ -12,6 +12,7 @@ Before you dig in, know this;
 - I used 'micro' as an excuse not to implement any error handling ... then ignored 'micro' and used recursion, just to make it work ;o)
 
 TO DO:
+- compat with [uPy hw api](https://github.com/micropython/micropython/wiki/Hardware-API), [wherever this goes](http://forum.micropython.org/viewtopic.php?f=14&t=1780)
 - re-instate use of memoryview in unpack, when micropython memoryview bug fixed
 - library specific error classes
 - replace SnmpPacket properties with getter/setter functions (property implementation is ugly and unintuitive)
