@@ -113,7 +113,7 @@ True
 True
 ```
 
-Unlike bytearrays ublob **does not** support assignment out of range(0,len(ub)-1);
+Unlike bytearrays ublob **does not** support assignment out of ublob[:len(ub)];
 
 ```python
 >>> len(ub)
