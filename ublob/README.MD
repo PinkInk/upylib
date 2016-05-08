@@ -68,7 +68,8 @@ True
 >>> #expect error
 >>> ub['s']
 TypeError: bytearray indices must be integers or slices, not str
->>>```
+>>>
+```
 
 Note; 
 - returns bytearrays, not memoryviews ... memoryviews would become inconsistent if the ublob was manipulated and could prevent internal operataions e.g. extending buffer
@@ -76,11 +77,11 @@ Note;
 
 Items and slices can be assigned to.  Including unequal slice assignments (but assignment to a slice with a step is not supported, and will raise an exception).  
 
-Internally assignments occur by sliding data around within the buffer, using a memoryview.  Note that this can/does result in areas of the buffer beyond the last valid data byte (ub._last) containing garbage, but none of the exposed methods expose thiss.  
+Internally assignments occur by sliding data around within the buffer, using a memoryview.  Note that this can/does result in areas of the buffer beyond ublob[:len(ub)] containing garbage, but the balance data in the buffer is only accessible by abusing ublob._b or ublob._mb.  
 
-The buffer automatically grows, to the next adequate multiple of **blocksize**, if required to accomodate new data.  The buffer is never shrunk automatically (ref hereunder for an internal call which can be used to shrink the buffer if desirable).  On micropython a **gc.collect()** is automatically issued after the buffer is grown, or shrunk.
+The buffer automatically grows, to the next adequate multiple of **blocksize**, if required to accomodate new data.  The buffer is never shrunk automatically, but ref ublob.buflen() method hereunder.  On micropython a **gc.collect()** is automatically issued after the buffer is grown or shrunk.
 
-Item assignment requires integers (just like bytearray);
+Item assignment requires integers;
 
 ```python
 >>> ub[0]=10
@@ -147,8 +148,27 @@ IndexError: index out of range
 True #still True as out of range ignorred by bytearray i.e. no change occured 
 >>>```
 
-The buffer can be shrunk to fit the data by leveraging an internal call;
+#####ublob.buflen(size=None, shrink=False)
+
+Get the buffer length;
 
 ```python
->>> ub._buf_align(len(ub), shrink=True)
+>>> len(ub)
+16
+>>> ub.buflen()
+30
+```
+
+Grow the buffer to accomodate size as multiple of ublob.blocksize (no change if size<ublob.buflen()) and return the new buffer length;
+
+```python
+>>> ub.buflen(39)
+45
+```
+
+Shrink buffer to nearest multiple of ublob.blocksize that can accomodate size (example is 'best fit for data'), won't shrink the buffer to less than len(ublob);
+
+```python
+>>> ub.buflen(len(ub),shrink=True)
+30
 ```

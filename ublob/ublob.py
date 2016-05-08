@@ -25,7 +25,7 @@ class ublob:
         return bytes( self._mb[:len(self)] )
     
     def __repr__(self):
-        return repr(bytes(self))
+        return 'bytearray(' + repr(bytes(self)) + ')'
     
     def __getitem__(self, key):
         return self._b[:len(self)][key]
@@ -51,7 +51,7 @@ class ublob:
             if vec < 0:
                 self._mb[start : len(self)+vec] = self._mb[stop : len(self)]
             elif vec > 0:
-                self._buf_align(len(self) + vec)
+                self.buflen(len(self) + vec)
                 self._mb[start+vec : len(self)+vec] = self._mb[start : len(self)]
             self._mb[start : start+len(v)] = memoryview(v)
             self._last += vec            
@@ -61,18 +61,20 @@ class ublob:
             else:
                 raise TypeError("int in range(0,256) required")
 
-    def _buf_align(self, size, shrink=False):
-        newsize = self._buf_calcsize(size)
-        if newsize > len(self._b):
-            del(self._mb)
-            self._b.extend( bytearray(newsize-len(self._b)) )
-            self._mb = memoryview(self._b)
-        elif shrink and newsize < len(self._b) and newsize >= len(self):
-            del(self._mb)
-            del(self._b[newsize:])
-            self._mb = memoryview(self._b)
-        if _MP:
-            gc.collect()
+    def buflen(self, size=None, shrink=False):
+        if size != None:
+            newsize = self._buf_calcsize(size)
+            if newsize > len(self._b):
+                del(self._mb)
+                self._b.extend( bytearray(newsize-len(self._b)) )
+                self._mb = memoryview(self._b)
+            elif shrink and newsize < len(self._b) and newsize >= len   (self):
+                del(self._mb)
+                del(self._b[newsize:])
+                self._mb = memoryview(self._b)
+            if _MP:
+                gc.collect()
+        return(len(self._mb))
     
     def _buf_calcsize(self, size):
         return ((size-1)//self.blocksize+1)*self.blocksize    
@@ -93,4 +95,3 @@ class ublob:
         if start < 0 or start > self._last:
             raise IndexError("index out of range")
         return start, stop
-            
