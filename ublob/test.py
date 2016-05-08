@@ -12,6 +12,8 @@ ub[:2] == b[:2]
 ub[0:2] == b[0:2]
 ub[:-6] == b[:-6]
 ub[3:-6] == b[3:-6]
+
+#expect error
 ub[::2] == b[::2]
 
 #expect error
