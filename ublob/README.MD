@@ -31,7 +31,6 @@ True
 Convert a ublob to a bytes, or bytearray object (for e.g. to send over network);
 
 ```python
-b'\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10'
 >>> bytes(ub)
 b'\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10'
 >>> bytearray(ub)
@@ -73,13 +72,13 @@ TypeError: bytearray indices must be integers or slices, not str
 
 Note; 
 - returns bytearrays, not memoryviews ... memoryviews would become inconsistent if the ublob was manipulated and could prevent internal operataions e.g. extending buffer
-- the internal memoryview can be accessesed as ub._mb - but it is inadvisable to do so without extreme caution
+- the internal memoryview can be accessesed as ublob._mb - but it is inadvisable to do so without extreme caution
 
 Items and slices can be assigned to.  Including unequal slice assignments (but assignment to a slice with a step is not supported, and will raise an exception).  
 
-Internally assignments occur by sliding data around within the buffer, using a memoryview.  Note that this can/does result in areas of the buffer beyond ublob[:len(ub)] containing garbage, but the balance data in the buffer is only accessible by abusing ublob._b or ublob._mb.  
+Internally assignments are achieved by sliding data around within the buffer, using a memoryview.  Note that this can and does result in areas of the buffer beyond ublob[:len(ub)] containing garbage, but the balance data in the buffer is only accessible by abusing the internals ublob._b and ublob._mb.  
 
-The buffer automatically grows, to the next adequate multiple of **blocksize**, if required to accomodate new data.  The buffer is never shrunk automatically, but ref ublob.buflen() method hereunder.  On micropython a **gc.collect()** is automatically issued after the buffer is grown or shrunk.
+The buffer automatically grows, to the next adequate multiple of ublob.blocksize, if required to accomodate new data.  The buffer is never shrunk automatically, but ref ublob.buflen() method hereunder, should shrinking be desirable.  On micropython a **gc.collect()** is automatically issued after the buffer is grown or shrunk.
 
 Item assignment requires integers;
 
@@ -87,7 +86,11 @@ Item assignment requires integers;
 >>> ub[0]=10
 >>> ub[0]=bytes([1,2,3])
 TypeError: int in range(0,256) required
-
+>>> ub[0]=-1
+TypeError: int in range(0,256) required
+>>> ub[0]=256
+TypeError: int in range(0,256) required
+>>>
 ```
 
 Bytes or bytearray's can be assigned to slices, there is no need for assignment length to equal slice length, the buffer may grow, if necessary;
@@ -107,7 +110,8 @@ True
 >>> b[2:5] = bytes([1,2,3,4,5,6,7])
 >>> ub[2:5] = bytes([1,2,3,4,5,6,7])
 >>> bytes(ub) == bytes(b)
-True```
+True
+```
 
 Unlike bytearrays ublob **does not** support assignment out of range(0,len(ub)-1);
 
@@ -120,7 +124,7 @@ IndexError: index out of range
 >>>
 ```
 
-Items or slices can be deleted from the buffer;
+Items or slices can be deleted;
 
 ```python
 >>> b = bytearray([x for x in range(1,17)])
@@ -146,7 +150,8 @@ IndexError: index out of range
 >>> del(b[5:])
 >>> bytes(ub) == bytes(b)
 True #still True as out of range ignorred by bytearray i.e. no change occured 
->>>```
+>>>
+```
 
 #####ublob.buflen(size=None, shrink=False)
 
