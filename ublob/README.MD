@@ -8,8 +8,6 @@ Intended to be used to simplify the manipulation of binary data (for e.g. from t
 
 Create a ublob, with initial buffer size as whatever multiple of **blocksize** will accomodate either a passed-in bytes or bytearray object, or **buf**. 
 
-From an existing bytes or bytearray object;
-
 As an empty ublob;
 
 ```python
@@ -19,6 +17,7 @@ As an empty ublob;
 >>> ub
 b''
 ```
+From an existing bytes or bytearray object;
 
 ```python
 >>> import ublob
