@@ -24,6 +24,7 @@ class ublob:
     def __bytes__(self):
         return bytes( self._mb[:len(self)] )
     
+    #memory hungry but useful for repl debugging
     def __repr__(self):
         return 'bytearray(' + repr(bytes(self)) + ')'
     
