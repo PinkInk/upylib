@@ -3,17 +3,24 @@ import ublob
 b = bytearray([x for x in range(1,17)])
 ub = ublob.ublob(b, buf=15, blocksize=15)
 
-ub[0], ub[1], ub[2]
-ub[:0], ub[:1], ub[:2]
-ub[0:2], ub[:-6], ub[3:-6]
-ub[::2]
+ub[0] == b[0]
+ub[1] == b[1]
+ub[2] == b[2]
+ub[:0] == b[:0]
+ub[:1] == b[:1]
+ub[:2] == b[:2]
+ub[0:2] == b[0:2]
+ub[:-6] == b[:-6]
+ub[3:-6] == b[3:-6]
+ub[::2] == b[::2]
+
+#expect error
 ub['s']
 
 repr(ub)
 len(ub)
 len(ub._b), len(ub._mb)
 
-ub
 del(ub[0])
 del(b[0])
 bytes(ub) == bytes(b)

@@ -41,23 +41,44 @@ bytearray(b'\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r\x0e\x0f\x10')
 Items and slices (including slices with step) return bytearrays;
 
 ```python
->>> ub[0]
-1
->>> ub[2]
-3
->>> ub[:-3]
-bytearray(b'\x01\x02\x03\x04\x05\x06\x07\x08\t\n\x0b\x0c\r')
->>> ub[-3:-2]
-bytearray(b'\x0e')
->>> ub[::2]
-bytearray(b'\x01\x03\x05\x07\t\x0b\r\x0f')
-```
+>>> b = bytearray([x for x in range(1,17)])
+>>> ub = ublob.ublob(b, buf=15, blocksize=15)
+>>>
+>>> ub[0] == b[0]
+True
+>>> ub[1] == b[1]
+True
+>>> ub[2] == b[2]
+True
+>>> ub[:0] == b[:0]
+True
+>>> ub[:1] == b[:1]
+True
+>>> ub[:2] == b[:2]
+True
+>>> ub[0:2] == b[0:2]
+True
+>>> ub[:-6] == b[:-6]
+True
+>>> ub[3:-6] == b[3:-6]
+True
+>>> ub[::2] == b[::2]
+True
+>>>
+>>> #expect error
+>>> ub['s']
+TypeError: bytearray indices must be integers or slices, not str
+>>>```
 
 Note; 
-- not memoryviews, memoryviews would become inconsistent if the ublob was manipulated and could prevent internal operataions e.g. extending buffer
+- returns bytearrays, not memoryviews ... memoryviews would become inconsistent if the ublob was manipulated and could prevent internal operataions e.g. extending buffer
 - the internal memoryview can be accessesed as ub._mb - but it is inadvisable to do so without extreme caution
 
-Items and slices can be assigned to.  Including unequal slice assignments (but assignment to a slice with a step is not supported, and will raise an error).  Internally assignments occur by shifting data within the buffer, using a memoryview.  The buffer automatically grows, to the next adequate multiple of **blocksize**, if required to accomodate new data.  The buffer is never shrunk automatically (ref hereunder for an internal call which can be used to shrink the buffer if desirable).
+Items and slices can be assigned to.  Including unequal slice assignments (but assignment to a slice with a step is not supported, and will raise an exception).  
+
+Internally assignments occur by sliding data around within the buffer, using a memoryview.  Note that this can/does result in areas of the buffer beyond the last valid data byte (ub._last) containing garbage, but none of the exposed methods expose thiss.  
+
+The buffer automatically grows, to the next adequate multiple of **blocksize**, if required to accomodate new data.  The buffer is never shrunk automatically (ref hereunder for an internal call which can be used to shrink the buffer if desirable).  On micropython a **gc.collect()** is automatically issued after the buffer is grown, or shrunk.
 
 Item assignment requires integers (just like bytearray);
 
@@ -71,11 +92,23 @@ TypeError: int in range(0,256) required
 Bytes or bytearray's can be assigned to slices, there is no need for assignment length to equal slice length, the buffer may grow, if necessary;
 
 ```python
->>> ub[0:0]=bytes([1,2,3])
->>> ub[:-2]=bytes([1,2,3])
-```
+>>> b = bytearray([x for x in range(1,17)])
+>>> ub = ublob.ublob(b, buf=15, blocksize=15)
+>>>
+>>> b[2:10] = bytes([1,2,3])
+>>> ub[2:10] = bytes([1,2,3])
+>>> bytes(ub) == bytes(b)
+True
+>>>
+>>> b = bytearray([x for x in range(1,17)])
+>>> ub = ublob.ublob(b, buf=15, blocksize=15)
+>>>
+>>> b[2:5] = bytes([1,2,3,4,5,6,7])
+>>> ub[2:5] = bytes([1,2,3,4,5,6,7])
+>>> bytes(ub) == bytes(b)
+True```
 
-Unlike bytearrays ublob does not support assignment beyond the end of the valid data;
+Unlike bytearrays ublob **does not** support assignment out of range(0,len(ub)-1);
 
 ```python
 >>> len(ub)
@@ -89,9 +122,30 @@ IndexError: index out of range
 Items or slices can be deleted from the buffer;
 
 ```python
->>> del(ub[3])
->>> del(ub[2:3])
-```
+>>> b = bytearray([x for x in range(1,17)])
+>>> ub = ublob.ublob(b, buf=15, blocksize=15)
+>>> del(ub[0])
+>>> del(b[0])
+>>> bytes(ub) == bytes(b)
+True
+>>>
+>>> del(ub[:2])
+>>> del(b[:2])
+>>> bytes(ub) == bytes(b)
+True
+>>>
+>>> del(ub[3:])
+>>> del(b[3:])
+>>> bytes(ub) == bytes(b)
+True
+>>>
+>>> #test out of range
+>>> del(ub[5:])
+IndexError: index out of range
+>>> del(b[5:])
+>>> bytes(ub) == bytes(b)
+True #still True as out of range ignorred by bytearray i.e. no change occured 
+>>>```
 
 The buffer can be shrunk to fit the data by leveraging an internal call;
 

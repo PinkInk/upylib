@@ -28,31 +28,18 @@ class ublob:
         return repr(bytes(self))
     
     def __getitem__(self, key):
-        t = type(key)
-        if t is slice:
-            return self._b[:len(self)][key.start:key.stop:key.step]
-        elif t is int:
-            return self._b[:len(self)][key]
-        else:
-            raise TypeError("indices must be int or slice")
+        return self._b[:len(self)][key]
 
     def __delitem__(self, key):
-        t = type(key)
-        if t is slice:
-            if key.step != None:
-                raise TypeError("step not supported")
-            start, stop = self._coerce_slice(key)
+        start, stop = self._coerce_slice(key)
+        if stop != None:
             vec = start - stop
             if vec < 0:
                 self._mb[start : len(self)+vec] = self._mb[stop : len(self)]
                 self._last += vec
-        elif t is int:
-            if key >= len(self):
-                raise IndexError("index out of range")
-            self._mb[key : len(self)-1] = self._mb[key+1 : len(self)]
-            self._last -= 1
         else:
-            raise TypeError("indices must be int or slice")
+            self._mb[start : len(self)-1] = self._mb[start+1 : len(self)]
+            self._last -= 1
 
     def __setitem__(self, key, v):
         if type(v) not in (int, bytes, bytearray, memoryview):
