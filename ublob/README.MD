@@ -2,7 +2,7 @@
 
 A buffered mutable bytearray like object that trades a configurable buffer overhead, of typically a few bytes, for the ability to perform destructive/constructive slice assignment operations using (an internal) memoryview.  The buffer is extended only if a slice assignment would cause overflow.
 
-Intended to be used to simplify the manipulation of binary data (for e.g. from the network) in memory constrained systems i.e. micropython, in particular the esp8266 port, however currently only works in cpython as slice object passed to `__setitem__` and `__getitem__` in micropython are not standins and not fully functional.
+Intended to be used to simplify the manipulation of binary data (for e.g. from the network) in memory constrained systems i.e. micropython, in particular the esp8266 port, however currently only works in cpython as slice object passed to `__setitem__` and `__getitem__` in micropython are standins and not fully functional.
 
 #####ublob.ublob(b=None, buf=128, blocksize=32)
 
