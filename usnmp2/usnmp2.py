@@ -70,6 +70,8 @@ def tobytes_tv(t, v=None):
             b = b + bytes([octet])
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("not implemented", t)
+    else:
+        raise TypeError("invalid type", t)
     return bytes([t]) + tobytes_len(len(b)) + b
 
 def tobytes_len(l):
