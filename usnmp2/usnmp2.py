@@ -35,14 +35,15 @@ SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
     
 
 def tobytes_tv(t, v=None):
-    b=bytearray()
     if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
         b = v
     elif t == ASN1_OCTSTR:
         if type(v) is str:
             b = bytes(v,'utf-8')
-        else:
+        elif type(v) in (bytes, bytearray):
             b = v
+        else:
+            raise ValueError("string or buffer required")
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         if v < 0:
             raise ValueError("ASN.1 ints must be >=0")
@@ -53,31 +54,20 @@ def tobytes_tv(t, v=None):
                 v //= 0x100
             if b[0]&0x80 == 0x80:
                 b = bytes([0x0]) + b
-    #no action for ASN1_NULL
+    elif t == ASN1_NULL:
+        b = bytes()
     elif t == ASN1_OID:
-        ######### WTF? ##########
         oid = v.split(".")
         #first two indexes are encoded in single byte
-        oid[0:2] = bytes([int(oid[0])*40 + int(oid[1])])
-        lambda x: bytes([x] if x<=0x7f else [x//0x80+0x80,x&0x7f])
-
-        #for i,id in enumerate(oid[2:]):
-        #    if id <= 0x7f:
-        #        oid[2+i] = bytes([id])
-        #    else:
-        #        odi[2+1] = bytes([id//0x80+0x80, id&0x7f])
-        #
-        #for id in oid[2:]:
-        #    id = int(id)
-        #    if id <= 0x7f:
-        #        b = b + bytes([id])
-        #    elif id < 0x7fff:
-        #        b = b + bytes([id//0x80+0x80], id&0x7f]) 
-        #    else:
-        #        raise ValueError("oid chunk out of bounds")
+        b = bytes([int(oid[0])*40 + int(oid[1])])
+        for id in oid[2:]:
+            id = int(id)
+            b = b + bytes([id] if id<=0x7f else [id//0x80+0x80,id&0x7f])
     elif t == SNMP_IPADDR:
-        for byte in v.split("."):
-            b.append(int(byte))
+        b = bytes()    
+        for octet in v.split("."):
+            octet = int(octet)
+            b = b + bytes([octet])
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
         raise Exception("not implemented", t)
     return bytes([t]) + tobytes_len(len(b)) + b
@@ -97,13 +87,12 @@ def frombytes_tvat(b, ptr):
     l, l_incr = frombytes_lenat(b, ptr)
     end = ptr+1+l+l_incr
     ptr +=  1+l_incr
-    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+    #strings and sequences
+    if t in (ASN1_OCTSTR, ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
         v = b[ptr:end]        
-    elif t == ASN1_OCTSTR:
-        v = b[ptr:end]
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         v=0
-        while ptr<end:
+        while ptr < end:
             v = v*0x100 + b[ptr]
             ptr += 1
     elif t == ASN1_NULL:
@@ -111,15 +100,14 @@ def frombytes_tvat(b, ptr):
     elif t == ASN1_OID:
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
-        high_septet = 0
         ptr += 1
         while ptr < end:
             if b[ptr]&0x80 == 0x80:
-                high_septet = b[ptr] - 0x80
+                v += "." + str((b[ptr]-0x80)*0x80 + b[ptr+1])
+                ptr += 2
             else:
-                v += "." + str(high_septet*0x80 + b[ptr])
-                high_septet = 0
-            ptr += 1
+                v += "." + str(b[ptr])
+                ptr += 1
     elif t == SNMP_IPADDR:
         v = ""
         while ptr < end:
