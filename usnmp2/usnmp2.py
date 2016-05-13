@@ -34,6 +34,93 @@ SNMP_TRAP_AUTHFAIL = const(0x4)
 SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
     
 
+class SnmpPacket:
+    
+    def __init__(self, *args, **kwargs):
+        if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
+            #b = memoryview(arg[0]) #whilst esp memoryview broken
+            b = args[0]
+            ptr = 1 + frombytes_lenat(b, 0)[1]
+            ptr = self._frombytes_props(b, ptr, ("ver", "community"))
+            self.type = b[ptr]
+            ptr += 1 + frombytes_lenat(b, ptr)[1]
+            if self.type == SNMP_TRAP:
+                ptr = self._frombytes_props(b, ptr, ("ent_oid", "ipaddr", "trap_type", "trap_specific"))
+            else:
+                ptr = self._frombytes_props(b, ptr, ("req_id", "err_stat", "err_id"))
+            ptr += 1 + frombytes_lenat(b, ptr)[1] #to varbinds
+            self.varbinds = _VarBinds(b[ptr:])
+        elif "type" in kwargs:
+            self.type = type
+            if self.type == SNMP_TRAP:
+                props = ("ver", "community", "ent_oid", "ipaddr", "trap_type", "trap_specific") 
+            else:
+                props = ("ver", "Community", "req_id", "err_stat", "err_id")
+            for arg in kwargs:
+                setattr(self, arg, kwargs[arg] if arg in props else None)
+            self.varbinds = _VarBinds(bytearray())
+        else:
+            raise ValueError("buffer or type=x required")
+    
+    def _frombytes_props(self, b, ptr, properties):
+        for prop in properties:
+            setattr(self, prop, frombytes_tvat(b, ptr)[1])
+            ptr += 1 + sum(frombytes_lenat(b, ptr))
+        return ptr
+
+
+class _VarBinds:
+
+    def __init__(self, b, blocksize=32):
+        self.blocksize = blocksize
+        self._b = bytearray( self._buf_calcsize(len(b)) )
+        #self._mb = memoryview(self._b)
+        self._b[0:len(b)] = b
+        self._last = len(b)-1
+        
+    def __getitem__(self, oid):
+        ptr = 0
+        while ptr < len(self._last+1):
+            #skip into the sequence
+            l, l_incr = frombytes_lenat(self._b, ptr)
+            t,v = frombytes_tvat(self._b, ptr+1+l_incr)
+            if v == oid:
+                skip = sum(frombytes_lenat(self._b, ptr+1+l_incr))
+                t,v = frombytes_tvat(self._b, ptr+2+l_incr+skip)
+                return t,v
+            ptr += 1+l+l_incr
+        raise KeyError(oid)
+    
+    def __setitem__(self, oid, tv):
+        pass
+    
+    def __iter__(self):
+        ptr = 0
+        while ptr<len(self._b):
+            l, l_incr = frombytes_lenat(self._b, ptr)
+            yield frombytes_tvat(self._b, ptr+1+l_incr)[1]
+            ptr += 1+l+l_incr
+            
+    def __delitem__(self, oid):
+        pass
+    
+    def _getptr(self, oid):
+        ptr = 0
+        while ptr < len(self._last+1):
+            #skip into the sequence
+            l, l_incr = frombytes_lenat(self._b, ptr)
+            t,v = frombytes_tvat(self._b, ptr+1+l_incr)
+            if v == oid:
+                return ptr
+            ptr += 1+l+l_incr
+    
+    def __bytes__(self):
+        return bytes( self._b[:self._last+1]
+
+    def _buf_calcsize(self, size):
+        return ((size-1)//self.blocksize+1)*self.blocksize    
+
+
 def tobytes_tv(t, v=None):
     if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
         b = v
