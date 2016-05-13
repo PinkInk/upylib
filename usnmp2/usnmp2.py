@@ -93,13 +93,20 @@ class _VarBinds:
         boid = tobytes_tv(ASN1_OID, oid)
         btv = tobytes_tv(t,v)
         b = bytes([ASN1_SEQ]) + tobytes_len(len(boid) + len(btv)) + boid + btv
-        ### FINISH ###
         try:
             start = self._seek_oidtv(oid)
             stop = start + 1 + sum(frombytes_lenat(self._b, start))
         except KeyError:
-            #tack on the end
-            pass
+            start = stop = self._last+1
+        stop =- len(b)
+        vec = start-stop
+        if vec < 0:
+            self._b[start : self._last+1+vec] = self._b[stop : self._last+1]
+        elif vec > 0:
+            self.buflen(self._last+1+vec)
+            self._b[start+vec : self._last+1+vec] = self._b[start : self._last+1]
+        self._b[start : start+len(b)] = b
+        self._last += vec
 
     def __iter__(self):
         ptr = 0
@@ -194,9 +201,13 @@ def frombytes_tvat(b, ptr):
     l, l_incr = frombytes_lenat(b, ptr)
     end = ptr+1+l+l_incr
     ptr +=  1+l_incr
-    #strings and sequences
-    if t in (ASN1_OCTSTR, ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
-        v = b[ptr:end]        
+    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+        v = bytes(b[ptr:end])
+    elif t == ASN1_OCTSTR:
+        try:
+            v = str(b[ptr:end], "utf-8")
+        except:
+            v = bytes(b[ptr:end])
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
         v=0
         while ptr < end:

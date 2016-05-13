@@ -48,5 +48,9 @@ except KeyError:
 for oid in p.varbinds:
     print(oid, p.varbinds[oid])
 
-p.varbinds["1.3.6.1.2.1.2.2.1.4.1"] = (usnmp2.ASN1_INT, 23232)
 
+p.varbinds["1.3.6.1.2.1.2.2.1.2.1"] = (usnmp2.ASN1_OCTSTR, "vlan23")
+p.varbinds["1.3.6.1.2.1.2.2.1.2.1"]
+
+#p.varbinds["1.3.6.1.2.1.2.2.1.4.1"] = (usnmp2.ASN1_INT, 23232)
+#p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
