@@ -18,8 +18,8 @@ usnmp2.frombytes_tvat(b,20)
 usnmp2.frombytes_tvat(b,23)
 usnmp2.frombytes_tvat(b,26)
 
-usnmp2.tobytes_tv(4, 'hello world')
-usnmp2.frombytes_tvat(usnmp2.tobytes_tv(4, b'hello world'),0)
+usnmp2.tobytes_tv(4, "hello world")
+usnmp2.frombytes_tvat(usnmp2.tobytes_tv(4, b"hello world""),0)
 
 usnmp2.frombytes_tvat(usnmp2.tobytes_tv(usnmp2.ASN1_INT,12311),0)[1] == 12311 
 usnmp2.frombytes_tvat(usnmp2.tobytes_tv(usnmp2.SNMP_GUAGE,23),0)[1] == 23 
@@ -35,7 +35,18 @@ p.type
 p.req_id
 p.err_stat
 p.err_id
-p.varbinds["1.3.6.1.2.1.2.2.1.2"]
+p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
 for oid in p.varbinds:
     print(oid, p.varbinds[oid])
+
+del(p.varbinds["1.3.6.1.2.1.2.2.1.4.1"])
+try:
+    p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
+except KeyError:
+    print("Deleted!")
+
+for oid in p.varbinds:
+    print(oid, p.varbinds[oid])
+
+p.varbinds["1.3.6.1.2.1.2.2.1.4.1"] = (usnmp2.ASN1_INT, 23232)
 

@@ -35,7 +35,7 @@ SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
     
 
 class SnmpPacket:
-    
+
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
             #b = memoryview(arg[0]) #whilst esp memoryview broken
@@ -61,7 +61,7 @@ class SnmpPacket:
             self.varbinds = _VarBinds(bytearray())
         else:
             raise ValueError("buffer or type=x required")
-    
+
     def _frombytes_props(self, b, ptr, properties):
         for prop in properties:
             setattr(self, prop, frombytes_tvat(b, ptr)[1])
@@ -71,54 +71,72 @@ class SnmpPacket:
 
 class _VarBinds:
 
-    def __init__(self, b, blocksize=32):
+    def __init__(self, b, buf=128, blocksize=64):
         self.blocksize = blocksize
-        self._b = bytearray( self._buf_calcsize(len(b)) )
+        self._b = bytearray( self._buf_calcsize( len(b) if len(b)>0 else buf ) )
         #self._mb = memoryview(self._b)
-        self._b[0:len(b)] = b
+        self._b[0:len(b)] = b    
         self._last = len(b)-1
-        
+
+    def __bytes__(self):
+        return bytes( self._b[:self._last+1] )
+
     def __getitem__(self, oid):
-        ptr = 0
-        while ptr < len(self._last+1):
-            #skip into the sequence
-            l, l_incr = frombytes_lenat(self._b, ptr)
-            t,v = frombytes_tvat(self._b, ptr+1+l_incr)
-            if v == oid:
-                skip = sum(frombytes_lenat(self._b, ptr+1+l_incr))
-                t,v = frombytes_tvat(self._b, ptr+2+l_incr+skip)
-                return t,v
-            ptr += 1+l+l_incr
-        raise KeyError(oid)
-    
+        ptr = self._seek_oidtv(oid)
+        ptr += 1+frombytes_lenat(self._b, ptr)[1]
+        ptr += 1+sum(frombytes_lenat(self._b, ptr))
+        t,v = frombytes_tvat(self._b, ptr)
+        return t,v
+
     def __setitem__(self, oid, tv):
-        pass
-    
+        t,v = tv
+        boid = tobytes_tv(ASN1_OID, oid)
+        btv = tobytes_tv(t,v)
+        b = bytes([ASN1_SEQ]) + tobytes_len(len(boid) + len(btv)) + boid + btv
+        ### FINISH ###
+        try:
+            start = self._seek_oidtv(oid)
+            stop = start + 1 + sum(frombytes_lenat(self._b, start))
+        except KeyError:
+            #tack on the end
+            pass
+
     def __iter__(self):
         ptr = 0
-        while ptr<len(self._b):
+        while ptr < self._last+1:
             l, l_incr = frombytes_lenat(self._b, ptr)
             yield frombytes_tvat(self._b, ptr+1+l_incr)[1]
             ptr += 1+l+l_incr
-            
+
     def __delitem__(self, oid):
-        pass
-    
-    def _getptr(self, oid):
+        start = self._seek_oidtv(oid)
+        stop = start + 1 + sum(frombytes_lenat(self._b, start))
+        vec = start-stop
+        self._b[start : self._last+1+vec] = self._b[stop : self._last+1]
+        self._last += vec
+
+    def buflen(self, size=None):
+        if size != None:
+            newsize = self._buf_calcsize(size)
+            if newsize > self._last+1:
+                #del(self._mb)
+                self._b.extend( bytearray(newsize-self._last+1) )
+                #self._mb = memoryview(self._b)
+        return len(self._b)
+
+    def _seek_oidtv(self, oid):
         ptr = 0
-        while ptr < len(self._last+1):
+        while ptr < self._last+1:
             #skip into the sequence
             l, l_incr = frombytes_lenat(self._b, ptr)
             t,v = frombytes_tvat(self._b, ptr+1+l_incr)
             if v == oid:
                 return ptr
             ptr += 1+l+l_incr
-    
-    def __bytes__(self):
-        return bytes( self._b[:self._last+1]
+        raise KeyError(oid)
 
     def _buf_calcsize(self, size):
-        return ((size-1)//self.blocksize+1)*self.blocksize    
+        return ((size-1)//self.blocksize+1)*self.blocksize 
 
 
 def tobytes_tv(t, v=None):
