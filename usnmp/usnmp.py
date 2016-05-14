@@ -3,412 +3,258 @@ if implementation.name == "cpython":
     def const(val):
         return val
 
-#SNMP versions
 SNMP_VER1 = const(0x00)
-
-#ASN.1 primitives
 ASN1_INT = const(0x02)
 ASN1_OCTSTR = const(0x04)
 ASN1_OID = const(0x06)
 ASN1_NULL = const(0x05)
 ASN1_SEQ = const(0x30)
-
-#library fudge specific binary octstr
-#------------------------------------
-#labelling of binary decoded ocstr vals
-#as discrete from string decoded is reqd
-#to allow unpack/pack to return same result
-ASN1_OCTSTR_BIN = const(0xff)
-
-#SNMP specific SEQUENCE types
 SNMP_GETREQUEST = const(0xa0)
 SNMP_GETNEXTREQUEST = const(0xa1)
 SNMP_GETRESPONSE = const(0xa2)
 SNMP_SETREQUEST = const(0xa3)
 SNMP_TRAP = const(0xa4)
-
-#SNMP specific integer types
 SNMP_COUNTER = const(0x41)
 SNMP_GUAGE = const(0x42)
 SNMP_TIMETICKS = const(0x43)
-
-#SNMP specific other types
 SNMP_IPADDR = const(0x40)
-SNMP_OPAQUE = const(0x44) #not implemented
-SNMP_NSAPADDR = const(0x45) #not implemented
-
-#SNMP error codes
+SNMP_OPAQUE = const(0x44)
+SNMP_NSAPADDR = const(0x45)
 SNMP_ERR_NOERROR = const(0x00)
 SNMP_ERR_TOOBIG = const(0x01)
 SNMP_ERR_NOSUCHNAME = const(0x02)
 SNMP_ERR_BADVALUE = const(0x03)
 SNMP_ERR_READONLY = const(0x04)
 SNMP_ERR_GENERR = const(0x05)
-
-#SNMP Generic Trap codes
-SNMP_TRAPGENERIC_COLDSTART = const(0x0)
-SNMP_TRAPGENERIC_WARMSTART = const(0x10)
-SNMP_TRAPGENERIC_LINKDOWN = const(0x2)
-SNMP_TRAPGENERIC_LINKUP = const(0x3)
-SNMP_TRAPGENERIC_AUTHENTICATIONFAILURE = const(0x4)
-SNMP_TRAPGENERIC_EGPNEIGHBORLOSS = const(0x5)
-
+SNMP_TRAP_COLDSTART = const(0x0)
+SNMP_TRAP_WARMSTART = const(0x10)
+SNMP_TRAP_LINKDOWN = const(0x2)
+SNMP_TRAP_LINKUP = const(0x3)
+SNMP_TRAP_AUTHFAIL = const(0x4)
+SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
+    
 
 class SnmpPacket:
+
     def __init__(self, *args, **kwargs):
-        if len(args) == 1 and type(args[0]) in (bytes, bytearray):
-            self.unpacked = unpack(args[0])
-        elif "type" in kwargs:
-            if kwargs["type"] != SNMP_TRAP:
-                #get/set types
-                self.unpacked = unpack(_SNMP_GETSET_PROTOTYPE)
-            elif kwargs["type"] == SNMP_TRAP:
-                self.unpacked = unpack(_SNMP_TUPLE_PROTOTYPE)
+        if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
+            #b = memoryview(arg[0]) #whilst esp memoryview broken
+            b = args[0]
+            ptr = 1 + frombytes_lenat(b, 0)[1]
+            ptr = self._frombytes_props(b, ptr, ("ver", "community"))
+            self.type = b[ptr]
+            ptr += 1 + frombytes_lenat(b, ptr)[1]
+            if self.type == SNMP_TRAP:
+                ptr = self._frombytes_props(b, ptr, ("ent_oid", "ipaddr", "trap_type", "trap_specific", "timestamp"))
             else:
-                raise Exception("Invalid type")
+                ptr = self._frombytes_props(b, ptr, ("req_id", "err_stat", "err_id"))
+            ptr += 1 + frombytes_lenat(b, ptr)[1] #to varbinds
+            
+            self.varbinds = _VarBinds(b[ptr:])
+        elif "type" in kwargs:
+            self.type = type
+            if self.type == SNMP_TRAP:
+                props = ("ver", "community", "ent_oid", "ipaddr", "trap_type", "trap_specific", "timestamp") 
+            else:
+                props = ("ver", "Community", "req_id", "err_stat", "err_id")
             for arg in kwargs:
-                if arg not in ["varbinds", "unpacked", "packed"] \
-                        and hasattr(self, arg):
-                    #non type specific kwargs silently ignored by properties
-                    setattr(self, arg, kwargs[arg])
+                setattr(self, arg, kwargs[arg] if arg in props else None)
+            self.varbinds = _VarBinds(bytearray())
         else:
-            raise Exception("Bytearray or type=xxx required")
-        if self.type != SNMP_TRAP:
-            #get/set types
-            self.varbinds = _VarBinds(self.unpacked[1][2][1][3][1])
+            raise ValueError("buffer or type=x required")
+
+    def __bytes__(self):
+        b = tobytes_tv(ASN1_SEQ, bytes(self.varbinds))
+        if self.type == SNMP_TRAP:
+            b = tobytes_tv(ASN1_OID, self.ent_oid) + tobytes_tv(SNMP_IPADDR, self.ipaddr) + tobytes_tv(ASN1_INT, self.trap_type) + tobytes_tv(ASN1_INT, self.trap_specific) + tobytes_tv(SNMP_TIMETICKS, self.timestamp) + b
         else:
-            self.varbinds = _VarBinds(self.unpacked[1][2][1][5][1])
-    #get|set specific properties
-    @property
-    def id(self):
-        if self.type != SNMP_TRAP:
-            return self.unpacked[1][2][1][0][1]
-    @id.setter
-    def id(self, v):
-        if self.type != SNMP_TRAP:
-            self.unpacked[1][2][1][0][1] = v
-    @property
-    def err_status(self):
-        if self.type != SNMP_TRAP:
-            return self.unpacked[1][2][1][1][1]
-    @err_status.setter
-    def err_status(self, v):
-        if self.type != SNMP_TRAP:
-            self.unpacked[1][2][1][1][1] = v
-    @property
-    def err_id(self):
-        if self.type != SNMP_TRAP:
-            return self.unpacked[1][2][1][2][1]
-    @err_id.setter
-    def err_id(self, v):
-        if self.type != SNMP_TRAP:
-            self.unpacked[1][2][1][2][1] = v
-    #trap specific properties
-    @property
-    def enterprise(self):
-        if self.type == SNMP_TRAP:
-            return self.unpacked[1][2][1][0][1]
-    @enterprise.setter
-    def enterprise(self, v):
-        if self.type == SNMP_TRAP:
-            self.unpacked[1][2][1][0][1] = v
-    @property
-    def agent_addr(self):
-        if self.type == SNMP_TRAP:
-            return self.unpacked[1][2][1][1][1]
-    @agent_addr.setter
-    def agent_addr(self, v):
-        if self.type == SNMP_TRAP:
-            self.unpacked[1][2][1][1][1] = v
-    @property
-    def generic_trap(self):
-        if self.type == SNMP_TRAP:
-            return self.unpacked[1][2][1][2][1]
-    @generic_trap.setter
-    def generic_trap(self, v):
-        if self.type == SNMP_TRAP:
-            self.unpacked[1][2][1][2][1] = v
-    @property
-    def specific_trap(self):
-        if self.type == SNMP_TRAP:
-            return self.unpacked[1][2][1][3][1]
-    @specific_trap.setter
-    def specific_trap(self, v):
-        if self.type == SNMP_TRAP:
-            self.unpacked[1][2][1][3][1] = v
-    @property
-    def time_stamp(self):
-        if self.type == SNMP_TRAP:
-            return self.unpacked[1][2][1][4][1]
-    @time_stamp.setter
-    def time_stamp(self, v):
-        if self.type == SNMP_TRAP:
-            self.unpacked[1][2][1][4][1] = v
-    #common properties
-    @property
-    def packed(self):
-        return pack(self.unpacked)
-    @property
-    def ver(self):
-        return self.unpacked[1][0][1]
-    @ver.setter
-    def ver(self, v):
-        self.unpacked[1][0][1] = v
-    @property
-    def community(self):
-        return self.unpacked[1][1][1]
-    @community.setter
-    def community(self, v):
-        self.unpacked[1][1][1] = v
-    @property
-    def type(self):
-        return self.unpacked[1][2][0]
-    @type.setter
-    def type(self, v):
-        self.unpacked[1][2][0] = v
+            b = tobytes_tv(ASN1_INT, self.req_id) + tobytes_tv(ASN1_INT, self.err_stat) + tobytes_tv(ASN1_INT, self.err_id) + b
+        b = tobytes_tv(self.type, b)
+        b = tobytes_tv(ASN1_INT, self.ver) + tobytes_tv(ASN1_OCTSTR, self.community) + b
+        b = tobytes_tv(ASN1_SEQ, b)             
+        return b
+
+    def _frombytes_props(self, b, ptr, properties):
+        for prop in properties:
+            setattr(self, prop, frombytes_tvat(b, ptr)[1])
+            ptr += 1 + sum(frombytes_lenat(b, ptr))
+        print(ptr)
+        return ptr    
 
 
 class _VarBinds:
-    def __init__(self, vbs):
-        self.vbs = vbs
+
+    def __init__(self, b, buf=128, blocksize=64):
+        self.blocksize = blocksize
+        self._b = bytearray( self._buf_calcsize( len(b) if len(b)>0 else buf ) )
+        #self._mb = memoryview(self._b)
+        self._b[0:len(b)] = b    
+        self._last = len(b)-1
+
+    def __bytes__(self):
+        return bytes( self._b[:self._last+1] )
+
     def __getitem__(self, oid):
-        for oid_tv in self.vbs:
-            if oid_tv[1][0][1] == oid:
-                if callable(oid_tv[1][1]):
-                    return oid_tv[1][1]
-                else:
-                    return oid_tv[1][1][0], oid_tv[1][1][1]
-        return None
+        ptr = self._seek_oidtv(oid)
+        ptr += 1+frombytes_lenat(self._b, ptr)[1]
+        ptr += 1+sum(frombytes_lenat(self._b, ptr))
+        t,v = frombytes_tvat(self._b, ptr)
+        return t,v
+
     def __setitem__(self, oid, tv):
-        existing = False
-        for oid_tv in self.vbs:
-            if oid_tv[1][0][1] == oid:
-                existing = True
-                oid_tv[1][1] = tv
-                break
-        if not existing:
-            if callable(tv):
-                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], tv]])
-            else:
-                self.vbs.append([ASN1_SEQ, [[ASN1_OID, oid], list(tv)]])
-    def __repr__(self):
-        s = "{"
-        for oid_tv in self.vbs:
-            if len(s) > 1:
-                s += ", "
-            s += "\'" + oid_tv[1][0][1] + "\': "
-            if callable(oid_tv[1][1]):
-                s += repr(oid_tv[1][1])
-            else:
-                #force to look like tuple returned by __getitem__
-                s += repr(oid_tv[1][1]).replace( "[", "(" ).replace( "]", ")" )
-        return s + "}"
+        t,v = tv
+        boid = tobytes_tv(ASN1_OID, oid)
+        btv = tobytes_tv(t,v)
+        b = bytes([ASN1_SEQ]) + tobytes_len(len(boid) + len(btv)) + boid + btv
+        try:
+            start = self._seek_oidtv(oid)
+            stop = start + 1 + sum(frombytes_lenat(self._b, start))
+        except KeyError:
+            start = stop = self._last+1
+        stop -= len(b)
+        vec = start-stop
+        if vec < 0:
+            self._b[start : self._last+1+vec] = self._b[stop : self._last+1]
+        elif vec > 0:
+            self.buflen(self._last+1+vec)
+            self._b[start+vec : self._last+1+vec] = self._b[start : self._last+1]
+        self._b[start : start+len(b)] = b
+        self._last += vec
+
     def __iter__(self):
-        for oid_tv in self.vbs:
-            yield oid_tv[1][0][1]
-    def __delitem__(self, oid):
-        for i, oid_tv in enumerate(self.vbs):
-            if oid_tv[1][0][1] == oid:
-                del(self.vbs[i])
-
-def pack(p):
-    if callable(p):
-        t,v = p()
-    else:
-        t,v = p
-    if type(v) is list:
-        #deepcopy the list
-        v = v[:]
-        for i, val in enumerate(v):
-            v[i] = pack(val)
-    return pack_tlv(t,v)
-
-def pack_tlv(t, v=None):
-    b=bytearray()
-    if callable(t) and v==None:
-        t,v = t()
-    if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, \
-             SNMP_SETREQUEST, SNMP_TRAP):
-        for block in v:
-            b.extend(block)
-    #octet strings that unpack as python strings
-    elif t == ASN1_OCTSTR:
-        b = bytearray(map(ord, v))
-    #octet strings that unpack as string of hex value pairs
-    elif t == ASN1_OCTSTR_BIN:
         ptr = 0
-        b = bytearray()
-        while ptr<len(v):
-            b.append( int(v[ptr:ptr+2], 16) )
-            ptr += 2
-        t = ASN1_OCTSTR
-    #int types
-    elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #cant eecode -ve (do -ve values occur in snmp?)
-        if v < 0:
-            raise Exception("-ve int")
+        while ptr < self._last+1:
+            l, l_incr = frombytes_lenat(self._b, ptr)
+            yield frombytes_tvat(self._b, ptr+1+l_incr)[1]
+            ptr += 1+l+l_incr
+
+    def __delitem__(self, oid):
+        start = self._seek_oidtv(oid)
+        stop = start + 1 + sum(frombytes_lenat(self._b, start))
+        vec = start-stop
+        self._b[start : self._last+1+vec] = self._b[stop : self._last+1]
+        self._last += vec
+
+    def buflen(self, size=None):
+        if size != None:
+            newsize = self._buf_calcsize(size)
+            if newsize > self._last+1:
+                #del(self._mb)
+                self._b.extend( bytearray(newsize-self._last+1) )
+                #self._mb = memoryview(self._b)
+        return len(self._b)
+
+    def _seek_oidtv(self, oid):
+        ptr = 0
+        while ptr < self._last+1:
+            #skip into the sequence
+            l, l_incr = frombytes_lenat(self._b, ptr)
+            t,v = frombytes_tvat(self._b, ptr+1+l_incr)
+            if v == oid:
+                return ptr
+            ptr += 1+l+l_incr
+        raise KeyError(oid)
+
+    def _buf_calcsize(self, size):
+        return ((size-1)//self.blocksize+1)*self.blocksize 
+
+
+def tobytes_tv(t, v=None):
+    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+        b = v
+    elif t == ASN1_OCTSTR:
+        if type(v) is str:
+            b = bytes(v,'utf-8')
+        elif type(v) in (bytes, bytearray):
+            b = v
         else:
-            b.append(v & 0xff)
-            v //= 0x100
+            raise ValueError("string or buffer required")
+    elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
+        if v < 0:
+            raise ValueError("ASN.1 ints must be >=0")
+        else:
+            b = bytes()
             while v > 0:
-                b = bytearray([v & 0xff]) + b
+                b = bytes([v & 0xff]) + b
                 v //= 0x100
-            #+ve values with high 0rder bit set are prefixed by 0x0
-            #observed in snmp, indicating -ve snmp ints are possible?
-            if b[0]&0x80==0x80:
-                b = bytearray([0x0]) + b
-    #null type
+            if len(b)>0 and b[0]&0x80 == 0x80:
+                b = bytes([0x0]) + b
     elif t == ASN1_NULL:
-        l = 0x0
-    #OIDs
+        b = bytes()
     elif t == ASN1_OID:
         oid = v.split(".")
-        oid = list(map(int, oid))
         #first two indexes are encoded in single byte
-        b.append(oid[0]*40 + oid[1])
+        b = bytes([int(oid[0])*40 + int(oid[1])])
         for id in oid[2:]:
-            if 0 <= id <= 0x7f:
-                b.append(id)
-            #check RFCs for correct upperbound
-            elif 0x7f < id < 0x7fff:
-                b.append(id//0x80+0x80)
-                b.append(id&0x7f)
-            else:
-                raise ValueError("oid chunk out of bounds")
-    #IP addr
+            id = int(id)
+            b = b + bytes([id] if id<=0x7f else [id//0x80+0x80,id&0x7f])
     elif t == SNMP_IPADDR:
-        for byte in map(int, v.split(".")):
-            b.append(byte)
-    #not implemented
+        b = bytes()    
+        for octet in v.split("."):
+            octet = int(octet)
+            b = b + bytes([octet])
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
-        raise Exception("SNMP_[OPAQUE & NSAPADDR] not implemented")
-    return bytearray([t]) + pack_len(len(b)) + b
-
-def pack_len(l):
-    if l < 0x80:
-        return bytearray([l])
+        raise Exception("not implemented", t)
     else:
-        b = bytearray()
+        raise TypeError("invalid type", t)
+    return bytes([t]) + tobytes_len(len(b)) + b
+
+def tobytes_len(l):
+    if l < 0x80:
+        return bytes([l])
+    else:
+        b = bytes()
         while l>0:
-            b = bytearray([l&0xff]) + b
+            b = bytes([l&0xff]) + b
             l //= 0x100
-        return bytearray([0x80+len(b)]) + b
+        return bytes([0x80+len(b)]) + b
 
-def unpack(b):
-    #bugfix: waiting upy fix for memoryview?
-    #mb = memoryview(b)
-    #t,l,v = unpack_tlv(mb)
-    t,l,v = unpack_tlv(b)
-    if type(v) is list:
-        for i, val in enumerate(v):
-            v[i] = unpack(val)
-    elif type(v) is bytearray:
-        v = unpack(v)
-    return [t,v]
-
-def unpack_tlv(b):
-    ptr = 0
+def frombytes_tvat(b, ptr):
     t = b[ptr]
-    l, l_incr = unpack_len(b)
-    ptr +=  1 + l_incr
-    #sequence types
-    if t in (ASN1_SEQ, \
-             SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, \
-             SNMP_SETREQUEST, SNMP_TRAP):
-        v = []
-        while ptr < len(b):
-            lb, lb_incr = unpack_len( b[ptr:] )
-            v.append( b[ptr : ptr+1+lb_incr+lb] )
-            ptr += 1 + lb + lb_incr
-    #octet string
+    l, l_incr = frombytes_lenat(b, ptr)
+    end = ptr+1+l+l_incr
+    ptr +=  1+l_incr
+    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+        v = bytes(b[ptr:end])
     elif t == ASN1_OCTSTR:
-        #if binary data contains unprintables (e.g. a mac-addr)
-        #  decode as a string of hex value pairs
-        #  return a non-standard type-code as a hint to pack_tlv
-        #else decode as python string
-        printable = True
-        for byte in b[ptr:]:
-            if not 128>byte>31:
-                printable = False
-                break
-        #if l == 6 or not printable:
-        if not printable:
-            t = ASN1_OCTSTR_BIN
-            v = ""
-            for byte in b[ptr : ptr+l]:
-                if byte<0x10:
-                    v += "0" + hex(byte)[2:]
-                else:
-                    v += hex(byte)[2:]
-        else:
-            v = bytes(b[ptr : ptr+l]).decode()
-    #integer types
+        try:
+            v = str(b[ptr:end], "utf-8")
+        except: #UnicodeDecodeError:
+            v = bytes(b[ptr:end])
     elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
-        #cant decode -ve (do -ve values occur in snmp?)
         v=0
-        for byte in b[ptr:]:
-            v = v*0x100 + byte
-    #null type
+        while ptr < end:
+            v = v*0x100 + b[ptr]
+            ptr += 1
     elif t == ASN1_NULL:
-        if b[1]==0 and len(b)==2:
-            v=None
-        else:
-            raise Exception("bad null encoding")
-    #OIDs
+        v=None
     elif t == ASN1_OID:
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
         ptr += 1
-        high_septet = 0
-        for byte in b[ptr:]:
-            if byte&0x80 == 0x80:
-                high_septet = byte - 0x80
+        while ptr < end:
+            if b[ptr]&0x80 == 0x80:
+                v += "." + str((b[ptr]-0x80)*0x80 + b[ptr+1])
+                ptr += 2
             else:
-                v += "." + str(high_septet*0x80 + byte)
-                high_septet = 0
-    #IP addr
+                v += "." + str(b[ptr])
+                ptr += 1
     elif t == SNMP_IPADDR:
-        v = str(b[ptr])
-        for byte in b[ptr+1:]:
-            v += "." + str(byte)
-    #unimplemented
+        v = ""
+        while ptr < end:
+            v += "." + str(b[ptr]) if v!="" else str(b[ptr])
+            ptr += 1
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
-        raise Exception("SNMP_[OPAQUE & NSAPADDR] not implemented")
+        raise Exception("not implemented", t)
     else:
-        raise Exception("invalid type", t)
-    return t, 1+l+l_incr, v
+        raise TypeError("invalid type", t)
+    return t, v
 
-def unpack_len(v):
-    if v[1]&0x80 == 0x80:
+def frombytes_lenat(b, ptr):
+    if b[ptr+1]&0x80 == 0x80:
         l = 0
-        for i in v[2 : 2+v[1]&0x7f]:
+        for i in b[ptr+2 : ptr+2+b[ptr+1]&0x7f]:
             l = l*0x100 + i
-        return l, 1 + v[1]&0x7f
+        return l, 1 + b[ptr+1]&0x7f
     else:
-        return v[1], 1
-
-#internals - template packets
-_SNMP_GETSET_PROTOTYPE = pack_tlv(ASN1_SEQ,[
-    pack_tlv(ASN1_INT, SNMP_VER1),
-    pack_tlv(ASN1_OCTSTR, ""),
-    pack_tlv(SNMP_GETREQUEST,[
-        pack_tlv(ASN1_INT,1),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_SEQ,[])
-    ])
-])
-_SNMP_TUPLE_PROTOTYPE = pack_tlv(ASN1_SEQ,[
-    pack_tlv(ASN1_INT, SNMP_VER1),
-    pack_tlv(ASN1_OCTSTR, ""),
-    pack_tlv(SNMP_TRAP,[
-        pack_tlv(ASN1_OID,"1.3.6.1.4.1"),
-        pack_tlv(SNMP_IPADDR,"127.0.0.1"),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_INT,0),
-        pack_tlv(ASN1_SEQ,[])
-    ])
-])
-
+        return b[ptr+1], 1
