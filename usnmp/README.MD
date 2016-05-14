@@ -1,8 +1,8 @@
-#usnmp.py (micro Simple Network Protocol library)
+#usnmp.py (micro Simple Network Protocol module)
 
-SNMP packet library targetting micropython.
+SNMP packet codec for micropython, note: that an 'SNMP server' is not implemented, you need to send/recv packets independently, this will be covered in revised documentation 'imminently'.
 
-
+Note: that I'm tinkering with this at the moment and it is not yet tested on micropython.
 
 ##Revision history
 
