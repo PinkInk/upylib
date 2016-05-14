@@ -36,6 +36,10 @@ SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
 
 class SnmpPacket:
 
+    _snmp_templ = (("ver", ASN1_INT, SNMP_VER1), ("community", ASN1_OCTSTR, "public"))
+    _getset_templ = (("req_id", ASN1_INT, 0), ("err_stat", ASN1_INT, 0), ("err_id", ASN1_INT, 0))
+    _trap_templ = (("ent_oid", ASN1_OID, "1.3.6.1.4"), ("ipaddr", SNMP_IPADDR, "127.0.0.1"), ("trap_type", ASN1_INT, 0), ("trap_specific", ASN1_INT, 0), ("timestamp", SNMP_TIMETICKS, 0))
+
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
             #b = memoryview(arg[0]) #whilst esp memoryview broken
@@ -49,7 +53,6 @@ class SnmpPacket:
             else:
                 ptr = self._frombytes_props(b, ptr, ("req_id", "err_stat", "err_id"))
             ptr += 1 + frombytes_lenat(b, ptr)[1] #to varbinds
-            
             self.varbinds = _VarBinds(b[ptr:])
         elif "type" in kwargs:
             self.type = type
