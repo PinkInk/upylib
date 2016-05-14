@@ -146,13 +146,15 @@ class _VarBinds:
 
     def _seek_oidtv(self, oid):
         ptr = 0
+        #compile oid to seek, negate interpreting every tlv
+        c = tobytes_tv(ASN1_OID, oid)
+        lc, lc_incr = frombytes_lenat(c,0)
         while ptr < self._last+1:
-            #skip into the sequence
             l, l_incr = frombytes_lenat(self._b, ptr)
-            t,v = frombytes_tvat(self._b, ptr+1+l_incr)
-            if v == oid:
+            lo, lo_incr = frombytes_lenat(self._b, ptr+1+l_incr)
+            if c[1+lc_incr:] == self._b[ptr+2+l_incr+lo_incr:ptr+2+l_incr+lo+lo_incr]:
                 return ptr
-            ptr += 1+l+l_incr
+            ptr += 1+l_incr+l
         raise KeyError(oid)
 
     def _buf_calcsize(self, size):
