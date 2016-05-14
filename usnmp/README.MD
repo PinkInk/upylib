@@ -2,7 +2,7 @@
 
 SNMP packet codec for micropython, note: that an 'SNMP server' is not implemented, you need to send/recv packets independently, this will be covered in revised documentation 'imminently'.
 
-Note: that I'm tinkering with this at the moment and it is not yet tested on micropython.
+Note: that I'm tinkering with this at the moment and it is not yet tested on micropython - the v1_* version is fully tested, and documented, refer v1_README.MD, but is exceedingly bloated and inneficient.
 
 ##Revision history
 
