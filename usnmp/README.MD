@@ -1,6 +1,6 @@
 #usnmp.py (micro Simple Network Protocol module)
 
-SNMP packet codec for micropython (_not_ an SNMP 'server', you need to send/recv packets independently).
+SNMP version1 packet codec for micropython (_not_ an SNMP 'server', you need to send/recv packets independently).
 
 Note: I'm tinkering with this at the moment hence absence of documentation - the v1_* version (in v1 dir) is fully tested, and documented, but is exceedingly bloated and inneficient.
 
