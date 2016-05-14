@@ -22,7 +22,7 @@ ASN1_NULL = const(0x05)
 ASN1_SEQ = const(0x30)
 SNMP_GETREQUEST = const(0xa0)
 SNMP_GETNEXTREQUEST = const(0xa1)
-SNMP_GETRESPONSE = const(0xa2)
+SNMP_GETRESPONSE = const(0xa2)
 SNMP_SETREQUEST = const(0xa3)
 SNMP_TRAP = const(0xa4)
 SNMP_COUNTER = const(0x41)
@@ -44,7 +44,6 @@ SNMP_TRAP_LINKUP = const(0x3)
 SNMP_TRAP_AUTHFAIL = const(0x4)
 SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
 
-    
 
 class SnmpPacket:
 
@@ -60,10 +59,10 @@ class SnmpPacket:
         self.type = b[ptr]
         ptr += 1 + frombytes_lenat(b, ptr)[1]
         if self.type == SNMP_TRAP:
-            ptr = self._frombytes_props(b, ptr, 
+            ptr = self._frombytes_props(b, ptr,
                   ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp"))
         else:
-            ptr = self._frombytes_props(b, ptr, 
+            ptr = self._frombytes_props(b, ptr,
                   ("id", "err_status", "err_id"))
         ptr += 1 + frombytes_lenat(b, ptr)[1] #to varbinds
         self.varbinds = _VarBinds(b[ptr:])
@@ -80,15 +79,14 @@ class SnmpPacket:
             b = tobytes_tv(ASN1_INT, self.id) + tobytes_tv(ASN1_INT, self.err_status) + tobytes_tv(ASN1_INT, self.err_id) + b
         b = tobytes_tv(self.type, b)
         b = tobytes_tv(ASN1_INT, self.ver) + tobytes_tv(ASN1_OCTSTR, self.community) + b
-        b = tobytes_tv(ASN1_SEQ, b)             
+        b = tobytes_tv(ASN1_SEQ, b)
         return b
 
     def _frombytes_props(self, b, ptr, properties):
         for prop in properties:
             setattr(self, prop, frombytes_tvat(b, ptr)[1])
             ptr += 1 + sum(frombytes_lenat(b, ptr))
-        print(ptr)
-        return ptr    
+        return ptr
 
 
 class _VarBinds:
@@ -96,7 +94,7 @@ class _VarBinds:
     def __init__(self, b, buf=128, blocksize=64):
         self.blocksize = blocksize
         self._b = bytearray( self._buf_calcsize( len(b) if len(b)>0 else buf ) )
-        self._b[0:len(b)] = b    
+        self._b[0:len(b)] = b
         self._last = len(b)-1
 
     #def __bytes__(self):
@@ -165,7 +163,7 @@ class _VarBinds:
         raise KeyError(oid)
 
     def _buf_calcsize(self, size):
-        return ((size-1)//self.blocksize+1)*self.blocksize 
+        return ((size-1)//self.blocksize+1)*self.blocksize
 
 
 def tobytes_tv(t, v=None):
@@ -173,7 +171,7 @@ def tobytes_tv(t, v=None):
         b = v
     elif t == ASN1_OCTSTR:
         if type(v) is str:
-            b = bytes(v,'utf-8')
+            b = bytes(v,"utf-8")
         elif type(v) in (bytes, bytearray):
             b = v
         else:
@@ -198,7 +196,7 @@ def tobytes_tv(t, v=None):
             id = int(id)
             b = b + bytes([id] if id<=0x7f else [id//0x80+0x80,id&0x7f])
     elif t == SNMP_IPADDR:
-        b = bytes()    
+        b = bytes()
         for octet in v.split("."):
             octet = int(octet)
             b = b + bytes([octet])
