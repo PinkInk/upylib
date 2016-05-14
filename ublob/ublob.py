@@ -12,11 +12,10 @@ class ublob:
             self._b = bytearray( self._buf_calcsize(len(b)) )
             self._mb = memoryview(self._b)
             self._mb[0 : len(b)] = memoryview(b)
-            self._last = len(b) - 1
         else:
             self._b = bytearray( self._buf_calcsize(buf) )
             self._mb = memoryview(self._b)
-            self._last = -1
+        self._last = len(b) - 1
 
     def __len__(self):
         return self._last+1
