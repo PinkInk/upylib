@@ -1,3 +1,5 @@
+import ASN1
+
 class VarBinds:
 
     def __init__(self, b, buf=128, blocksize=64):

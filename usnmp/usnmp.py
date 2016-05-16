@@ -180,7 +180,7 @@ def tobytes_tv(t, v=None):
         if v < 0:
             raise ValueError("ASN.1 ints must be >=0")
         else:
-            b = bytes()
+            b = bytes() if v!=0 else bytes(1)
             while v > 0:
                 b = bytes([v & 0xff]) + b
                 v //= 0x100
@@ -204,6 +204,7 @@ def tobytes_tv(t, v=None):
         raise Exception("not implemented", t)
     else:
         raise TypeError("invalid type", t)
+    print(b'-'+b+b'-')
     return bytes([t]) + tobytes_len(len(b)) + b
 
 def tobytes_len(l):

@@ -82,3 +82,9 @@ t1.ver
 t1.community
 t1.enterprise
 t1.agent_addr
+
+#single item get-request
+s="30260201000403414643a01c020433783ac0020100020100300e300c06082b060102010101000500"
+a=bytes(binascii.unhexlify(s))
+b=usnmp.SnmpPacket(a)
+a==b.tobytes()
