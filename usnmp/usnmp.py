@@ -74,11 +74,18 @@ class SnmpPacket:
     def tobytes(self):
         b = tobytes_tv(ASN1_SEQ, self.varbinds.tobytes())
         if self.type == SNMP_TRAP:
-            b = tobytes_tv(ASN1_OID, self.enterprise) + tobytes_tv(SNMP_IPADDR, self.agent_addr) + tobytes_tv(ASN1_INT, self.generic_trap) + tobytes_tv(ASN1_INT, self.specific_trap) + tobytes_tv(SNMP_TIMETICKS, self.timestamp) + b
+            b = tobytes_tv(ASN1_OID, self.enterprise) + \
+                tobytes_tv(SNMP_IPADDR, self.agent_addr) + \
+                tobytes_tv(ASN1_INT, self.generic_trap) + \
+                tobytes_tv(ASN1_INT, self.specific_trap) + \
+                tobytes_tv(SNMP_TIMETICKS, self.timestamp) + b
         else:
-            b = tobytes_tv(ASN1_INT, self.id) + tobytes_tv(ASN1_INT, self.err_status) + tobytes_tv(ASN1_INT, self.err_id) + b
+            b = tobytes_tv(ASN1_INT, self.id) + \
+            tobytes_tv(ASN1_INT, self.err_status) + \ 
+            tobytes_tv(ASN1_INT, self.err_id) + b
         b = tobytes_tv(self.type, b)
-        b = tobytes_tv(ASN1_INT, self.ver) + tobytes_tv(ASN1_OCTSTR, self.community) + b
+        b = tobytes_tv(ASN1_INT, self.ver) + \ 
+            tobytes_tv(ASN1_OCTSTR, self.community) + b
         b = tobytes_tv(ASN1_SEQ, b)
         return b
 
