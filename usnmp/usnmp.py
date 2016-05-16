@@ -204,7 +204,6 @@ def tobytes_tv(t, v=None):
         raise Exception("not implemented", t)
     else:
         raise TypeError("invalid type", t)
-    print(b'-'+b+b'-')
     return bytes([t]) + tobytes_len(len(b)) + b
 
 def tobytes_len(l):
