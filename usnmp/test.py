@@ -1,7 +1,5 @@
 import binascii
-#getrequest
 
-s="3081b00201000403414643a181a5020433783ac9020100020100308196300d06092b06010201020201010500300d06092b06010201020201020500300d06092b06010201020201030500300d06092b06010201020201040500300d06092b06010201020201050500300d06092b06010201020201060500300d06092b06010201020201070500300d06092b06010201020201080500300d06092b06010201020201090500300d06092b060102010202010a0500"
 #getresponse
 s="3081d20201000403414643a281c702043821eea10201000201003081b8300f060a2b0601020102020101010201013013060a2b0601020102020102010405566c616e31300f060a2b0601020102020103010201353010060a2b060102010202010401020205dc3012060a2b06010201020201050142043b9aca003014060a2b0601020102020106010406001b8ff4d1c0300f060a2b060102010202010701020102300f060a2b0601020102020108010201023010060a2b06010201020201090143022c06300f060a2b060102010202010a01410100"
 
@@ -20,12 +18,12 @@ usnmp.frombytes_tvat(b,26)
 usnmp.tobytes_tv(4, "hello world")
 usnmp.frombytes_tvat(usnmp.tobytes_tv(4, b"hello world"),0)
 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_INT,12311),0)[1] == 12311 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_GUAGE,23),0)[1] == 23 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_TIMETICKS,65783634),0)[1] == 65783634 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_NULL,None),0)[1] == None 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_OID,"1.3.1.2.2.4324.2"),0)[1] == "1.3.1.2.2.4324.2" 
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR,"172.26.235.23"),0)[1] == "172.26.235.23" 
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_INT,12311),0)[1] == 12311
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_GUAGE,23),0)[1] == 23
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_TIMETICKS,65783634),0)[1] == 65783634
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_NULL,None),0)[1] == None
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.ASN1_OID,"1.3.1.2.2.4324.2"),0)[1] == "1.3.1.2.2.4324.2"
+usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR,"172.26.235.23"),0)[1] == "172.26.235.23"
 
 p = usnmp.SnmpPacket(b)
 p.ver
@@ -158,17 +156,28 @@ a==b.tobytes()
 b.ver, b.community, b.type
 for i in b.varbinds: print(i, b.varbinds[i])
 
+b.varbinds._b[:b.varbinds._last+1] #raw data
+usnmp.frombytes_tvat(b.varbinds._b[:b.varbinds._last+1],2) #unpack the oid (sucesfully), skipping sequence header
+l,l_incr = usnmp.frombytes_lenat(b.varbinds._b[:b.varbinds._last+1],2)
+usnmp.frombytes_tvat(b.varbinds._b[:b.varbinds._last+1][2:][:1+l_incr+l],0)
+oidb = b.varbinds._b[:b.varbinds._last+1][2:][:1+l_incr+l]
+oid = usnmp.frombytes_tvat(oidb,0)[1]
+oidb1 = usnmp.tobytes_tv(usnmp.ASN1_OID, oid)
+oidb == oidb1
+usnmp.frombytes_lenat(oidb,0) == usnmp.frombytes_lenat(oidb1,0)
+
+for i in range(len(oidb)):print(i,oidb[i],oidb1[i],oidb[i]==oidb1[i],bin(oidb[i]),bin(oidb1[i]))
+
 #but not a problem?
 p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']=usnmp.ASN1_INT, 23
 p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']
 
 #different encoding results for same OID?
 a=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x83E\xea\x1c\x01\x81@\x81(\x01\x81\t'
-a=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x82\xc5\xea\x1c\x01\x81@\x81(\x01\x81\t'
+b=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x82\xc5\xea\x1c\x01\x81@\x81(\x01\x81\t'
 usnmp.frombytes_tvat(a,0)
 usnmp.frombytes_tvat(b,0)
 usnmp.frombytes_tvat(a,0)==usnmp.frombytes_tvat(b,0)
-
 
 import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -188,10 +197,11 @@ for oid in r.varbinds:
     print(oid, r.varbinds[oid])
 
 r=usnmp.SnmpPacket(community="public", type=usnmp.SNMP_GETNEXTREQUEST)
+rsize=2048
 oid = "1.3.6.1.2.1.1.1"
 r.varbinds[oid]=(usnmp.ASN1_NULL,None)
 s.sendto(r.tobytes(), (b'192.168.1.1',161))
-d=s.recvfrom(1024)
+d=s.recvfrom(rsize)
 while True:
     r=usnmp.SnmpPacket(d[0])
     try:
@@ -202,6 +212,7 @@ while True:
         print(oid, r.varbinds[oid])
     r.type=usnmp.SNMP_GETNEXTREQUEST
     s.sendto(r.tobytes(), (b'192.168.1.1',161))
-    d=s.recvfrom(1024)
+    d=s.recvfrom(rsize)
+
 
 

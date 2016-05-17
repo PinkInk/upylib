@@ -44,6 +44,9 @@ SNMP_TRAP_LINKUP = const(0x3)
 SNMP_TRAP_AUTHFAIL = const(0x4)
 SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
 
+_SNMP_SEQs = (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP)
+_SNMP_INTs = (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS)
+
 
 class SnmpPacket:
 
@@ -164,8 +167,6 @@ class _VarBinds:
         while ptr < self._last+1:
             l, l_incr = frombytes_lenat(self._b, ptr)
             lo, lo_incr = frombytes_lenat(self._b, ptr+1+l_incr)
-            print(c[1+lc_incr:])
-            print(bytes(self._b[ptr+2+l_incr+lo_incr:ptr+2+l_incr+lo+lo_incr]))
             if c[1+lc_incr:] == self._b[ptr+2+l_incr+lo_incr:ptr+2+l_incr+lo+lo_incr]:
                 return ptr
             ptr += 1+l_incr+l
@@ -176,7 +177,7 @@ class _VarBinds:
 
 
 def tobytes_tv(t, v=None):
-    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+    if t in _SNMP_SEQs:
         b = v
     elif t == ASN1_OCTSTR:
         if type(v) is str:
@@ -185,7 +186,7 @@ def tobytes_tv(t, v=None):
             b = v
         else:
             raise ValueError("string or buffer required")
-    elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
+    elif t in _SNMP_INTs:
         if v < 0:
             raise ValueError("ASN.1 ints must be >=0")
         else:
@@ -203,7 +204,11 @@ def tobytes_tv(t, v=None):
         b = bytes([int(oid[0])*40 + int(oid[1])])
         for id in oid[2:]:
             id = int(id)
-            b = b + bytes([id] if id<=0x7f else [id//0x80+0x80,id&0x7f])
+            ob = bytes() if id>0 else bytes([0])
+            while id > 0:
+                ob = bytes([id&0x7f if len(ob)==0 else 0x80+(id&0x7f)]) + ob
+                id //= 0x80
+            b += ob
     elif t == SNMP_IPADDR:
         b = bytes()
         for octet in v.split("."):
@@ -230,14 +235,14 @@ def frombytes_tvat(b, ptr):
     l, l_incr = frombytes_lenat(b, ptr)
     end = ptr+1+l+l_incr
     ptr +=  1+l_incr
-    if t in (ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP):
+    if t in _SNMP_SEQs:
         v = bytes(b[ptr:end])
     elif t == ASN1_OCTSTR:
         try:
             v = str(b[ptr:end], "utf-8")
         except: #UnicodeDecodeError:
             v = bytes(b[ptr:end])
-    elif t in (ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS):
+    elif t in _SNMP_INTs:
         v=0
         while ptr < end:
             v = v*0x100 + b[ptr]
@@ -248,13 +253,14 @@ def frombytes_tvat(b, ptr):
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
         ptr += 1
+        ob = 0
         while ptr < end:
             if b[ptr]&0x80 == 0x80:
-                v += "." + str((b[ptr]-0x80)*0x80 + b[ptr+1])
-                ptr += 2
+                ob = ob*0x80 + (b[ptr]&0x7f)
             else:
-                v += "." + str(b[ptr])
-                ptr += 1
+                v += "." + str((ob*0x80)+b[ptr])
+                ob = 0
+            ptr += 1
     elif t == SNMP_IPADDR:
         v = ""
         while ptr < end:
