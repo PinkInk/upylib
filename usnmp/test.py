@@ -162,6 +162,14 @@ for i in b.varbinds: print(i, b.varbinds[i])
 p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']=usnmp.ASN1_INT, 23
 p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']
 
+#different encoding results for same OID?
+a=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x83E\xea\x1c\x01\x81@\x81(\x01\x81\t'
+a=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x82\xc5\xea\x1c\x01\x81@\x81(\x01\x81\t'
+usnmp.frombytes_tvat(a,0)
+usnmp.frombytes_tvat(b,0)
+usnmp.frombytes_tvat(a,0)==usnmp.frombytes_tvat(b,0)
+
+
 import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.settimeout(1)

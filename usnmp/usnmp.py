@@ -81,10 +81,10 @@ class SnmpPacket:
                 tobytes_tv(SNMP_TIMETICKS, self.timestamp) + b
         else:
             b = tobytes_tv(ASN1_INT, self.id) + \
-            tobytes_tv(ASN1_INT, self.err_status) + \ 
+            tobytes_tv(ASN1_INT, self.err_status) + \
             tobytes_tv(ASN1_INT, self.err_id) + b
         b = tobytes_tv(self.type, b)
-        b = tobytes_tv(ASN1_INT, self.ver) + \ 
+        b = tobytes_tv(ASN1_INT, self.ver) + \
             tobytes_tv(ASN1_OCTSTR, self.community) + b
         b = tobytes_tv(ASN1_SEQ, b)
         return b
@@ -164,6 +164,8 @@ class _VarBinds:
         while ptr < self._last+1:
             l, l_incr = frombytes_lenat(self._b, ptr)
             lo, lo_incr = frombytes_lenat(self._b, ptr+1+l_incr)
+            print(c[1+lc_incr:])
+            print(bytes(self._b[ptr+2+l_incr+lo_incr:ptr+2+l_incr+lo+lo_incr]))
             if c[1+lc_incr:] == self._b[ptr+2+l_incr+lo_incr:ptr+2+l_incr+lo+lo_incr]:
                 return ptr
             ptr += 1+l_incr+l
