@@ -1,18 +1,18 @@
-_getset_templ = "3014020004067075626c6963a0080200020002003000"
-_trap_templ = "3020020004067075626c6963a41406042b06010440047f0000010200020043003000"
+#refer template.py
+_SNMP_GETSET_TEMPL = b"3014020004067075626c6963a0080200020002003000"
+_SNMP_TRAP_TEMPL = b"302502010004067075626c6963a41806052b0601040140047f0000010201000201004301003000"
 
 from sys import implementation
 if implementation.name == "cpython":
     def const(val):
         return val
-    #refer template.py
     import binascii
-    _getset_templ = binascii.unhexlify(_getset_templ)
-    _trap_templ = binascii.unhexlify(_trap_templ)
+    _SNMP_GETSET_TEMPL = binascii.unhexlify(_SNMP_GETSET_TEMPL)
+    _SNMP_TRAP_TEMPL = binascii.unhexlify(_SNMP_TRAP_TEMPL)
 else:
     import ubinascii
-    _getset_templ = ubinascii.unhexlify(_getset_templ)
-    _trap_templ = ubinascii.unhexlify(_trap_templ)
+    _SNMP_GETSET_TEMPL = ubinascii.unhexlify(_SNMP_GETSET_TEMPL)
+    _SNMP_TRAP_TEMPL = ubinascii.unhexlify(_SNMP_TRAP_TEMPL)
 
 SNMP_VER1 = const(0x00)
 ASN1_INT = const(0x02)
@@ -44,8 +44,21 @@ SNMP_TRAP_LINKUP = const(0x3)
 SNMP_TRAP_AUTHFAIL = const(0x4)
 SNMP_TRAP_EGPNEIGHLOSS = const(0x5)
 
-_SNMP_SEQs = bytes([ASN1_SEQ, SNMP_GETREQUEST, SNMP_GETRESPONSE, SNMP_GETNEXTREQUEST, SNMP_SETREQUEST, SNMP_TRAP])
-_SNMP_INTs = bytes([ASN1_INT, SNMP_COUNTER, SNMP_GUAGE, SNMP_TIMETICKS])
+#ASN.1 sequence and SNMP derived types
+_SNMP_SEQs = bytes([ASN1_SEQ, 
+                    SNMP_GETREQUEST, 
+                    SNMP_GETRESPONSE, 
+                    SNMP_GETNEXTREQUEST, 
+                    SNMP_SETREQUEST, 
+                    SNMP_TRAP
+                  ])
+
+#ASN.1 int and SNMP derived types
+_SNMP_INTs = bytes([ASN1_INT, 
+                    SNMP_COUNTER, 
+                    SNMP_GUAGE, 
+                    SNMP_TIMETICKS
+                  ])
 
 
 class SnmpPacket:
@@ -54,7 +67,7 @@ class SnmpPacket:
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
             b = args[0]
         elif "type" in kwargs:
-            b = _trap_templ if kwargs["type"]==SNMP_TRAP else _getset_templ
+            b = _SNMP_TRAP_TEMPL if kwargs["type"]==SNMP_TRAP else _SNMP_GETSET_TEMPL
         else:
             raise ValueError("buffer or type=x required")
         ptr = 1 + frombytes_lenat(b, 0)[1]
@@ -67,30 +80,30 @@ class SnmpPacket:
         else:
             ptr = self._frombytes_props(b, ptr,
                   ("id", "err_status", "err_id"))
-        ptr += 1 + frombytes_lenat(b, ptr)[1] #to varbinds
+        ptr += 1 + frombytes_lenat(b, ptr)[1]
         self.varbinds = _VarBinds(b[ptr:])
         for arg in kwargs:
             if hasattr(self, arg):
                 setattr(self, arg, kwargs[arg])
 
-    #def __bytes__(self):
     def tobytes(self):
         b = tobytes_tv(ASN1_SEQ, self.varbinds.tobytes())
         if self.type == SNMP_TRAP:
-            b = tobytes_tv(ASN1_OID, self.enterprise) + \
-                tobytes_tv(SNMP_IPADDR, self.agent_addr) + \
-                tobytes_tv(ASN1_INT, self.generic_trap) + \
-                tobytes_tv(ASN1_INT, self.specific_trap) + \
-                tobytes_tv(SNMP_TIMETICKS, self.timestamp) + b
+            b = tobytes_tv(ASN1_OID, self.enterprise) \
+                + tobytes_tv(SNMP_IPADDR, self.agent_addr) \
+                + tobytes_tv(ASN1_INT, self.generic_trap) \
+                + tobytes_tv(ASN1_INT, self.specific_trap) \
+                + tobytes_tv(SNMP_TIMETICKS, self.timestamp) \
+                + b
         else:
-            b = tobytes_tv(ASN1_INT, self.id) + \
-            tobytes_tv(ASN1_INT, self.err_status) + \
-            tobytes_tv(ASN1_INT, self.err_id) + b
-        b = tobytes_tv(self.type, b)
-        b = tobytes_tv(ASN1_INT, self.ver) + \
-            tobytes_tv(ASN1_OCTSTR, self.community) + b
-        b = tobytes_tv(ASN1_SEQ, b)
-        return b
+            b = tobytes_tv(ASN1_INT, self.id) \
+                + tobytes_tv(ASN1_INT, self.err_status) \
+                + tobytes_tv(ASN1_INT, self.err_id) \
+                + b
+        return tobytes_tv(ASN1_SEQ, tobytes_tv(ASN1_INT, self.ver) \
+                + tobytes_tv(ASN1_OCTSTR, self.community) \
+                + tobytes_tv(self.type, b \
+                    + tobytes_tv(ASN1_SEQ, self.varbinds.tobytes())))
 
     def _frombytes_props(self, b, ptr, properties):
         for prop in properties:
@@ -107,7 +120,6 @@ class _VarBinds:
         self._b[0:len(b)] = b
         self._last = len(b)-1
 
-    #def __bytes__(self):
     def tobytes(self):
         return bytes( self._b[:self._last+1] )
 
@@ -120,9 +132,7 @@ class _VarBinds:
 
     def __setitem__(self, oid, tv):
         t,v = tv
-        boid = tobytes_tv(ASN1_OID, oid)
-        btv = tobytes_tv(t,v)
-        b = bytes([ASN1_SEQ]) + tobytes_len(len(boid) + len(btv)) + boid + btv
+        b = tobytes_tv(ASN1_SEQ, tobytes_tv(ASN1_OID, oid) + tobytes_tv(t,v)) 
         try:
             start = self._seek_oidtv(oid)
             stop = start + 1 + sum(frombytes_lenat(self._b, start))

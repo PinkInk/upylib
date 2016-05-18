@@ -27,7 +27,7 @@ binascii.hexlify(gs)
 #   INT version = SNMP_VER1
 #   STR community = "public"
 #   TYPE [trap] = SNMP_TRAP
-#       OID enterprise oid = "1.3.6.1.4"
+#       OID enterprise oid = "1.3.6.1.4.1" (root of enterprise oid's)
 #       IP ip address = 127.0.0.1
 #       INT trap generic type = 0
 #       INT trap specific type = 0
@@ -35,7 +35,7 @@ binascii.hexlify(gs)
 #       SEQ
 #           of variable bindings
 trap = tobytes_tv(ASN1_SEQ, b'')
-trap = tobytes_tv(ASN1_OID, "1.3.6.1.4") + \
+trap = tobytes_tv(ASN1_OID, "1.3.6.1.4.1") + \
         tobytes_tv(SNMP_IPADDR, "127.0.0.1") + \
         tobytes_tv(ASN1_INT, 0) + \
         tobytes_tv(ASN1_INT, 0) + \
