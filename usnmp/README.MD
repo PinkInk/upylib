@@ -36,41 +36,41 @@ Create a GETREQUEST packet to request;
 ... from an agent @ 192.168.1.1 using the **public** community.
 
 ```python
-import usnmp
-greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
+>>> import usnmp
+>>> greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
 ```
 
 Note that the module has provided reasonable defaults that match this simple
 case; 
 
 ```python
-greq.ver
+>>> greq.ver
 0 #usnmp.SNMP_VER1
-greq.community
+>>> greq.community
 'public'
-greq.id
+>>> greq.id
 0
 ```
 
 But these can be changed, either via subsequent assignment;
 
 ```python
-greq.community 'somethingelse'
-greq.id = 5436235
+>>> greq.community = 'somethingelse'
+>>> greq.id = 5436235
 ```
 
 ... or in the class initialisation itself;
 
 ```python
-greq = usnmp.SnmpPacket(type=usnmp.GET_REQUEST, community='public', id=654235)
+>>> greq = usnmp.SnmpPacket(type=usnmp.GET_REQUEST, community='public', id=654235)
 ```
 
 Populate the **.varbinds** object (a collections.OrderedDict) with the OIDs
-being requested;
+to be requested from the agent;
 
 ```python
-greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
-greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.ASN1_NULL, None
+>>> greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
+>>> greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.ASN1_NULL, None
 ```
 
 If you were building an equivalent GETRESPONSE packet, you'd need to 
@@ -78,36 +78,33 @@ specify the Type & Value against each OID (refering to
 [MIB-2](https://www.ietf.org/rfc/rfc1213.txt));
 
 ```python
-greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 3523441234
-greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.SNMP_TIMETICKS, 908452344
+>>> greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 3523441234
+>>> greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.SNMP_TIMETICKS, 908452344
 ```
 
-Note that as above even GETREQUEST packets require a value against each OID, 
-formally this is an usnmp.ASN1_NULL, but there is a convenience alternative
-accepted by the module;
+Note that as above GETREQUEST packet varbinds require a (type, value) tuple for 
+each OID, formally this is an usnmp.ASN1_NULL, python type None, but there is a
+convenience alternative accepted by the module;
 
 ```python
-greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
-greq.varbinds['1.3.6.1.2.1.1.3.0'] = None
+>>> greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
+>>> greq.varbinds['1.3.6.1.2.1.1.3.0'] = None
 ```
 
 ###Decode a packet received from the network;
 
 First lets send the packet created above to the agent, and hopefully receive
-its response.
-
-Formally; we should compare the **id** of the response to the **id** of the 
-request in order to verify the relationship (seeding this from the likes of 
-micropython's time.ticks_us() may be useful).
+its response;
 
 
 ```python
-import socket, time
-s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
-s.settimeout(1)
-greq.id = time.ticks_us()
-s.sendto(greq.tobytes(), (b'192.168.1.1', 161))
-b = s.recvfrom(1024)[0]
+>>> import socket, time
+>>> s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+>>> s.settimeout(1)
+>>> greq.id = time.ticks_us()
+>>> s.sendto(greq.tobytes(), (b'192.168.1.1', 161))
+72
+>>> b = s.recvfrom(1024)[0]
 ```
 
 **b** now (hopefully) contains the GETRESPONSE to our GREQUEST;
@@ -118,7 +115,11 @@ gresp.type == usnmp.SNMP_GETRESPONSE
 True
 ```
 
-Compare id's;
+Formally; we should compare the **id** of the response to the **id** of the 
+request in order to verify the relationship (seeding this from the likes of 
+micropython's time.ticks_us() may be useful).
+
+
 
 ```python
 gresp.id == greq.id
