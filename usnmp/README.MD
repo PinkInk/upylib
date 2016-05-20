@@ -38,59 +38,58 @@ Create a GETREQUEST packet to request;
 ```python
 import usnmp
 greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
-greq.ver
 ```
 
 Note that the module has provided reasonable defaults that match this simple
 case; 
 
-'''python
+```python
 greq.ver
 0 #usnmp.SNMP_VER1
 greq.community
 'public'
 greq.id
 0
-'''
+```
 
 But these can be changed, either via subsequent assignment;
 
-'''python
+```python
 greq.community 'somethingelse'
 greq.id = 5436235
-'''
+```
 
 ... or in the class initialisation itself;
 
-'''python
+```python
 greq = usnmp.SnmpPacket(type=usnmp.GET_REQUEST, community='public', id=654235)
-'''
+```
 
 Populate the **.varbinds** object (a collections.OrderedDict) with the OIDs
 being requested;
 
-'''python
+```python
 greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
 greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.ASN1_NULL, None
-'''
+```
 
 If you were building an equivalent GETRESPONSE packet, you'd need to 
 specify the Type & Value against each OID (refering to 
 [MIB-2](https://www.ietf.org/rfc/rfc1213.txt));
 
-'''python
+```python
 greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 3523441234
 greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.SNMP_TIMETICKS, 908452344
-'''
+```
 
 Note that as above even GETREQUEST packets require a value against each OID, 
 formally this is an usnmp.ASN1_NULL, but there is a convenience alternative
 accepted by the module;
 
-'''python
+```python
 greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
 greq.varbinds['1.3.6.1.2.1.1.3.0'] = None
-'''
+```
 
 ###Decode a packet received from the network;
 
@@ -102,62 +101,62 @@ request in order to verify the relationship (seeding this from the likes of
 micropython's time.ticks_us() may be useful).
 
 
-'''python
+```python
 import socket, time
 s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 s.settimeout(1)
 greq.id = time.ticks_us()
 s.sendto(greq.tobytes(), (b'192.168.1.1', 161))
 b = s.recvfrom(1024)[0]
-'''
+```
 
 **b** now (hopefully) contains the GETRESPONSE to our GREQUEST;
 
-'''python
+```python
 gresp = usnmp.SnmpPacket(b)
 gresp.type == usnmp.SNMP_GETRESPONSE
 True
-'''
+```
 
 Compare id's;
 
-'''python
+```python
 gresp.id == greq.id
 True
-'''
+```
 
 Retrieve the data;
 
-'''python
+```python
 for oid in gresp.varbinds:
     print(oid, gresp.varbinds[oid][1])
 
 '1.3.6.1.2.1.2.2.1.10.4'   5425233412
 '1.3.6.1.2.1.1.3.0'	1359284344
-'''
+```
 
 ##SNMP v1 general and packet type specific variables
 
 **All** SNMP packets define **ver**sion and **community**.
 
-'''python
+```python
 p.ver
 0 #usnmp.SNMP_VER1
 p.community
 'public'
-'''
+```
 
 SNMP **GET** and **SET** type packets define request_**id**, 
 **err**or**_status** and **err**or**_id**.
 
-'''python
+```python
 p.id
 756345346
 p.err_status
 0 #usnmp.SNMP_ERR_NOERROR - general error
 p.err_id
 0 #agent specific error code
-'''
+```
 
 SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**, 
 **specific_trap** and **timestamp**.
@@ -171,7 +170,7 @@ p.specific_trap
 0 #agent specific trap type code
 p.timestamp
 683436
-'''
+```
 
 ##Constants
 
@@ -218,9 +217,9 @@ SNMP packet type (derived from ASN.1 SEQuence) for SNMP GETREQUESTs.
 A request from a Manager to an Agent to provide the current value of one or
 more OID's.
 
-'''python
+```python
 p=usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
-'''
+```
 
 **SNMP_GETNEXTREQUEST** = 0xa1
 
@@ -232,9 +231,9 @@ that follow the ones in the request.  This packet type allows a Manager to
 the values in a variable length table (e.g. the Interfaces or Connections table)
 row by row.
 
-'''python
+```python
 p=usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST)
-'''
+```
 
 Corresponding response should include the next OID(s) available (and their 
 values) on the agent, after the one(s) specified in this request.
@@ -246,9 +245,9 @@ been reached.
 
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP GETRESPONSEs.
 
-'''python
+```python
 p=usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
-'''
+```
 
 Response from agent to Manager to either a GETREQUEST, GETNEXTREQUEST or
 SETREQUEST packet, containing the request variables (OID values).
@@ -257,9 +256,9 @@ SETREQUEST packet, containing the request variables (OID values).
 
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP SETREQUESTs.
 
-'''python
+```python
 p=usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
-'''
+```
 
 Requests to set the value of **writeable** agent variable(s) (OID values).  
 
@@ -269,9 +268,9 @@ Refer Mib-2 to determine which OIDs are writeable.
 
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP TRAPs.
 
-'''python
+```python
 p=usnmp.SnmpPacket(type=usnmp.SNMP_TRAP)
-'''
+```
 
 All the above GET|SET type SNMP packets are **poll** operations i.e. 
 a 'Manager' polls (asks for) the value of a specific OID (or OID's) on
@@ -292,9 +291,9 @@ interface since it started counting them.
 
 Represented in micropython by an **int**eger.
 
-'''python
+```python
 p.varbinds["1.3.6.1.2.1.2.2.1.10.4"] = 1252341
-'''
+```
 
 **SNMP_GUAGE** = 0x42
 
@@ -320,9 +319,9 @@ SNMP data type representing an IP Address.
 Represented in micropython by a **str**ing in normal IP Address format 
 e.g. "172.26.1.1" or "255.255.255.0";
 
-'''python
+```python
 p.varbinds['1.3.6.1.2.1.6.13.1.2.11'] = usnmp.SNMP_IPADDR, "172.26.1.1"
-'''
+```
 
 **SNMP_OPAQUE** = 0x44<BR>
 **SNMP_NSAPADDR** = 0x45
@@ -358,23 +357,23 @@ and are used by the **SnmpPacket** class to decode and encode data.
 
 Return binary payload encoding of python format ASN.1/SNMP type and value pair.
 
-'''python
+```python
 usnmp.tobytes_tv(usnmp.ASN1_OID, "1.3.1.2.1.1.11.2")
 b'\x06\x07+\x01\x02\x01\x01\x0b\x02'
 usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1")
 b'@\x04\xac\x1a\x17\x01'
-'''
+```
 
 ###usnmp.tobytes_len(len)
 
 Return binary encoding of the length of a data block.
 
-'''python
+```python
 usnmp.tobytes_len(23)
 b'\x17'
 usnmp.tobytes_len(2754)
 b'\x82\n\xc2'
-'''
+```
 
 Note that the number of bytes required to encode a data blocks length is
 variable, hence the behaviour of the counterpart usnmp.frombytes_lenat 
@@ -384,7 +383,7 @@ function described hereunder.
 
 Return the type and value found at **ptr** within **bytes**.
 
-'''python
+```python
 usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1"), 0)
 (64, '172.26.23.1')
 64 == usnmp.SNMP_IPADDR
@@ -394,28 +393,28 @@ import binascii
 b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
 usnmp.frombytes_tvat(b, 5)
 (4, 'AFC') #community string
-'''
+```
 
 ###usnmp.frombytes_lenat(bytes, ptr)
 
 Return the length of the payload encoded at **ptr** in **bytes** and also the
 number of bytes the legnth was encoded in.
 
-'''python
+```python
 import binascii
 #single item get-request, captured from nw
 b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
 usnmp.frombytes_lenat(b, 5)
 (3, 1) #three bytes long, length encoded in a single byte
-'''
+```
 
 The full length of the data-block starting at **ptr** is 1 (the length of 
 type byte) + the sum of the outputs of this function.
 
-'''python
+```python
 1+sum(usnmp.frombytes_lenat(b, 5))
 5
-'''
+```
 
 ##SNMP v1 packet structure
 
@@ -492,27 +491,27 @@ requested.
 If you are requesting to know this value from an agent a GETxxx type SNMP 
 packet will fill the data value with an ASN.1 NULL type e.g.;
 
-'''python
+```python
 import usnmp
 p = usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
 p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
-'''
+```
 
 Or for brevity;
 
-'''python
+```python
 p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
-'''
+```
 
 If you are acting as an agent (i.e. responding to such a get request), or are
 interpreting data received in response to the request, the DATA element will
 be of type SNMP_COUNTER (because the specific OID is of type Counter), a 
 derivative of the ASN.1 INT type, which can represent an integer e.g.;
 
-'''python
+```python
 p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
 p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 12345678 #some value
-'''
+```
 
 
 
