@@ -1,14 +1,14 @@
-#Simple Network Management Protocol v1 packet codec, 
-#for [Micropython](www.micropython.org)
+#Simple Network Management Protocol v1 packet codec, for [Micropython](www.micropython.org)
 
 Codes and encodes SNMP v1 packets received from, or to send on, the network.  
+
 _Not_ a server - sending or receiving packets on the network is outside of 
 its scope (but trivial; refer examples hereunder).
 
-Note: _only_ SNMPv1 is supported.  SNMPv1 is not encrypted - data is sent
+Note: _only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
 to the network, including the internet if you so choose, 'in the clear' - 
 be sure that you understand the consequences thereof before utilising this 
-module, or SNMPv1 in general, on a network that you don't control.
+module, or SNMPv1 in general, on a network that you don't trust.
 
 Target is for it to be minimal enough to load, compile and run on the 
 micropython esp8266 port, with adequate resources remaining for other tasks 
@@ -16,30 +16,30 @@ micropython esp8266 port, with adequate resources remaining for other tasks
 embedded device), whilst retaining a useable api.
 
 _I plan to further optimise the module through use of memoryviews, when a 
-general availability release of the esp8266 port, with working memoryview 
-support, is released._
+general-availability release of the esp8266 port with working memoryview 
+support is released._
 
 ##usnmp.SnmpPacket() class
 
 Represents an SNMP packet.  Can be initialised in one of two ways i.e.;
 
 - with a buffer (bytes, bytearray or memoryview) of data received from the network
-- by defining the SNMP type, type specific parameters and variable bindings (data) from scratch
+- by defining the SNMP type and type specific properties and variable bindings (data)
 
 ###Create and encode an SNMP packet from scratch;
 
-Create a GETREQUEST packet to request 
+Create a GETREQUEST packet to request; 
 
 - ifInOctets::4 (OID: 1.3.6.1.2.1.2.2.1.10.4 - Count of packets inbound to Interface 4)
 - sysUpTime (OID: 1.3.6.1.2.1.1.3.0)
 
-from an agent @ 192.168.1.1 using the **public** community.
+... from an agent @ 192.168.1.1 using the **public** community.
 
-'''python
+```python
 import usnmp
 greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
 greq.ver
-'''
+```
 
 Note that the module has provided reasonable defaults that match this simple
 case; 
