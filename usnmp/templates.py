@@ -1,6 +1,6 @@
 #construct compiled template packets used in main module
 
-from usnmp import *
+import usnmp
 import binascii
 
 # SEQ
@@ -12,14 +12,14 @@ import binascii
 #       INT error index = 0
 #       SEQ 
 #           of variable binding = empty
-gs = tobytes_tv(ASN1_SEQ, b'')
-gs = tobytes_tv(ASN1_INT, 0) + \
-        tobytes_tv(ASN1_INT, 0) + \
-        tobytes_tv(ASN1_INT, 0) + gs 
-gs = tobytes_tv(SNMP_GETREQUEST, gs)
-gs = tobytes_tv(ASN1_INT, SNMP_VER1) + \
-        tobytes_tv(ASN1_OCTSTR, "public") + gs
-gs = tobytes_tv(ASN1_SEQ, gs)
+gs = usnmp.tobytes_tv(usnmp.ASN1_SEQ, b'')
+gs = usnmp.tobytes_tv(usnmp.ASN1_INT, 0) + \
+        usnmp.tobytes_tv(usnmp.ASN1_INT, 0) + \
+        usnmp.tobytes_tv(usnmp.ASN1_INT, 0) + gs 
+gs = usnmp.tobytes_tv(usnmp.SNMP_GETREQUEST, gs)
+gs = usnmp.tobytes_tv(usnmp.ASN1_INT, usnmp.SNMP_VER1) + \
+        usnmp.tobytes_tv(usnmp.ASN1_OCTSTR, "public") + gs
+gs = usnmp.tobytes_tv(usnmp.ASN1_SEQ, gs)
 gs
 binascii.hexlify(gs)
 
@@ -34,15 +34,15 @@ binascii.hexlify(gs)
 #       TIME time = 0
 #       SEQ
 #           of variable bindings
-trap = tobytes_tv(ASN1_SEQ, b'')
-trap = tobytes_tv(ASN1_OID, "1.3.6.1.4.1") + \
-        tobytes_tv(SNMP_IPADDR, "127.0.0.1") + \
-        tobytes_tv(ASN1_INT, 0) + \
-        tobytes_tv(ASN1_INT, 0) + \
-        tobytes_tv(SNMP_TIMETICKS, 0) + trap
-trap = tobytes_tv(SNMP_TRAP, trap)
-trap = tobytes_tv(ASN1_INT, SNMP_VER1) + \
-        tobytes_tv(ASN1_OCTSTR, "public") + trap
-trap = tobytes_tv(ASN1_SEQ, trap)
+trap = usnmp.tobytes_tv(usnmp.ASN1_SEQ, b'')
+trap = usnmp.tobytes_tv(usnmp.ASN1_OID, "1.3.6.1.4.1") + \
+        usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "127.0.0.1") + \
+        usnmp.tobytes_tv(usnmp.ASN1_INT, 0) + \
+        usnmp.tobytes_tv(usnmp.ASN1_INT, 0) + \
+        usnmp.tobytes_tv(usnmp.SNMP_TIMETICKS, 0) + trap
+trap = usnmp.tobytes_tv(usnmp.SNMP_TRAP, trap)
+trap = usnmp.tobytes_tv(usnmp.ASN1_INT, usnmp.SNMP_VER1) + \
+        usnmp.tobytes_tv(usnmp.ASN1_OCTSTR, "public") + trap
+trap = usnmp.tobytes_tv(usnmp.ASN1_SEQ, trap)
 trap
 binascii.hexlify(trap)

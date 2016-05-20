@@ -1,17 +1,5 @@
 from usnmp_codec import *
 
-##reinstate when esp support OrderedDict
-#from ucollections import OrderedDict
-
-##for cpython, uncomment;
-#try:
-#    from collections import OrderedDict
-#except ImportError:
-#    from ucollections import OrderedDict
-#
-#def const(val):
-#    return val
-
 _SNMP_PROPS = ("ver", "community")
 _SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")
 _SNMP_GETSET_PROPS = ("id", "err_status", "err_id")
@@ -19,14 +7,13 @@ _SNMP_GETSET_PROPS = ("id", "err_status", "err_id")
 _SNMP_GETSET_TEMPL = b"0\x14\x02\x00\x04\x06public\xa0\x08\x02\x00\x02\x00\x02\x000\x00"
 _SNMP_TRAP_TEMPL = b"0%\x02\x01\x00\x04\x06public\xa4\x18\x06\x05+\x06\x01\x04\x01@\x04\x7f\x00\x00\x01\x02\x01\x00\x02\x01\x00C\x01\x000\x00"
 
-
 class SnmpPacket:
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
             b = args[0]
         elif "type" in kwargs:
-            if kwargs["type"]== SNMP_TRAP:
+            if kwargs["type"] == SNMP_TRAP:
                 b = _SNMP_TRAP_TEMPL
             else:
                 b = _SNMP_GETSET_TEMPL

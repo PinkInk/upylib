@@ -36,7 +36,7 @@ p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
 for oid in p.varbinds: print(oid, p.varbinds[oid])
 
 p.varbinds["1.3.6.1.2.1.2.2.1.1.1"]=usnmp.ASN1_INT,23
-del(p.varbinds["1.3.6.1.2.1.2.2.1.4.1"])p.varbinds._last
+del(p.varbinds["1.3.6.1.2.1.2.2.1.4.1"])
 try:
     p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
 except KeyError:
