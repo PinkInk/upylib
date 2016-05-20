@@ -178,7 +178,9 @@ decoding SNMP data.
 
 ###General constants
 
-**SNMP_VER1** = 0x0 indicates SNMP Version 1 (the only version supported by this module).
+**SNMP_VER1** = 0x0 
+
+Indicates SNMP Version 1 (the only version supported by this module).
 
 ###Constants for DER encoded ASN.1 primitive types
 
@@ -217,7 +219,7 @@ A request from a Manager to an Agent to provide the current value of one or
 more OID's.
 
 ```python
-p=usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
 ```
 
 **SNMP_GETNEXTREQUEST** = 0xa1
@@ -231,7 +233,7 @@ the values in a variable length table (e.g. the Interfaces or Connections table)
 row by row.
 
 ```python
-p=usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST)
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST)
 ```
 
 Corresponding response should include the next OID(s) available (and their 
@@ -245,7 +247,7 @@ been reached.
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP GETRESPONSEs.
 
 ```python
-p=usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
+>>> p=usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
 ```
 
 Response from agent to Manager to either a GETREQUEST, GETNEXTREQUEST or
@@ -256,7 +258,7 @@ SETREQUEST packet, containing the request variables (OID values).
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP SETREQUESTs.
 
 ```python
-p=usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
+>>> p=usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
 ```
 
 Requests to set the value of **writeable** agent variable(s) (OID values).  
@@ -291,7 +293,7 @@ interface since it started counting them.
 Represented in micropython by an **int**eger.
 
 ```python
-p.varbinds["1.3.6.1.2.1.2.2.1.10.4"] = 1252341
+>>> p.varbinds["1.3.6.1.2.1.2.2.1.10.4"] = 1252341
 ```
 
 **SNMP_GUAGE** = 0x42
@@ -319,7 +321,7 @@ Represented in micropython by a **str**ing in normal IP Address format
 e.g. "172.26.1.1" or "255.255.255.0";
 
 ```python
-p.varbinds['1.3.6.1.2.1.6.13.1.2.11'] = usnmp.SNMP_IPADDR, "172.26.1.1"
+>>> p.varbinds['1.3.6.1.2.1.6.13.1.2.11'] = usnmp.SNMP_IPADDR, "172.26.1.1"
 ```
 
 **SNMP_OPAQUE** = 0x44<BR>
@@ -352,14 +354,14 @@ Possible SNMP **TRAP** packet **generic_trap** values.
 May be useful for deeper analysis of SNMP packets received from the network
 and are used by the **SnmpPacket** class to decode and encode data.
 
-###usnmp.tobytes_tv(type, data)
+###usnmp.tobytes_tv(type, value)
 
-Return binary payload encoding of python format ASN.1/SNMP type and value pair.
+Return binary payload encoding of python format ASN.1/SNMP type and value.
 
 ```python
-usnmp.tobytes_tv(usnmp.ASN1_OID, "1.3.1.2.1.1.11.2")
+>>> usnmp.tobytes_tv(usnmp.ASN1_OID, "1.3.1.2.1.1.11.2")
 b'\x06\x07+\x01\x02\x01\x01\x0b\x02'
-usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1")
+>>> usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1")
 b'@\x04\xac\x1a\x17\x01'
 ```
 
@@ -368,9 +370,9 @@ b'@\x04\xac\x1a\x17\x01'
 Return binary encoding of the length of a data block.
 
 ```python
-usnmp.tobytes_len(23)
+>>> usnmp.tobytes_len(23)
 b'\x17'
-usnmp.tobytes_len(2754)
+>>> usnmp.tobytes_len(2754)
 b'\x82\n\xc2'
 ```
 
@@ -380,17 +382,25 @@ function described hereunder.
 
 ###usnmp.frombytes_tvat(bytes, ptr)
 
-Return the type and value found at **ptr** within **bytes**.
+Return the (python) type and value found at **ptr** within **bytes**.
+
+__Output can be unpredictable if **ptr** doesn't point to the first byte
+in a data block.  For example, if the byte at ptr; 
+
+- is not an ASN.1 or SNMP type code, an exception will be raised
+- is a valid type code (randomly encountered within a payload or length encoding) output may be garbage
+__ 
 
 ```python
-usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1"), 0)
+>>> usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1"), 0)
 (64, '172.26.23.1')
-64 == usnmp.SNMP_IPADDR
+>>> 64 == usnmp.SNMP_IPADDR
 True
-import binascii
-#single item get-request, captured from nw
-b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
-usnmp.frombytes_tvat(b, 5)
+>>> 
+>>> import binascii
+>>> #single item get-request, captured from nw
+>>> b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
+>>> usnmp.frombytes_tvat(b, 5)
 (4, 'AFC') #community string
 ```
 
@@ -400,10 +410,10 @@ Return the length of the payload encoded at **ptr** in **bytes** and also the
 number of bytes the legnth was encoded in.
 
 ```python
-import binascii
-#single item get-request, captured from nw
-b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
-usnmp.frombytes_lenat(b, 5)
+>>> import binascii
+>>> #single item get-request, captured from nw
+>>> b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
+>>> usnmp.frombytes_lenat(b, 5)
 (3, 1) #three bytes long, length encoded in a single byte
 ```
 
@@ -427,9 +437,11 @@ There are two general packet structures;
 Each ASN.1 primitive, or SNMP derived type, is encoded in 3 elements - Type, 
 Length and Payload;
 
+```
 T - one byte indicating type of the data
 L[L1, L2 ... Ln] - length of Payload, can take more than one byte to encode
 P[P1, P2 ... Pn] - Payload bytes
+```
 
 The ASN.1 type SEQuence, is a container for multiple sub data elements, each
 encoded to the above described scheme (which _can_ include other SEQuences).
@@ -437,14 +449,17 @@ encoded to the above described scheme (which _can_ include other SEQuences).
 The SNMP protocol defines a number of derivatives of ASN.1 SEQuence which 
 are also containers e.g. the SNMP_GETxxx, SNMP_SETREQUEST and SNMP_TRAP types.
 
+```
 T - SEQ
 L[..Ln] - length of all the encoded sub data elements
     TL[..Ln]P[...Pn]
     TL[..Ln]P[...Pn]
     etc.
+```
 
 The SNMP GET and SET type packet format;
 
+```
 SEQ
     INT version
     OCTSTR community
@@ -460,9 +475,11 @@ SEQ
     	   	OID
     	   	DATA
     	   etc.
+```
 
 The SNMP TRAP type packet format is unique;
 
+```
 SEQ
     INT version
     OCTSTR community
@@ -480,6 +497,7 @@ SEQ
     	   	OID
     	   	DATA
     	   etc.
+```
 
 Variable Bindings (varbinds) associate specific agent properties with their
 value for e.g. 1.3.6.1.2.1.2.2.1.10.4 is defined by MIB-2 as ifInOctets 
