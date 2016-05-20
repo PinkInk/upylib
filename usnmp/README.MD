@@ -15,12 +15,22 @@ micropython esp8266 port, with adequate resources remaining for other tasks
 (I can't envisage any scenario where SNMP would be the only function of an 
 embedded device), whilst retaining a useable api.
 
-**BUT**, as of writing;
-- **memoryview is broken in the current general-availability version of the micropython esp8266 port, hence memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely.**
-- **contrary to the documentation current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class.**
-Therefore **usnmp_esp.py** is a modified version that uses a vanila Dictionary instead.
-This results in behaviour that diverges from SNMP standard (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable.
-- **usnmp_esp.py is still too large to be loaded by the current general-availability release of micropython esp8266 port**.
+This has (finally) been achieved, by splitting the module into two files
+`usnmp.py` and `usnmp_codec.py` ... to use the module copy both to the 
+filesystem of your microcontroller, and import `usnmp`;
+
+```python
+>>> import gc
+>>> import usnmp
+>>> gc.collect()
+```
+
+As of writing;
+- **memoryviews are broken in the current general-availability version of the micropython esp8266 port.**
+As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended.
+- **Contrary to the documentation current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class.**
+Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds).
+This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable.
 
 _Note: content of v1 subdir is an earlier, much less 'optimal' version maintained for posterity._
 
