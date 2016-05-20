@@ -5,7 +5,7 @@ Codes and encodes SNMP v1 packets received from, or to send on, the network.
 _Not_ a server - sending or receiving packets on the network is outside of 
 its scope (but trivial; refer examples hereunder).
 
-Note: _only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
+_Only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
 to the network, including the internet if you so choose, 'in the clear' - 
 be sure that you understand the consequences thereof before utilising this 
 module, or SNMPv1 in general, on a network that you don't trust.
@@ -32,20 +32,20 @@ I am not gauranteeing that that keeps up with changes to the main .py files._
 As of writing;
 - **memoryviews are broken in the current general-availability version of the micropython esp8266 port.**
 As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended.
-- **Contrary to the documentation current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class.**
+- **Current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class.**
 Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds).
 This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable.
 
-_Note: content of v1 subdir is an earlier, less optimised version maintained for posterity._
+_Note: v1 contains an earlier version maintained for posterity._
 
 ##usnmp.SnmpPacket() class
 
 Represents an SNMP packet.  Can be initialised in one of two ways i.e.;
 
 - with a buffer (bytes, bytearray or memoryview) of data received from the network
-- by defining the SNMP type and type specific properties and variable bindings (data)
+- by explicitly defining the SNMP type, type specific properties and variable bindings (data)
 
-###Create and encode an SNMP packet from scratch;
+###Create an SNMP packet from scratch;
 
 Create a GETREQUEST packet to request; 
 
@@ -59,8 +59,7 @@ Create a GETREQUEST packet to request;
 >>> greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
 ```
 
-Note that the module has provided reasonable defaults that match this simple
-case; 
+The module has provided reasonable defaults that match this simple case; 
 
 ```python
 >>> greq.ver
@@ -78,13 +77,13 @@ But these can be changed, either via subsequent assignment;
 >>> greq.id = 5436235
 ```
 
-... or in the class initialisation itself;
+... or in the class initialisation;
 
 ```python
 >>> greq = usnmp.SnmpPacket(type=usnmp.GET_REQUEST, community='public', id=654235)
 ```
 
-Populate the **.varbinds** object (a collections.OrderedDict) with the OIDs
+Populate the **.varbinds** object with the OIDs
 to be requested from the agent;
 
 ```python
@@ -112,8 +111,7 @@ convenience alternative accepted by the module;
 
 ###Decode a packet received from the network;
 
-First lets send the packet created above to the agent, and hopefully receive
-its response;
+Send the packet to the agent, and hopefully receive its response;
 
 
 ```python
@@ -142,9 +140,9 @@ request in order to verify the relationship;
 True
 ```
 
-__seeding **.id** this from the likes of micropython's time.ticks_us() may be useful__
+_seeding **.id** this from the likes of micropython's time.ticks_us() may be useful_
 
-Retrieve the requested data;
+Retrieve the requested variables;
 
 ```python
 >>> for oid in gresp.varbinds:
@@ -153,7 +151,7 @@ Retrieve the requested data;
 '1.3.6.1.2.1.1.3.0'	(67, 1359284344) #67 == usnmp.SNMP_TIMETICKS
 ```
 
-##SNMP v1 general and packet type specific variables
+##SNMP v1 general, and packet-type specific, variables
 
 **All** SNMP packets define **ver**sion and **community**.
 
