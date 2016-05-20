@@ -10,14 +10,26 @@ to the network, including the internet if you so choose, 'in the clear' -
 be sure that you understand the consequences thereof before utilising this 
 module, or SNMPv1 in general, on a network that you don't trust.
 
-Target is for it to be minimal enough to load, compile and run on the 
+**Target** is for it to be minimal enough to load, compile and run on the 
 micropython esp8266 port, with adequate resources remaining for other tasks 
 (I can't envisage any scenario where SNMP would be the only function of an 
 embedded device), whilst retaining a useable api.
 
-_I plan to further optimise the module through use of memoryviews, when a 
-general-availability release of the esp8266 port with working memoryview 
-support is released._
+**BUT as of writing;
+- memoryview is broken in the esp general-availability port, hence memory utilisation
+is sub-optimal (for now) and excessive heap fragmentation is highly likely
+- ucollections does not contain the OrderedDict class ... therefore  
+usnmp_esp.py is a modified version of the library that uses a vanila Dictionary
+in its place - this results in behaviour that diverges from SNMP standard
+(wherein Variable Bindings are normally ordered) and as a side-effect you
+cannot compare a binary packet received from the network with 'usnmp.SnmpPacket.tobytes()' 
+output, because order in which variable bindings is encoded is unpredictable.
+- usnmp_esp.py is still too large to be loaded by the current general-availability
+release of esp8266 micropython port
+***    
+
+__Note: content of v1 subdir is an earlier, much less 'optimal' version maintained
+for posterity__
 
 ##usnmp.SnmpPacket() class
 

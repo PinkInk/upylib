@@ -1,17 +1,3 @@
-try:
-    from ucollections import OrderedDict
-except ImportError:
-    from ucollections import OrderedDict
-
-##for cpython, uncomment;
-#try:
-#    from collections import OrderedDict
-#except ImportError:
-#    from ucollections import OrderedDict
-#
-#def const(val):
-#    return val
-
 SNMP_VER1 = const(0x00)
 ASN1_INT = const(0x02)
 ASN1_OCTSTR = const(0x04)
@@ -87,7 +73,8 @@ class SnmpPacket:
         else:
             ptr = self._frombytes_props(b, ptr, _SNMP_GETSET_PROPS)
         ptr += 1 + frombytes_lenat(b, ptr)[1]
-        self.varbinds = OrderedDict()
+        #self.varbinds = OrderedDict()
+        self.varbinds = {}
         while ptr < len(b):
             ptr += 1 + frombytes_lenat(b, ptr)[1] #step into seq
             oid = frombytes_tvat(b, ptr)[1]
