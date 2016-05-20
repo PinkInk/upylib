@@ -110,30 +110,28 @@ its response;
 **b** now (hopefully) contains the GETRESPONSE to our GREQUEST;
 
 ```python
-gresp = usnmp.SnmpPacket(b)
-gresp.type == usnmp.SNMP_GETRESPONSE
+>>> gresp = usnmp.SnmpPacket(b)
+>>> gresp.type == usnmp.SNMP_GETRESPONSE
 True
 ```
 
 Formally; we should compare the **id** of the response to the **id** of the 
-request in order to verify the relationship (seeding this from the likes of 
-micropython's time.ticks_us() may be useful).
-
-
+request in order to verify the relationship;
 
 ```python
-gresp.id == greq.id
+>>> gresp.id == greq.id
 True
 ```
 
-Retrieve the data;
+__seeding **.id** this from the likes of micropython's time.ticks_us() may be useful__
+
+Retrieve the requested data;
 
 ```python
-for oid in gresp.varbinds:
-    print(oid, gresp.varbinds[oid][1])
-
-'1.3.6.1.2.1.2.2.1.10.4'   5425233412
-'1.3.6.1.2.1.1.3.0'	1359284344
+>>> for oid in gresp.varbinds:
+>>>     print(oid, gresp.varbinds[oid])
+'1.3.6.1.2.1.2.2.1.10.4'   (65, 5425233412) #65 == usnmp.SNMP_COUNTER
+'1.3.6.1.2.1.1.3.0'	(67, 1359284344) #67 == usnmp.SNMP_TIMETICKS
 ```
 
 ##SNMP v1 general and packet type specific variables
@@ -141,35 +139,35 @@ for oid in gresp.varbinds:
 **All** SNMP packets define **ver**sion and **community**.
 
 ```python
-p.ver
+>>> p.ver
 0 #usnmp.SNMP_VER1
-p.community
+>>> p.community
 'public'
 ```
 
-SNMP **GET** and **SET** type packets define request_**id**, 
+SNMP **GET** and **SET** type packets additionally define request_**id**, 
 **err**or**_status** and **err**or**_id**.
 
 ```python
-p.id
+>>> p.id
 756345346
-p.err_status
-0 #usnmp.SNMP_ERR_NOERROR - general error
-p.err_id
+>>> p.err_status
+0 #0 == usnmp.SNMP_ERR_NOERROR - general error
+>>> p.err_id
 0 #agent specific error code
 ```
 
 SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**, 
 **specific_trap** and **timestamp**.
 
-'python
-p.enterprise
+```python
+>>> p.enterprise
 '1.3.6.1.4.1.32513'
-p.generic_trap
+>>> p.generic_trap
 0 #usnmp.SNMP_TRAP_COLDSTART
-p.specific_trap
+>>> p.specific_trap
 0 #agent specific trap type code
-p.timestamp
+>>> p.timestamp
 683436
 ```
 
