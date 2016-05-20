@@ -8,15 +8,15 @@ its scope (but trivial; refer examples hereunder).
 _Only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
 to the network, including the internet if you so choose, 'in the clear' - 
 be sure that you understand the consequences thereof before utilising this 
-module, or SNMPv1 in general, on a network that you don't trust.
+library, or SNMPv1 in general, on a network that you don't trust.
 
 **Target** is for it to be minimal enough to load, compile and run on the 
 micropython esp8266 port, with adequate resources remaining for other tasks 
 (I can't envisage any scenario where SNMP would be the only function of an 
 embedded device), whilst retaining a useable api.
 
-This has (finally) been achieved, by splitting the module into two files
-`usnmp.py` and `usnmp_codec.py` ... to use the module copy both to the 
+This has (finally) been achieved, by splitting the library into two files
+`usnmp.py` and `usnmp_codec.py` ... to use the library copy both to the 
 filesystem of your microcontroller, and import `usnmp`;
 
 ```python
@@ -32,7 +32,7 @@ I am not gauranteeing that that keeps up with changes to the main .py files._
 As of writing;
 - **memoryviews are broken in the current general-availability version of the micropython esp8266 port.**
 As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended.
-- **Current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class.**
+- **Current general-availability version of the micropython esp8266 port ucollections library does not define an OrderedDict class.**
 Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds).
 This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable.
 
@@ -59,7 +59,7 @@ Create a GETREQUEST packet to request;
 >>> greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
 ```
 
-The module has provided reasonable defaults that match this simple case; 
+The class has provided reasonable defaults that match this simple case; 
 
 ```python
 >>> greq.ver
@@ -102,7 +102,7 @@ specify the Type & Value against each OID (refering to
 
 Note that as above GETREQUEST packet varbinds require a (type, value) tuple for 
 each OID, formally this is an usnmp.ASN1_NULL, python type None, but there is a
-convenience alternative accepted by the module;
+convenience alternative accepted by the library;
 
 ```python
 >>> greq.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
@@ -190,14 +190,14 @@ SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**,
 
 ##Constants
 
-The module contains publically accessible constants useful for encoding and
+The library contains publically accessible constants useful for encoding and
 decoding SNMP data.
 
 ###General constants
 
 **SNMP_VER1** = 0x0 
 
-Indicates SNMP Version 1 (the only version supported by this module).
+Indicates SNMP Version 1 (the only version supported by this library).
 
 ###Constants for DER encoded ASN.1 primitive types
 
