@@ -1,11 +1,12 @@
+import ubinascii
 from usnmp_codec import *
 
 _SNMP_PROPS = ("ver", "community")
 _SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")
 _SNMP_GETSET_PROPS = ("id", "err_status", "err_id")
 #packet templates, refer template.py
-_SNMP_GETSET_TEMPL = b"0\x14\x02\x00\x04\x06public\xa0\x08\x02\x00\x02\x00\x02\x000\x00"
-_SNMP_TRAP_TEMPL = b"0%\x02\x01\x00\x04\x06public\xa4\x18\x06\x05+\x06\x01\x04\x01@\x04\x7f\x00\x00\x01\x02\x01\x00\x02\x01\x00C\x01\x000\x00"
+_SNMP_GETSET_TEMPL = ubinascii.unhexlify(b"3014020004067075626c6963a0080200020002003000")
+_SNMP_TRAP_TEMPL = ubinascii.unhexlify(b"302502010004067075626c6963a41806052b0601040140047f0000010201000201004301003000")
 
 class SnmpPacket:
 
