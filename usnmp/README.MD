@@ -247,7 +247,7 @@ been reached.
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP GETRESPONSEs.
 
 ```python
->>> p=usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
 ```
 
 Response from agent to Manager to either a GETREQUEST, GETNEXTREQUEST or
@@ -258,7 +258,7 @@ SETREQUEST packet, containing the request variables (OID values).
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP SETREQUESTs.
 
 ```python
->>> p=usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
 ```
 
 Requests to set the value of **writeable** agent variable(s) (OID values).  
@@ -270,7 +270,7 @@ Refer Mib-2 to determine which OIDs are writeable.
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP TRAPs.
 
 ```python
-p=usnmp.SnmpPacket(type=usnmp.SNMP_TRAP)
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_TRAP)
 ```
 
 All the above GET|SET type SNMP packets are **poll** operations i.e. 
@@ -406,8 +406,8 @@ True
 
 ###usnmp.frombytes_lenat(bytes, ptr)
 
-Return the length of the payload encoded at **ptr** in **bytes** and also the
-number of bytes the legnth was encoded in.
+Return the length of the payload encoded at **ptr** in **bytes** and the
+number of bytes used to encoded it.
 
 ```python
 >>> import binascii
@@ -509,15 +509,15 @@ If you are requesting to know this value from an agent a GETxxx type SNMP
 packet will fill the data value with an ASN.1 NULL type e.g.;
 
 ```python
-import usnmp
-p = usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
-p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
+>>> import usnmp
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST)
+>>> p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.ASN1_NULL, None
 ```
 
 Or for brevity;
 
 ```python
-p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
+>>> p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = None
 ```
 
 If you are acting as an agent (i.e. responding to such a get request), or are
@@ -526,8 +526,8 @@ be of type SNMP_COUNTER (because the specific OID is of type Counter), a
 derivative of the ASN.1 INT type, which can represent an integer e.g.;
 
 ```python
-p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
-p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 12345678 #some value
+>>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
+>>> p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 12345678 #some value
 ```
 
 
