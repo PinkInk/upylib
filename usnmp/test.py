@@ -36,11 +36,7 @@ p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
 for oid in p.varbinds: print(oid, p.varbinds[oid])
 
 p.varbinds["1.3.6.1.2.1.2.2.1.1.1"]=usnmp.ASN1_INT,23
-
-p.varbinds._last
-del(p.varbinds["1.3.6.1.2.1.2.2.1.4.1"])
-p.varbinds._last
-
+del(p.varbinds["1.3.6.1.2.1.2.2.1.4.1"])p.varbinds._last
 try:
     p.varbinds["1.3.6.1.2.1.2.2.1.4.1"]
 except KeyError:
@@ -133,11 +129,11 @@ a==b.tobytes()
 b.ver, b.community, b.type
 for i in b.varbinds: print(i, b.varbinds[i])
 
-#simple trap
+#simple trap, with odd timestamp encoding of 0
 s="303b02010004067075626c6963a42e06092b0601040181f4690040047f000001020100020100430400000000300f300d06082b06010201020100020121"
 a=bytes(binascii.unhexlify(s))
 b=usnmp.SnmpPacket(a)
-a==b.tobytes()
+a==b.tobytes() #fails due to unnecessary 3 byte 0x00,0x00,0x00 encoding of timestamp in source packet
 b.ver, b.community, b.type
 for i in b.varbinds: print(i, b.varbinds[i])
 
@@ -155,29 +151,6 @@ b=usnmp.SnmpPacket(a)
 a==b.tobytes()
 b.ver, b.community, b.type
 for i in b.varbinds: print(i, b.varbinds[i])
-
-b.varbinds._b[:b.varbinds._last+1] #raw data
-usnmp.frombytes_tvat(b.varbinds._b[:b.varbinds._last+1],2) #unpack the oid (sucesfully), skipping sequence header
-l,l_incr = usnmp.frombytes_lenat(b.varbinds._b[:b.varbinds._last+1],2)
-usnmp.frombytes_tvat(b.varbinds._b[:b.varbinds._last+1][2:][:1+l_incr+l],0)
-oidb = b.varbinds._b[:b.varbinds._last+1][2:][:1+l_incr+l]
-oid = usnmp.frombytes_tvat(oidb,0)[1]
-oidb1 = usnmp.tobytes_tv(usnmp.ASN1_OID, oid)
-oidb == oidb1
-usnmp.frombytes_lenat(oidb,0) == usnmp.frombytes_lenat(oidb1,0)
-
-for i in range(len(oidb)):print(i,oidb[i],oidb1[i],oidb[i]==oidb1[i],bin(oidb[i]),bin(oidb1[i]))
-
-#but not a problem?
-p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']=usnmp.ASN1_INT, 23
-p.varbinds['1.3.6.1.2.1.3.1.1.1.453.13596.1.192.168.1']
-
-#different encoding results for same OID?
-a=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x83E\xea\x1c\x01\x81@\x81(\x01\x81\t'
-b=bytes([usnmp.ASN1_OID,21])+b'+\x06\x01\x02\x01\x03\x01\x01\x01\x82\xc5\xea\x1c\x01\x81@\x81(\x01\x81\t'
-usnmp.frombytes_tvat(a,0)
-usnmp.frombytes_tvat(b,0)
-usnmp.frombytes_tvat(a,0)==usnmp.frombytes_tvat(b,0)
 
 import socket
 s=socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
@@ -213,6 +186,3 @@ while True:
     r.type=usnmp.SNMP_GETNEXTREQUEST
     s.sendto(r.tobytes(), (b'192.168.1.1',161))
     d=s.recvfrom(rsize)
-
-
-
