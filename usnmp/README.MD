@@ -15,21 +15,13 @@ micropython esp8266 port, with adequate resources remaining for other tasks
 (I can't envisage any scenario where SNMP would be the only function of an 
 embedded device), whilst retaining a useable api.
 
-**BUT as of writing;
-- memoryview is broken in the esp general-availability port, hence memory utilisation
-is sub-optimal (for now) and excessive heap fragmentation is highly likely
-- ucollections does not contain the OrderedDict class ... therefore  
-usnmp_esp.py is a modified version of the library that uses a vanila Dictionary
-in its place - this results in behaviour that diverges from SNMP standard
-(wherein Variable Bindings are normally ordered) and as a side-effect you
-cannot compare a binary packet received from the network with 'usnmp.SnmpPacket.tobytes()' 
-output, because order in which variable bindings is encoded is unpredictable.
-- usnmp_esp.py is still too large to be loaded by the current general-availability
-release of esp8266 micropython port
-***    
+**BUT**, as of writing;
+- **memoryview is broken in the current general-availability version of the micropython esp8266 port, hence memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely**
+- **contrary to the documentation current general-availability version of the micropython esp8266 port ucollections module does not define an OrderedDict class ... therefore **usnmp_esp.py** is a modified version that uses a vanila Dictionary instead**
+This results in behaviour that diverges from SNMP standard (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable
+- **usnmp_esp.py is still too large to be loaded by the current general-availability release of micropython esp8266 port**
 
-__Note: content of v1 subdir is an earlier, much less 'optimal' version maintained
-for posterity__
+__Note: content of v1 subdir is an earlier, much less 'optimal' version maintained for posterity__
 
 ##usnmp.SnmpPacket() class
 
