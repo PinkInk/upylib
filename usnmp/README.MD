@@ -30,11 +30,11 @@ the files using paste-mode (Ctrl-E) and the contents of copypaste.txt ... but
 I am not gauranteeing that that keeps up with changes to the main .py files._
 
 As of writing;
-- **memoryviews are broken in the current general-availability version of the micropython esp8266 port.**
-As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended.
-- **Current general-availability version of the micropython esp8266 port ucollections library does not define an OrderedDict class.**
-Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds).
-This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable.
+- memoryviews are broken in the current general-availability version of the micropython esp8266 port.
+_As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended._
+- Current general-availability version of the micropython esp8266 port ucollections library does not define an OrderedDict class.
+_Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds)._
+_This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
 
 _Note: v1 contains an earlier version maintained for posterity._
 
