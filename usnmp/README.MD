@@ -153,13 +153,15 @@ Retrieve the requested variables;
 
 ##SNMP v1 general, and packet-type specific, variables
 
-**All** SNMP packets define **ver**sion and **community**.
+**All** SNMP packets define **ver**sion, **community** and **type**.
 
 ```python
 >>> p.ver
 0 #usnmp.SNMP_VER1
 >>> p.community
 'public'
+>>> p.type
+162 # == usnmp.SNMP_GETRESPONSE
 ```
 
 SNMP **GET** and **SET** type packets additionally define request_**id**, 
@@ -190,8 +192,8 @@ SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**,
 
 ##Constants
 
-The library contains publically accessible constants useful for encoding and
-decoding SNMP data.
+The library contains publically accessible constants useful for interpreting and
+encoding SNMP data.
 
 ###General constants
 
@@ -256,7 +258,7 @@ row by row.
 Corresponding response should include the next OID(s) available (and their 
 values) on the agent, after the one(s) specified in this request.
 
-If response contains the same OID(s) as requested - end of available OIDs has
+If response contains the requested OIDs - end of available OIDs has
 been reached.
 
 **SNMP_GETRESPONSE** = 0xa2
@@ -334,7 +336,7 @@ Represented in micropython by an **int**eger.
 
 SNMP data type representing an IP Address.
 
-Represented in micropython by a **str**ing in normal IP Address format 
+Represented in micropython by a **str**ing in normal IP4 Address format 
 e.g. "172.26.1.1" or "255.255.255.0";
 
 ```python
@@ -401,13 +403,6 @@ function described hereunder.
 
 Return the (python) type and value found at **ptr** within **bytes**.
 
-__Output can be unpredictable if **ptr** doesn't point to the first byte
-in a data block.  For example, if the byte at ptr; 
-
-- is not an ASN.1 or SNMP type code, an exception will be raised
-- is a valid type code (randomly encountered within a payload or length encoding) output may be garbage
-__ 
-
 ```python
 >>> usnmp.frombytes_tvat(usnmp.tobytes_tv(usnmp.SNMP_IPADDR, "172.26.23.1"), 0)
 (64, '172.26.23.1')
@@ -420,6 +415,11 @@ True
 >>> usnmp.frombytes_tvat(b, 5)
 (4, 'AFC') #community string
 ```
+
+_Output is unpredictable if **ptr** doesn't point to the first byte in a data block.  For example, if the byte at ptr;_ 
+
+- _is not an ASN.1 or SNMP type code, an exception will be raised_
+- _is a valid type code (randomly encountered within a payload or length encoding) output is garbage_
 
 ###usnmp.frombytes_lenat(bytes, ptr)
 
@@ -444,9 +444,9 @@ type byte) + the sum of the outputs of this function.
 
 ##SNMP v1 packet structure
 
-SNMP packets structure is derived from the DER encoded ASN.1 standard.
+SNMP packet structure is derived from the DER encoded ASN.1 standard.
 
-There are two general packet structures;
+There are two _general_ packet structures;
 
 - GET and SET type packets (GETREQUEST, GETRESPONSE, GETNEXTREQUEST and SETREQUEST)
 - TRAP packets
@@ -486,11 +486,11 @@ SEQ
     	INT err_id
     	SEQ container for Variable Bindings (varbinds)
     	   SEQ 1
-    	   	OID
-    	   	DATA
+    	   	OID 1
+    	   	DATA 1
     	   SEQ 2
-    	   	OID
-    	   	DATA
+    	   	OID 2
+    	   	DATA 2
     	   etc.
 ```
 
@@ -508,11 +508,11 @@ SEQ
     	TIMETICKS timestamp of the event
     	SEQ container for Variable Bindings (varbinds)
     	   SEQ 1
-    	   	OID
-    	   	DATA
+    	   	OID 1
+    	   	DATA 1
     	   SEQ 2
-    	   	OID
-    	   	DATA
+    	   	OID 2
+    	   	DATA 2
     	   etc.
 ```
 
