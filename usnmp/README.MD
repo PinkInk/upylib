@@ -438,7 +438,7 @@ The full length of the data-block starting at **ptr** is 1 (the length of
 type byte) + the sum of the outputs of this function.
 
 ```python
-1+sum(usnmp.frombytes_lenat(b, 5))
+>>> 1+sum(usnmp.frombytes_lenat(b, 5))
 5
 ```
 
