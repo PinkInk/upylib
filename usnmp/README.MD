@@ -159,7 +159,7 @@ Retrieve the requested variables;
 
 ##SNMP v1 general, and packet-type specific, variables
 
-**All** SNMP packets define **ver**sion, **community** and **type**.
+**All** SNMP packets define **ver**sion, **community**, **type** and **var**iable**bind**ing**s**.
 
 ```python
 >>> p.ver
@@ -167,7 +167,9 @@ Retrieve the requested variables;
 >>> p.community
 'public'
 >>> p.type
-162 # == usnmp.SNMP_GETRESPONSE
+160 # == usnmp.SNMP_GETREQUEST
+>>> p.varbinds
+{'1.3.6.1.2.1.1.1.0': (5, None)}
 ```
 
 SNMP **GET** and **SET** type packets additionally define request_**id**,
