@@ -1,5 +1,9 @@
 import ubinascii
 from usnmp_codec import *
+try:
+    from ucollections import OrderedDict
+except:
+    pass
 
 _SNMP_PROPS = ("ver", "community")
 _SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")
@@ -29,9 +33,10 @@ class SnmpPacket:
         else:
             ptr = self._frombytes_props(b, ptr, _SNMP_GETSET_PROPS)
         ptr += 1 + frombytes_lenat(b, ptr)[1]
-        ##reinstate when esp support OrderedDict
-        #self.varbinds = OrderedDict()
-        self.varbinds = {}
+        try:
+            self.varbinds = OrderedDict()
+        except:
+            self.varbinds = {}
         while ptr < len(b):
             ptr += 1 + frombytes_lenat(b, ptr)[1] #step into seq
             oid = frombytes_tvat(b, ptr)[1]

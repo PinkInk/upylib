@@ -1,22 +1,22 @@
 #Simple Network Management Protocol v1 packet codec, for [Micropython](www.micropython.org)
 
-Codes and encodes SNMP v1 packets received from, or to send on, the network.  
+Codes and encodes SNMP v1 packets received from, or to send on, the network.
 
-_Not_ a server - sending or receiving packets on the network is outside of 
+_Not_ a server - sending or receiving packets on the network is outside of
 its scope (but trivial; refer examples hereunder).
 
 _Only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
-to the network, including the internet if you so choose, 'in the clear' - 
-be sure that you understand the consequences thereof before utilising this 
+to the network, including the internet if you so choose, 'in the clear' -
+be sure that you understand the consequences thereof before utilising this
 library, or SNMPv1 in general, on a network that you don't trust.
 
-**Target** is for it to be minimal enough to load, compile and run on the 
-micropython esp8266 port, with adequate resources remaining for other tasks 
-(I can't envisage any scenario where SNMP would be the only function of an 
+**Target** is for it to be minimal enough to load, compile and run on the
+micropython esp8266 port, with adequate resources remaining for other tasks
+(I can't envisage any scenario where SNMP would be the only function of an
 embedded device), whilst retaining a useable api.
 
 This has (finally) been achieved, by splitting the library into two files
-`usnmp.py` and `usnmp_codec.py` ... to use the library copy both to the 
+`usnmp.py` and `usnmp_codec.py` ... to use the library copy both to the
 filesystem of your microcontroller, and import `usnmp`;
 
 ```python
@@ -32,9 +32,9 @@ I am not gauranteeing that that keeps up with changes to the main .py files._
 As of writing;
 - memoryviews are broken in the current general-availability version of the micropython esp8266 port.
 _As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended._
-- Current general-availability version of the micropython esp8266 port ucollections library does not define an OrderedDict class.
-_Therefore a vanila Dictionary is used (hopefully temporarily) to store Variable Bindings (varbinds)._
-_This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are normally ordered) and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
+- Current general-availability version of the micropython esp8266 port ucollections library does not contain an OrderedDict class.
+_Therefore a vanila Dictionary is used to store Variable Bindings (varbinds) when OrderedDict is not available._
+_This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered') and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
 
 _Note: v1 contains an earlier version maintained for posterity._
 
@@ -47,7 +47,7 @@ Represents an SNMP packet.  Can be initialised in one of two ways i.e.;
 
 ###Create an SNMP packet from scratch;
 
-Create a GETREQUEST packet to request; 
+Create a GETREQUEST packet to request;
 
 - ifInOctets::4 (OID: 1.3.6.1.2.1.2.2.1.10.4 - Count of packets inbound to Interface 4)
 - sysUpTime (OID: 1.3.6.1.2.1.1.3.0)
@@ -59,7 +59,7 @@ Create a GETREQUEST packet to request;
 >>> greq = usnmp.SnmpPacket(usnmp.SNMP_GETREQUEST)
 ```
 
-The class has provided reasonable defaults that match this simple case; 
+The class has provided reasonable defaults that match this simple case;
 
 ```python
 >>> greq.ver
@@ -91,8 +91,8 @@ to be requested from the agent;
 >>> greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.ASN1_NULL, None
 ```
 
-If you were building an equivalent GETRESPONSE packet, you'd need to 
-specify the Type & Value against each OID (refering to 
+If you were building an equivalent GETRESPONSE packet, you'd need to
+specify the Type & Value against each OID (refering to
 [MIB-2](https://www.ietf.org/rfc/rfc1213.txt));
 
 ```python
@@ -100,7 +100,7 @@ specify the Type & Value against each OID (refering to
 >>> greq.varbinds['1.3.6.1.2.1.1.3.0'] = usnmp.SNMP_TIMETICKS, 908452344
 ```
 
-Note that as above GETREQUEST packet varbinds require a (type, value) tuple for 
+Note that as above GETREQUEST packet varbinds require a (type, value) tuple for
 each OID, formally this is an usnmp.ASN1_NULL, python type None, but there is a
 convenience alternative accepted by the library;
 
@@ -111,14 +111,20 @@ convenience alternative accepted by the library;
 
 ###Decode a packet received from the network;
 
-Send the packet to the agent, and hopefully receive its response;
+Send the packet created above to the agent and, hopefully, receive its response.
 
+SNMP is a UDP protocol, so create an appropriate socket;
 
 ```python
 >>> import socket, time
 >>> s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
 >>> s.settimeout(1)
 >>> greq.id = time.ticks_us()
+```
+
+SNMP v1 is (normally) bound to port 161 of the agent;
+
+```python
 >>> s.sendto(greq.tobytes(), (b'192.168.1.1', 161))
 72
 >>> b = s.recvfrom(1024)[0]
@@ -132,7 +138,7 @@ Send the packet to the agent, and hopefully receive its response;
 True
 ```
 
-Formally; we should compare the **id** of the response to the **id** of the 
+Formally; we should compare the **id** of the response to the **id** of the
 request in order to verify the relationship;
 
 ```python
@@ -164,7 +170,7 @@ Retrieve the requested variables;
 162 # == usnmp.SNMP_GETRESPONSE
 ```
 
-SNMP **GET** and **SET** type packets additionally define request_**id**, 
+SNMP **GET** and **SET** type packets additionally define request_**id**,
 **err**or**_status** and **err**or**_id**.
 
 ```python
@@ -176,7 +182,7 @@ SNMP **GET** and **SET** type packets additionally define request_**id**,
 0 #agent specific error code
 ```
 
-SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**, 
+SNMP **TRAP** type packets define **enterprise**_oid, **generic_trap**,
 **specific_trap** and **timestamp**.
 
 ```python
@@ -197,19 +203,19 @@ encoding SNMP data.
 
 ###General constants
 
-**SNMP_VER1** = 0x0 
+**SNMP_VER1** = 0x0
 
 Indicates SNMP Version 1 (the only version supported by this library).
 
 ###Constants for DER encoded ASN.1 primitive types
 
-**ASN1_OCTSTR** = 0x04 
+**ASN1_OCTSTR** = 0x04
 
-ASN.1 DER primative data type for encoding strings, and bytes data.  
+ASN.1 DER primative data type for encoding strings, and bytes data.
 
-Note that Octet Strings can contain non-printable characters, therefore if 
-a packet with an Octet String encoded OID value is received from the network, 
-when it's decoded if it contains only printable characters it'll be decoded 
+Note that Octet Strings can contain non-printable characters, therefore if
+a packet with an Octet String encoded OID value is received from the network,
+when it's decoded if it contains only printable characters it'll be decoded
 as a **str**ing, otherwise a **bytes** object.
 
 MAC Addresses are commonly encoded as non-printable Octet Strings.
@@ -221,7 +227,7 @@ ASN.1 DER primative data type for encoding OID's.
 
 **ASN1_NULL** = 0x05
 
-ASN.1 DER primative data type for encoding Null values, used in GETREQUEST type 
+ASN.1 DER primative data type for encoding Null values, used in GETREQUEST type
 SNMP packets.
 
 **ASN1_SEQ** = 0x30
@@ -245,7 +251,7 @@ more OID's.
 
 SNMP packet type (derived from ASN.1 SEQuence) for SNMP GETNEXTREQUESTs.
 
-A request from a Manager to an Agent to provide the current value of the OID(s) 
+A request from a Manager to an Agent to provide the current value of the OID(s)
 that follow the ones in the request.  This packet type allows a Manager to
 'walk' the MIB tree of an agent, without knowing it in advance.  Or retrieve
 the values in a variable length table (e.g. the Interfaces or Connections table)
@@ -255,7 +261,7 @@ row by row.
 >>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST)
 ```
 
-Corresponding response should include the next OID(s) available (and their 
+Corresponding response should include the next OID(s) available (and their
 values) on the agent, after the one(s) specified in this request.
 
 If response contains the requested OIDs - end of available OIDs has
@@ -280,7 +286,7 @@ SNMP packet type (derived from ASN.1 SEQuence) for SNMP SETREQUESTs.
 >>> p = usnmp.SnmpPacket(type=usnmp.SNMP_SETREQUEST)
 ```
 
-Requests to set the value of **writeable** agent variable(s) (OID values).  
+Requests to set the value of **writeable** agent variable(s) (OID values).
 
 Refer Mib-2 to determine which OIDs are writeable.
 
@@ -292,21 +298,21 @@ SNMP packet type (derived from ASN.1 SEQuence) for SNMP TRAPs.
 >>> p = usnmp.SnmpPacket(type=usnmp.SNMP_TRAP)
 ```
 
-All the above GET|SET type SNMP packets are **poll** operations i.e. 
+All the above GET|SET type SNMP packets are **poll** operations i.e.
 a 'Manager' polls (asks for) the value of a specific OID (or OID's) on
 an 'Agent'.
 
 TRAPs are used to **push** information from an agent to its Manager.
 
 Typically, for example, an agent might be configured to push a TRAP to its
-manager when a network interface is connected (usnmp.SNMP_TRAP_LINKUP) or 
+manager when a network interface is connected (usnmp.SNMP_TRAP_LINKUP) or
 disconnected (usnmp.SNMP_TRAP_LINKDOWN) or identifying that it has rebooted
 and how (usnmp.SNMP_TRACK[COLDSTART|WARMSTART]).
 
 **SNMP_COUNTER** = 0x41
 
-SNMP data type used to represent a 'forever increasing' value for e.g. 
-ifInOctets, which holds the number of octets of data received at an 
+SNMP data type used to represent a 'forever increasing' value for e.g.
+ifInOctets, which holds the number of octets of data received at an
 interface since it started counting them.
 
 Represented in micropython by an **int**eger.
@@ -317,7 +323,7 @@ Represented in micropython by an **int**eger.
 
 **SNMP_GUAGE** = 0x42
 
-SNMP data type used to represent values that show current point-in-time 
+SNMP data type used to represent values that show current point-in-time
 utilisation, values (for e.g. 'current throughput of an interface') vary
 with time and may go down (although not below zero), as well as up between
 polls.
@@ -326,7 +332,7 @@ Represented in micropython by an **int**eger.
 
 **SNMP_TIMETICKS** = 0x43
 
-SNMP data type representing elapsed time in 100ths of seconds since a 
+SNMP data type representing elapsed time in 100ths of seconds since a
 particular event (normally agent startup, as SNMP has no concept of
 'human time').
 
@@ -336,7 +342,7 @@ Represented in micropython by an **int**eger.
 
 SNMP data type representing an IP Address.
 
-Represented in micropython by a **str**ing in normal IP4 Address format 
+Represented in micropython by a **str**ing in normal IP4 Address format
 e.g. "172.26.1.1" or "255.255.255.0";
 
 ```python
@@ -346,7 +352,7 @@ e.g. "172.26.1.1" or "255.255.255.0";
 **SNMP_OPAQUE** = 0x44<BR>
 **SNMP_NSAPADDR** = 0x45
 
-Unimplemented SNMP data types, encountering them will cause SnmpPacket to 
+Unimplemented SNMP data types, encountering them will cause SnmpPacket to
 raise an exception.
 
 SNMP_ERR_NOERROR = 0x00<BR>
@@ -396,7 +402,7 @@ b'\x82\n\xc2'
 ```
 
 Note that the number of bytes required to encode a data blocks length is
-variable, hence the behaviour of the counterpart usnmp.frombytes_lenat 
+variable, hence the behaviour of the counterpart usnmp.frombytes_lenat
 function described hereunder.
 
 ###usnmp.frombytes_tvat(bytes, ptr)
@@ -408,7 +414,7 @@ Return the (python) type and value found at **ptr** within **bytes**.
 (64, '172.26.23.1')
 >>> 64 == usnmp.SNMP_IPADDR
 True
->>> 
+>>>
 >>> import binascii
 >>> #single item get-request, captured from nw
 >>> b = b'0&\x02\x01\x00\x04\x03AFC\xa0\x1c\x02\x043x:\xc0\x02\x01\x00\x02\x01\x000\x0e0\x0c\x06\x08+\x06\x01\x02\x01\x01\x01\x00\x05\x00'
@@ -416,7 +422,7 @@ True
 (4, 'AFC') #community string
 ```
 
-_Output is unpredictable if **ptr** doesn't point to the first byte in a data block.  For example, if the byte at ptr;_ 
+_Output is unpredictable if **ptr** doesn't point to the first byte in a data block.  For example, if the byte at ptr;_
 
 - _is not an ASN.1 or SNMP type code, an exception will be raised_
 - _is a valid type code (randomly encountered within a payload or length encoding) output is garbage_
@@ -434,7 +440,7 @@ number of bytes used to encoded it.
 (3, 1) #three bytes long, length encoded in a single byte
 ```
 
-The full length of the data-block starting at **ptr** is 1 (the length of 
+The full length of the data-block starting at **ptr** is 1 (the length of
 type byte) + the sum of the outputs of this function.
 
 ```python
@@ -451,7 +457,7 @@ There are two _general_ packet structures;
 - GET and SET type packets (GETREQUEST, GETRESPONSE, GETNEXTREQUEST and SETREQUEST)
 - TRAP packets
 
-Each ASN.1 primitive, or SNMP derived type, is encoded in 3 elements - Type, 
+Each ASN.1 primitive, or SNMP derived type, is encoded in 3 elements - Type,
 Length and Payload;
 
 ```
@@ -463,7 +469,7 @@ P[P1, P2 ... Pn] - Payload bytes
 The ASN.1 type SEQuence, is a container for multiple sub data elements, each
 encoded to the above described scheme (which _can_ include other SEQuences).
 
-The SNMP protocol defines a number of derivatives of ASN.1 SEQuence which 
+The SNMP protocol defines a number of derivatives of ASN.1 SEQuence which
 are also containers e.g. the SNMP_GETxxx, SNMP_SETREQUEST and SNMP_TRAP types.
 
 ```
@@ -517,12 +523,12 @@ SEQ
 ```
 
 Variable Bindings (varbinds) associate specific agent properties with their
-value for e.g. 1.3.6.1.2.1.2.2.1.10.4 is defined by MIB-2 as ifInOctets 
+value for e.g. 1.3.6.1.2.1.2.2.1.10.4 is defined by MIB-2 as ifInOctets
 for interface No. 4 as a Counter i.e. the number of octets of data that were
-recorded inbound to the 4th interface up to the point in time the property was 
+recorded inbound to the 4th interface up to the point in time the property was
 requested.
 
-If you are requesting to know this value from an agent a GETxxx type SNMP 
+If you are requesting to know this value from an agent a GETxxx type SNMP
 packet will fill the data value with an ASN.1 NULL type e.g.;
 
 ```python
@@ -539,13 +545,14 @@ Or for brevity;
 
 If you are acting as an agent (i.e. responding to such a get request), or are
 interpreting data received in response to the request, the DATA element will
-be of type SNMP_COUNTER (because the specific OID is of type Counter), a 
+be of type SNMP_COUNTER (because the specific OID is of type Counter), a
 derivative of the ASN.1 INT type, which can represent an integer e.g.;
 
 ```python
 >>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
 >>> p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 12345678 #some value
 ```
+
 
 
 
