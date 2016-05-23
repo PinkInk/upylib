@@ -36,8 +36,6 @@ _As a result memory utilisation is sub-optimal (for now) and excessive heap-frag
 _Therefore a vanila Dictionary is used to store Variable Bindings (varbinds) when OrderedDict is not available._
 _This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered') and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
 
-_Note: v1 contains an earlier version maintained for posterity._
-
 ##usnmp.SnmpPacket() class
 
 Represents an SNMP packet.  Can be initialised in one of two ways i.e.;
@@ -554,8 +552,3 @@ derivative of the ASN.1 INT type, which can represent an integer e.g.;
 >>> p = usnmp.SnmpPacket(type=usnmp.SNMP_GETRESPONSE)
 >>> p.varbinds['1.3.6.1.2.1.2.2.1.10.4'] = usnmp.SNMP_COUNTER, 12345678 #some value
 ```
-
-
-
-
-
