@@ -8,7 +8,7 @@ except:
 _SNMP_PROPS = ("ver", "community")
 _SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")
 _SNMP_GETSET_PROPS = ("id", "err_status", "err_id")
-#packet templates, refer template.py
+#packet templates, refer utils/template.py
 _SNMP_GETSET_TEMPL = ubinascii.unhexlify(b"3014020004067075626c6963a0080200020002003000")
 _SNMP_TRAP_TEMPL = ubinascii.unhexlify(b"302502010004067075626c6963a41806052b0601040140047f0000010201000201004301003000")
 

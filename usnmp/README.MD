@@ -26,7 +26,7 @@ filesystem of your microcontroller, and import `usnmp`;
 ```
 
 _If you are not using the webrepl facility of the esp8266 port, you can create
-the files using paste-mode (Ctrl-E) and the contents of copypaste.txt ... but
+the files using paste-mode (Ctrl-E) and the contents of utils/copypaste.txt ... but
 I am not gauranteeing that that keeps up with changes to the main .py files._
 
 As of writing;
