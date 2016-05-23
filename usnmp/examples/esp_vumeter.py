@@ -19,9 +19,9 @@ oid_uptime = "1.3.6.1.2.1.1.3.0"
 #   "1.3.6.1.2.1.2.2.1.10.6" == ifInOctets::6
 #   (my home routers wan interface, vlan1)
 oid_if_inoct = "1.3.6.1.2.1.2.2.1.10.6"
-#expected interface peak throughput per 1/100s
-#   or trial and error in this case ;o)
-peak=1200
+#expected interface peak throughput in bps
+#   16Mbps;
+bandwidth=16*1024*1024
 #pin number that neopixel data-in is connected to
 np_pin = 4
 #number of neopixels in string
@@ -47,6 +47,8 @@ for i in range(np_count):
     else:
         vu.append((100,0,0)) #red 
 
+gc.collect()
+
 greq = usnmp.SnmpPacket(type=usnmp.SNMP_GETREQUEST, id=time.ticks_us())
 for i in (oid_uptime, oid_if_inoct):
     greq.varbinds[i] = None
@@ -54,22 +56,22 @@ for i in (oid_uptime, oid_if_inoct):
 s.sendto(greq.tobytes(), (agent_ip, agent_port))
 d = s.recvfrom(1024)
 gresp = usnmp.SnmpPacket(d[0])
-last_ut = gresp.varbinds[oid_uptime][1]
-last_in8 = gresp.varbinds[oid_if_inoct][1]
 
 while True:
+    last_ut = gresp.varbinds[oid_uptime][1]
+    last_in8 = gresp.varbinds[oid_if_inoct][1]
     gc.collect()
     time.sleep(delay)
     greq.id=time.ticks_us()
-    s.sendto(greq.tobytes(), (b'192.168.1.1', 161))
+    s.sendto(greq.tobytes(), (agent_ip, agent_port))
     d = s.recvfrom(1024)
     gresp = usnmp.SnmpPacket(d[0])
     if greq.id == gresp.id:
-        ts = gresp.varbinds[oid_uptime][1]
+        ut = gresp.varbinds[oid_uptime][1]
         in8 = gresp.varbinds[oid_if_inoct][1]
-        v = int((((in8-last_in8)//(ts-last_ut))/peak)*8)
+        bps = (in8-last_in8)//(ut-last_ut)*100*8
+        level = bps*np_count//bandwidth
+        print(bps, level)
         for i in range(np_count):
-            np[i] = vu[i] if v>=i else 0,0,0
+            np[i] = vu[i] if level>i  else (0,0,0)
         np.write()
-        last_ut = ts
-        last_in8 = in8
