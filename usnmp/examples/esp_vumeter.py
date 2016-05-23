@@ -71,7 +71,7 @@ while True:
         in8 = gresp.varbinds[oid_if_inoct][1]
         bps = (in8-last_in8)//(ut-last_ut)*100*8
         level = bps*np_count//bandwidth
-        print(bps, level)
+        print(bps)
         for i in range(np_count):
             np[i] = vu[i] if level>i  else (0,0,0)
         np.write()
