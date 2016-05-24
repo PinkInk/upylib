@@ -5,7 +5,7 @@
 Display inbound or outbound utilisation of a one of your routers interfaces 
 on a string of neopixels, vu meter style.
 
-#is_wife_home.py
+##is_wife_home.py
 
 Sometimes I'd like advance notice that my wife's returned from some wandering to
 either (a) prepare a welcoming drink or (b) don my innocent face.  I've noticed
