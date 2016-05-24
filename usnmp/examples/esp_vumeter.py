@@ -73,5 +73,5 @@ while True:
         level = bps*np_count//bandwidth
         print(bps)
         for i in range(np_count):
-            np[i] = vu[i] if level>i  else (0,0,0)
+            np[i] = vu[i] if level>i else (0,0,0)
         np.write()
