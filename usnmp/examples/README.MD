@@ -1,4 +1,4 @@
-#a couple of fun examples
+#examples
 
 ##esp_vumeter.py
 

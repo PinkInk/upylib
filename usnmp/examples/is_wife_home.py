@@ -10,8 +10,7 @@
 agent_ip = "192.168.1.1"
 agent_port = 161
 #wifes (not my wifes) smartphone MAC Address
-#mac = b"f437b76dbc64"
-mac = b"60921733754e"
+mac = b"f437b76dbc64"
 #pin number that neopixel data-in is connected to
 np_pin = 4
 #number of neopixels in string
