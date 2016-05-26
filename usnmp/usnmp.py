@@ -3,11 +3,15 @@ try:
 except:
     import binascii
 
-from usnmp_codec import *
 try:
     from ucollections import OrderedDict
 except:
-    pass
+    try:
+        from collections import OrderedDict
+    excep:
+        pass
+
+from usnmp_codec import *
 
 _SNMP_PROPS = ("ver", "community")
 _SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")

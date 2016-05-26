@@ -1,3 +1,9 @@
+try:
+    const(1)
+except:
+    def const(v)
+        return v
+
 SNMP_VER1 = const(0x00)
 ASN1_INT = const(0x02)
 ASN1_OCTSTR = const(0x04)
