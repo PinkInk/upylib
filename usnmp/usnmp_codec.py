@@ -1,7 +1,7 @@
 try:
     const(1)
 except:
-    def const(v)
+    def const(v):
         return v
 
 SNMP_VER1 = const(0x00)
@@ -76,7 +76,7 @@ def tobytes_tv(t, v=None):
     elif t == ASN1_OID:
         oid = v.split(".")
         #first two indexes are encoded in single byte
-        b = bytes([int(oid[0])*40 + int(oid[1])])
+        b = bytes([int(oid[0])*40 +(int(oid[1]) if len(oid)>1 else 0)])
         for id in oid[2:]:
             id = int(id)
             ob = bytes() if id>0 else bytes([0])
@@ -108,7 +108,7 @@ def tobytes_len(l):
 def frombytes_tvat(b, ptr):
     t = b[ptr]
     l, l_incr = frombytes_lenat(b, ptr)
-    end = ptr+1+l+l_incr
+    end = ptr+1+l_incr+l
     ptr +=  1+l_incr
     if t in _SNMP_SEQs:
         v = bytes(b[ptr:end])
@@ -126,7 +126,9 @@ def frombytes_tvat(b, ptr):
         v=None
     elif t == ASN1_OID:
         #first 2 indexes are encoded in single byte
-        v = str( b[ptr]//0x28 ) + "." + str( b[ptr]%0x28 )
+        v = str( b[ptr]//0x28 )
+        if b[ptr]%0x28 != 0:
+            v += "." + str( b[ptr]%0x28 )
         ptr += 1
         ob = 0
         while ptr < end:
