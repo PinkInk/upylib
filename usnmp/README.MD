@@ -20,20 +20,16 @@ This has (finally) been achieved, by splitting the library into two files
 filesystem of your microcontroller, and import `usnmp`;
 
 ```python
->>> import gc
 >>> import usnmp
->>> gc.collect()
 ```
 
-_If you are not using the webrepl facility of the esp8266 port, you can create
-the files using paste-mode (Ctrl-E) and the contents of utils/copypaste.txt ... but
-I am not gauranteeing that that keeps up with changes to the main .py files._
+_The requirement for a split library is negated if you plan to 'freeze' the module into flash, rather than place it in the filesystem.
+In this case; concatenate the two files, copy into scripts folder (e.g. `micropython/esp8266/scripts`), compile and flash._
 
 As of writing;
 - memoryviews are broken in the current general-availability version of the micropython esp8266 port.
 _As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended._
-- Current general-availability version of the micropython esp8266 port ucollections library does not contain an OrderedDict class.
-_Therefore a vanila Dictionary is used to store Variable Bindings (varbinds) when OrderedDict is not available._
+- if [u]collections.OrderedDict isn't available (WiPy & ga1.8 of esp) a vanilla dictionary is used to represent Variable Bindings (varbinds) instead 
 _This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered') and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
 
 ##usnmp.SnmpPacket() class
