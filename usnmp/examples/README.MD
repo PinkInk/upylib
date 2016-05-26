@@ -1,6 +1,6 @@
 #examples
 
-##esp_vumeter.py
+##vumeter.py
 
 Display inbound or outbound utilisation of a one of your routers interfaces 
 on a string of neopixels, vu meter style.

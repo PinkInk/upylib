@@ -6,7 +6,19 @@
 #
 # Requires: usnmp.py & usnmp_codec.py
 #-----------------------------------------------
-import gc, usnmp, time, socket, machine, neopixel, ubinascii
+import gc
+gc.collect()
+import usnmp
+gc.collect()
+import time
+gc.collect()
+import socket
+gc.collect()
+import machine
+gc.collect()
+import neopixel
+gc.collect()
+import ubinascii
 gc.collect()
 
 def main():
@@ -43,7 +55,7 @@ def main():
     gc.collect()
 
     #build a getnextrequest packet
-    greq = usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST, community=agent_community id=time.ticks_us())
+    greq = usnmp.SnmpPacket(type=usnmp.SNMP_GETNEXTREQUEST, community=agent_community, id=time.ticks_us())
     for oid in oids_pat:
         greq.varbinds[oid] = None
 
@@ -70,7 +82,7 @@ def main():
                 #if this one contains a mac
                 if oid.startswith(oid_mac):
                 
-                    #compare it to the mac we're looking for
+                    #compare it to the mac were looking for
                     if ubinascii.hexlify(gresp.varbinds[oid][1]) == mac:
                         ishome = True
                 
@@ -87,8 +99,10 @@ def main():
             s.sendto(gresp.tobytes(), (agent_ip, agent_port))
             d = s.recvfrom(1024)
             gresp = usnmp.SnmpPacket(d[0])
+
+        print(ishome)
         
-        #light the led according to whether she's home
+        #light the led according to whether she is home
         for i in range(np_count):
             np[i] = (255,0,0) if ishome else (0,255,0)
         

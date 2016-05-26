@@ -5,7 +5,17 @@
 #
 # Requires: usnmp.py & usnmp_codec.py
 #-----------------------------------------------
-import gc, usnmp, time, socket, machine, neopixel
+import gc
+gc.collect()
+import usnmp
+gc.collect()
+import time
+gc.collect()
+import socket
+gc.collect()
+import machine
+gc.collect()
+import neopixel
 gc.collect()
 
 def main():
@@ -38,7 +48,7 @@ def main():
     #   negate impact of nw latency
     oid_uptime = "1.3.6.1.2.1.1.3.0"
 
-    np = neopixel_.NeoPixel(machine.Pin(np_pin), np_count)
+    np = neopixel.NeoPixel(machine.Pin(np_pin), np_count)
 
     s = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
     s.settimeout(1)
@@ -84,6 +94,8 @@ def main():
 
             bps = (in8-last_in8)//(ut-last_ut)*100*8
             level = bps*np_count//bandwidth
+            
+            print(bps, "bps")
 
             for i in range(np_count):
                 np[i] = vu[i] if level>i else (0,0,0)
