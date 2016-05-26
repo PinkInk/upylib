@@ -23,9 +23,6 @@ filesystem of your microcontroller, and import `usnmp`;
 >>> import usnmp
 ```
 
-_The requirement for a split library is negated if you plan to 'freeze' the module into flash, rather than place it in the filesystem.
-In this case; concatenate the two files, copy into scripts folder (e.g. `micropython/esp8266/scripts`), compile and flash._
-
 As of writing;
 - memoryviews are broken in the current general-availability version of the micropython esp8266 port.
 _As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended._
