@@ -8,7 +8,7 @@ try:
 except:
     try:
         from collections import OrderedDict
-    excep:
+    except:
         pass
 
 from usnmp_codec import *
