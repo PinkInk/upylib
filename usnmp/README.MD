@@ -29,7 +29,7 @@ In this case; concatenate the two files, copy into scripts folder (e.g. `micropy
 As of writing;
 - memoryviews are broken in the current general-availability version of the micropython esp8266 port.
 _As a result memory utilisation is sub-optimal (for now) and excessive heap-fragmentation is likely, judicial and frequent use of gc.collect() is recommended._
-- if [u]collections.OrderedDict isn't available (WiPy & ga1.8 of esp) a vanilla dictionary is used to represent Variable Bindings (varbinds) instead 
+- if [u]collections.OrderedDict isn't available (WiPy & ga1.8 of esp) a vanilla dictionary is used to represent Variable Bindings (varbinds) instead.  
 _This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered') and as a side-effect you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which variable bindings is encoded is unpredictable._
 
 ##usnmp.SnmpPacket() class
