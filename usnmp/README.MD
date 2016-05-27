@@ -16,8 +16,7 @@ filesystem of your microcontroller and `import usnmp`;
 ```
 
 Known issues;
-- memoryviews are broken in the current general-availability version of the micropython esp8266 port.
-_As a result they are not currently used and memory utilisation could be improved - judicial and frequent use of gc.collect() is recommended._
+- won't run on ga1.8 release of micropython for esp due bug in `memoryview` which is fixed in source and expected to be availalable in the next ga release.
 - if [u]collections.OrderedDict isn't available (WiPy & ga1.8 esp ports) a vanilla dictionary is used to store and manipulate Variable Bindings (varbinds).  
 _This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered')._
 _As a result you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because the order in which varbinds are encoded is unpredictable._
