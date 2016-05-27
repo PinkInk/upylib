@@ -13,25 +13,25 @@ except:
 
 from usnmp_codec import *
 
-_SNMP_PROPS = ("ver", "community")
-_SNMP_TRAP_PROPS = ("enterprise", "agent_addr", "generic_trap", "specific_trap", "timestamp")
-_SNMP_GETSET_PROPS = ("id", "err_status", "err_id")
+_SNMP_PROPS = ('ver', 'community')
+_SNMP_TRAP_PROPS = ('enterprise', 'agent_addr', 'generic_trap', 'specific_trap', 'timestamp')
+_SNMP_GETSET_PROPS = ('id', 'err_status', 'err_id')
 #packet templates, refer utils/template.py
-_SNMP_GETSET_TEMPL = binascii.unhexlify(b"3014020004067075626c6963a0080200020002003000")
-_SNMP_TRAP_TEMPL = binascii.unhexlify(b"302502010004067075626c6963a41806052b0601040140047f0000010201000201004301003000")
+_SNMP_GETSET_TEMPL = binascii.unhexlify(b'3014020004067075626c6963a0080200020002003000')
+_SNMP_TRAP_TEMPL = binascii.unhexlify(b'302502010004067075626c6963a41806052b0601040140047f0000010201000201004301003000')
 
 class SnmpPacket:
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
             b = args[0]
-        elif "type" in kwargs:
-            if kwargs["type"] == SNMP_TRAP:
+        elif 'type' in kwargs:
+            if kwargs['type'] == SNMP_TRAP:
                 b = _SNMP_TRAP_TEMPL
             else:
                 b = _SNMP_GETSET_TEMPL
         else:
-            raise ValueError("buffer or type=x required")
+            raise ValueError('buffer or type=x required')
         ptr = 1 + frombytes_lenat(b, 0)[1]
         ptr = self._frombytes_props(b, ptr, _SNMP_PROPS)
         self.type = b[ptr]

@@ -56,14 +56,14 @@ def tobytes_tv(t, v=None):
         b = v
     elif t == ASN1_OCTSTR:
         if type(v) is str:
-            b = bytes(v,"utf-8")
+            b = bytes(v,'utf-8')
         elif type(v) in (bytes, bytearray):
             b = v
         else:
-            raise ValueError("string or buffer required")
+            raise ValueError('string or buffer required')
     elif t in _SNMP_INTs:
         if v < 0:
-            raise ValueError("ASN.1 ints must be >=0")
+            raise ValueError('ASN.1 ints must be >=0')
         else:
             b = bytes() if v!=0 else bytes(1)
             while v > 0:
@@ -74,7 +74,7 @@ def tobytes_tv(t, v=None):
     elif t == ASN1_NULL:
         b = bytes()
     elif t == ASN1_OID:
-        oid = v.split(".")
+        oid = v.split('.')
         #first two indexes are encoded in single byte
         b = bytes([int(oid[0])*40 +(int(oid[1]) if len(oid)>1 else 0)])
         for id in oid[2:]:
@@ -86,13 +86,13 @@ def tobytes_tv(t, v=None):
             b += ob
     elif t == SNMP_IPADDR:
         b = bytes()
-        for octet in v.split("."):
+        for octet in v.split('.'):
             octet = int(octet)
             b = b + bytes([octet])
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
-        raise Exception("not implemented", t)
+        raise Exception('not implemented', t)
     else:
-        raise TypeError("invalid type", t)
+        raise TypeError('invalid type', t)
     return bytes([t]) + tobytes_len(len(b)) + b
 
 def tobytes_len(l):
@@ -114,7 +114,7 @@ def frombytes_tvat(b, ptr):
         v = bytes(b[ptr:end])
     elif t == ASN1_OCTSTR:
         try:
-            v = str(b[ptr:end], "utf-8")
+            v = str(b[ptr:end], 'utf-8')
         except: #UnicodeDecodeError:
             v = bytes(b[ptr:end])
     elif t in _SNMP_INTs:
@@ -128,25 +128,25 @@ def frombytes_tvat(b, ptr):
         #first 2 indexes are encoded in single byte
         v = str( b[ptr]//0x28 )
         if b[ptr]%0x28 != 0:
-            v += "." + str( b[ptr]%0x28 )
+            v += '.' + str( b[ptr]%0x28 )
         ptr += 1
         ob = 0
         while ptr < end:
             if b[ptr]&0x80 == 0x80:
                 ob = ob*0x80 + (b[ptr]&0x7f)
             else:
-                v += "." + str((ob*0x80)+b[ptr])
+                v += '.' + str((ob*0x80)+b[ptr])
                 ob = 0
             ptr += 1
     elif t == SNMP_IPADDR:
-        v = ""
+        v = ''
         while ptr < end:
-            v += "." + str(b[ptr]) if v!="" else str(b[ptr])
+            v += '.' + str(b[ptr]) if v!='' else str(b[ptr])
             ptr += 1
     elif t in (SNMP_OPAQUE, SNMP_NSAPADDR):
-        raise Exception("not implemented", t)
+        raise Exception('not implemented', t)
     else:
-        raise TypeError("invalid type", t)
+        raise TypeError('invalid type', t)
     return t, v
 
 def frombytes_lenat(b, ptr):

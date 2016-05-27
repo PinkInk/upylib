@@ -7,9 +7,9 @@ to the network, including the internet if you so choose, 'in the clear'.
 
 **Target** is for it to be minimal enough to load, compile and run on the
 micropython esp8266 port, with adequate resources remaining for other tasks, 
-whilst retaining a useable api.  This has been achieved, by splitting the library into two files
+whilst retaining a useable api.  This has been achieved by splitting the library into two files
 `usnmp.py` and `usnmp_codec.py` ... to use the library copy both to the
-filesystem of your microcontroller and import `usnmp`;
+filesystem of your microcontroller and `import usnmp`;
 
 ```python
 >>> import usnmp
@@ -17,10 +17,10 @@ filesystem of your microcontroller and import `usnmp`;
 
 Known issues;
 - memoryviews are broken in the current general-availability version of the micropython esp8266 port.
-_As a result memory utilisation could be improved - judicial and frequent use of gc.collect() is recommended._
-- if [u]collections.OrderedDict isn't available (WiPy & ga1.8 of esp) a vanilla dictionary is used to store and manipulate Variable Bindings (varbinds).  
+_As a result they are not currently used and memory utilisation could be improved - judicial and frequent use of gc.collect() is recommended._
+- if [u]collections.OrderedDict isn't available (WiPy & ga1.8 esp ports) a vanilla dictionary is used to store and manipulate Variable Bindings (varbinds).  
 _This results in behaviour that diverges from SNMP norm (wherein Variable Bindings are 'normally ordered')._
-_As a result you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because order in which varbinds are encoded is unpredictable._
+_As a result you cannot compare a binary packet received from the network with `usnmp.SnmpPacket.tobytes()`, because the order in which varbinds are encoded is unpredictable._
 
 ##usnmp.SnmpPacket() class
 
