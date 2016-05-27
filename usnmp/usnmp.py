@@ -19,12 +19,12 @@ class SnmpPacket:
 
     def __init__(self, *args, **kwargs):
         if len(args) == 1 and type(args[0]) in (bytes, bytearray, memoryview):
-            b = args[0]
+            b = memoryview(args[0])
         elif 'type' in kwargs:
             if kwargs['type'] == SNMP_TRAP:
-                b = _SNMP_TRAP_TEMPL
+                b = memoryview(_SNMP_TRAP_TEMPL)
             else:
-                b = _SNMP_GETSET_TEMPL
+                b = memoryview(_SNMP_GETSET_TEMPL)
         else:
             raise ValueError('buffer or type=x required')
         ptr = 1 + frombytes_lenat(b, 0)[1]
