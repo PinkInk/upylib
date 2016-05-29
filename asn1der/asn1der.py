@@ -86,19 +86,19 @@ class Asn1DerOctStr(_Asn1DerBaseClass, bytes):
 
 
 class Asn1DerSeq(_Asn1DerBaseClass, list):
-     der_type = 0x30
+     der_type = TypeCodes[TypeNames.index('Seq')]
 
      @staticmethod
-     def frombytes(b, t=0x30):
+     def frombytes(b, t=TypeCodes[TypeNames.index('Seq')]):
          if b[0] != t:
              raise ValueError('expected type ' + str(t) + ' got', b[0])
          ptr = 1+frombytes_lenat(b,0)[1]
-         v = []
+         v = Asn1DerSeq([])
          while ptr < len(b):
             l, l_incr = frombytes_lenat(b, ptr)
             v.append( TypeClasses[TypeCodes.index(b[ptr])].frombytes(b[ptr:ptr+1+l_incr+l]) )
             ptr += 1+l_incr+l
-         return Asn1DerSeq(v)
+         return v
 
      def _tobytes(self):
          b = bytes()
@@ -106,25 +106,23 @@ class Asn1DerSeq(_Asn1DerBaseClass, list):
             b += i.tobytes()
          return b
 
+
+#no python primitive ... consider singleton
+#so `is Asn1DerNull` can be tested
 class Asn1DerNull(_Asn1DerBaseClass):
-    pass
-#     der_type = 0x05
+    der_type = TypeCodes[TypeNames.index('Null')]
 
-#     @staticmethod
-#     def frombytes(b, t=0x05):
-#         if b[0] != t:
-#             raise ValueError('expected type ' + str(t) + ' got', b[0])
-#         return Asn1DerNull()
+    @staticmethod
+    def frombytes(b, t=TypeCodes[TypeNames.index('Null')]):
+        if b[0] != t:
+            raise ValueError('expected type ' + str(t) + ' got', b[0])
+        return Asn1DerNull()
 
-#     def _tobytes(self):
-#         return bytes()
+    def _tobytes(self):
+        return bytes()
 
 
-#demonstrate override for counter
-# class SnmpCounter(Asn1DerInt):
-#     typecode = 0x04
-#     def frombytes(b, t=0x04):
-#         return super().from_bytes(b, t=t)
+TypeClasses = [Asn1DerInt, Asn1DerOctStr, Asn1DerNull, Asn1DerOid, Asn1DerSeq]
 
 def frombytes_lenat(b, ptr):
     if b[ptr+1]&0x80 == 0x80:
@@ -135,17 +133,10 @@ def frombytes_lenat(b, ptr):
     else:
         return b[ptr+1], 1
 
-
-TypeClasses = [Asn1DerInt, Asn1DerOctStr, Asn1DerNull, Asn1DerOid, Asn1DerSeq]
-
-#
-def encode(v):
-    pass
-
 def decode(b):
-    l = []
-    #walk and decode bytes, appending discrete blocks to l
-    if len(l) == 1:
-        return l[0]
-    else:
-        return l
+    v, ptr = [], 0
+    while ptr < len(b):
+        l, l_incr = frombytes_lenat(b, ptr)
+        v.append( TypeClasses[TypeCodes.index(b[ptr])].frombytes(b[ptr:ptr+1+l_incr+l]) )
+        ptr += 1+l_incr+l
+    return v
