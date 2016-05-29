@@ -9,7 +9,10 @@ class SnmpCounter(Asn1DerInt):
     
     @staticmethod
     def frombytes(b, t=TypeCodes[TypeNames.index('Counter')]):
-        return super().frombytes(b, t=t)
+        if b[0] != t:
+            raise ValueError('expected type ' + str(t) + ' got', b[0])
+        ptr = 1+frombytes_lenat(b,0)[1]
+        return SnmpCounter(int.from_bytes(b[ptr:]))
 
 
 class SnmpGuage(Asn1DerInt):    
@@ -17,7 +20,10 @@ class SnmpGuage(Asn1DerInt):
     
     @staticmethod
     def frombytes(b, t=TypeCodes[TypeNames.index('Guage')]):
-        return super().frombytes(b, t=t)
+        if b[0] != t:
+            raise ValueError('expected type ' + str(t) + ' got', b[0])
+        ptr = 1+frombytes_lenat(b,0)[1]
+        return SnmpGuage(int.from_bytes(b[ptr:]))
 
 
 class SnmpTimeTicks(Asn1DerInt):    
@@ -25,8 +31,10 @@ class SnmpTimeTicks(Asn1DerInt):
     
     @staticmethod
     def frombytes(b, t=TypeCodes[TypeNames.index('TimeTicks')]):
-        return super().frombytes(b, t=t)
+        if b[0] != t:
+            raise ValueError('expected type ' + str(t) + ' got', b[0])
+        ptr = 1+frombytes_lenat(b,0)[1]
+        return SnmpTimeTicks(int.from_bytes(b[ptr:]))
 
-#b'B\x03#\xe2O'
 
 TypeClasses.extend([SnmpCounter, SnmpGuage, SnmpTimeTicks])
