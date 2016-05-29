@@ -1,5 +1,18 @@
-TypeNames   = ['Int', 'OctStr', 'Null', 'Oid', 'Seq']
-TypeCodes   = [0x02, 0x04, 0x05, 0x06, 0x30]
+TypeNames = [
+        'Int', 
+        'OctStr', 
+        'Null', 
+        'Oid', 
+        'Seq'
+    ]
+
+TypeCodes = [
+        0x02, 
+        0x04, 
+        0x05, 
+        0x06, 
+        0x30
+    ]
 
 
 class Asn1DerBaseClass:
@@ -138,7 +151,13 @@ class Asn1DerNull(Asn1DerBaseClass):
         return b''
 
 
-TypeClasses = [Asn1DerInt, Asn1DerOctStr, Asn1DerNull, Asn1DerOid, Asn1DerSeq]
+TypeClasses = [
+        Asn1DerInt, 
+        Asn1DerOctStr, 
+        Asn1DerNull, 
+        Asn1DerOid, 
+        Asn1DerSeq
+    ]
 
 
 def frombytes_lenat(b, ptr):

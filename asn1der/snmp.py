@@ -1,5 +1,24 @@
 from asn1der import *
 from collections import OrderedDict
+try:
+    const(1)
+except:
+    def const(v):
+        return v
+
+ERR_NOERROR = const(0x00)
+ERR_TOOBIG = const(0x01)
+ERR_NOSUCHNAME = const(0x02)
+ERR_BADVALUE = const(0x03)
+ERR_READONLY = const(0x04)
+ERR_GENERR = const(0x05)
+
+TRAP_COLDSTART = const(0x0)
+TRAP_WARMSTART = const(0x10)
+TRAP_LINKDOWN = const(0x2)
+TRAP_LINKUP = const(0x3)
+TRAP_AUTHFAIL = const(0x4)
+TRAP_EGPNEIGHLOSS = const(0x5)
 
 TypeNames.extend([
         'IPAddr',
