@@ -19,12 +19,12 @@ class Asn1DerBaseClass:
     typecode = None
     
     @staticmethod
-    def frombytes(b, t=None):
+    def from_bytes(b, t=None):
         if b[0] != t:
             raise ValueError('expected type ' + hex(t) + ' got ' +hex(b[0]) )
 
     #requires self2bytes(self)
-    def tobytes(self):
+    def to_bytes(self):
         b = self.self2bytes()
         l = len(b)
         if l < 0x80:
@@ -38,20 +38,22 @@ class Asn1DerBaseClass:
         return bytes([self.typecode]) + lb + b
 
 
-def bytes2int(b):
-    ptr = 1+frombytes_lenat(b,0)[1]
-    return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
+# def bytes2int(b):
+#     ptr = 1+frombytes_lenat(b,0)[1]
+#     return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
 
 class Asn1DerInt(Asn1DerBaseClass, int):
     typecode = TypeCodes[TypeNames.index('Int')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Int')]):
-        super().frombytes(b, t=t)
-        return Asn1DerInt( bytes2int(b) )
+    def from_bytes(b, t=TypeCodes[TypeNames.index('Int')]):
+        super().from_bytes(b, t=t)
+        # return Asn1DerInt( bytes2int(b) )
+        ptr = 1+frombytes_lenat(b,0)[1]
+        return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
 
     def self2bytes(self):
-        b = self.to_bytes((len(hex(self+0))-1)//2)
+        b = super().to_bytes( (len(hex(self+0))-1)//2 )
         return bytes(1)+b if b[0]&0x80 == 0x80 else b 
 
 
@@ -137,7 +139,7 @@ class Asn1DerSeq(Asn1DerBaseClass, list):
 def bytes2null(b):
     return None
 
-#no python primitive ... consider singleton
+#select compact singleton approach
 #so `is Asn1DerNull` can be tested
 class Asn1DerNull(Asn1DerBaseClass):
     typecode = TypeCodes[TypeNames.index('Null')]

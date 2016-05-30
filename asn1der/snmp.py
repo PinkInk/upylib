@@ -1,5 +1,10 @@
 from asn1der import *
-from collections import OrderedDict
+
+try:
+    from ucollections import OrderedDict
+except:
+    from collections import OrderedDict
+    
 try:
     const(1)
 except:
@@ -25,6 +30,8 @@ TypeNames.extend([
         'Counter', 
         'Guage', 
         'TimeTicks',
+        'Opaque',
+        'NsApAddr',
         'GetRequest',
         'GetNextRequest',
         'GetResponse',
@@ -33,9 +40,12 @@ TypeNames.extend([
     ])
 
 TypeCodes.extend([
+        0x40,
         0x41, 
         0x42, 
         0x43,
+        0x44,
+        0x45,
         0xa0,
         0xa1,
         0xa2,
@@ -93,12 +103,13 @@ class SnmpTimeTicks(Asn1DerInt):
         super().frombytes(b, t=t)
         return SnmpTimeTicks( bytes2int(b) )
 
+class SnmpOpaque(): #not implemented, pending realworld case
+    pass 
 
-#------------------------------------------------------------------
-def bytes2getrequest(b, t):
+class SnmpNsApAddr(): #not implemented, pending realworld case
     pass
 
-class SnmpGetRequest(Asn1DerBaseClass, OrderedDict):
+class SnmpGetRequest(Asn1DerSeq):
     typecode = TypeCodes[TypeNames.index('GetRequest')]
 
     @staticmethod
@@ -106,15 +117,39 @@ class SnmpGetRequest(Asn1DerBaseClass, OrderedDict):
         super().frombytes(b, t=t)
         return SnmpGetNextRequest( bytes2getrequest(b) )
     
-    def self2bytes(self):
-        pass
-#------------------------------------------------------------------
 
-class SnmpGetNextRequest(SnmpGetRequest):
+class SnmpGetNextRequest(Asn1DerSeq):
     typecode = TypeCodes[TypeNames.index('GetNextRequest')]
 
     @staticmethod
     def frombytes(b, t=TypeCodes[TypeNames.index('GetNextRequest')]):
+        super().frombytes(b, t=t)
+        return SnmpGetNextRequest( bytes2getrequest(b) )
+
+
+class SnmpGetResponse(Asn1DerSeq):
+    typecode = TypeCodes[TypeNames.index('GetResponse')]
+
+    @staticmethod
+    def frombytes(b, t=TypeCodes[TypeNames.index('GetResponse')]):
+        super().frombytes(b, t=t)
+        return SnmpGetNextRequest( bytes2getrequest(b) )
+
+
+class SnmpSetRequest(Asn1DerSeq):
+    typecode = TypeCodes[TypeNames.index('SetRequest')]
+
+    @staticmethod
+    def frombytes(b, t=TypeCodes[TypeNames.index('SetRequest')]):
+        super().frombytes(b, t=t)
+        return SnmpGetNextRequest( bytes2getrequest(b) )
+
+    
+class SnmpTrap(Asn1DerSeq):
+    typecode = TypeCodes[TypeNames.index('Trap')]
+
+    @staticmethod
+    def frombytes(b, t=TypeCodes[TypeNames.index('Trap')]):
         super().frombytes(b, t=t)
         return SnmpGetNextRequest( bytes2getrequest(b) )
 
@@ -124,6 +159,11 @@ TypeClasses.extend([
         SnmpCounter, 
         SnmpGuage, 
         SnmpTimeTicks,
+        SnmpOpaque,
+        SnmpNsApAddr,
         SnmpGetRequest,
-        SnmpGetNextRequest
+        SnmpGetNextRequest,
+        SnmpGetResponse,
+        SnmpSetRequest,
+        SnmpTrap
     ])
