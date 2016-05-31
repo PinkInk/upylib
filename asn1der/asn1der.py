@@ -18,47 +18,31 @@ TypeCodes = [
 class Asn1DerBaseClass:
     typecode = None
     
-    @staticmethod
-    def from_bytes(b, t=None):
-        if b[0] != t:
-            raise ValueError('expected type ' + hex(t) + ' got ' +hex(b[0]) )
-
-    #requires self2bytes(self)
+    #expects children to implement _to_bytes(self)
+    #returning byte encoded payload (which it wraps in t,l)
     def to_bytes(self):
-        b = self.self2bytes()
-        l = len(b)
-        if l < 0x80:
-            lb = bytes([l])
-        else:
-            lb = bytes()
-            while l>0:
-                lb = bytes([l&0xff]) + lb
-                l //= 0x100
-            lb = bytes([0x80+len(lb)]) + lb
-        return bytes([self.typecode]) + lb + b
+        b = self._to_bytes()
+        return self.typecode.to_bytes(1) + to_bytes_len(len(b)) + b
 
 
-# def bytes2int(b):
-#     ptr = 1+frombytes_lenat(b,0)[1]
-#     return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
+def tlv2int(b):
+    ptr = 1 + from_bytes_lenat(b,0)[1]
+    return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
 
 class Asn1DerInt(Asn1DerBaseClass, int):
     typecode = TypeCodes[TypeNames.index('Int')]
 
     @staticmethod
-    def from_bytes(b, t=TypeCodes[TypeNames.index('Int')]):
-        super().from_bytes(b, t=t)
-        # return Asn1DerInt( bytes2int(b) )
-        ptr = 1+frombytes_lenat(b,0)[1]
-        return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
+    def from_bytes(b):
+        return Asn1DerInt( tlv2int(b) )
 
-    def self2bytes(self):
-        b = super().to_bytes( (len(hex(self+0))-1)//2 )
+    def _to_bytes(self):
+        b = (self+0).to_bytes( (len(hex(self+0))-1)//2 )
         return bytes(1)+b if b[0]&0x80 == 0x80 else b 
 
 
-def bytes2oid(b):
-    ptr = 1+frombytes_lenat(b,0)[1]
+def tlv2oidstr(b):
+    ptr = 1 + from_bytes_lenat(b,0)[1]
     #first 2 indexes are encoded in single byte
     v = str( b[ptr]//0x28 )
     if b[ptr]%0x28 != 0: #fringe case: OID == "1"
@@ -78,11 +62,10 @@ class Asn1DerOid(Asn1DerBaseClass, str):
     typecode = TypeCodes[TypeNames.index('Oid')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Oid')]):
-        super().frombytes(b, t=t)
-        return Asn1DerOid( bytes2oid(b) )
+    def from_bytes(b):
+        return Asn1DerOid( tlv2oidstr(b) )
 
-    def self2bytes(self):
+    def _to_bytes(self):
         oid = self.split('.')
         #first two indexes are encoded in single byte
         b = bytes([int(oid[0])*40 +(int(oid[1]) if len(oid)>1 else 0)])
@@ -95,62 +78,53 @@ class Asn1DerOid(Asn1DerBaseClass, str):
             b += ob
         return b
 
-
-def bytes2octstr(b):
-    ptr = 1+frombytes_lenat(b,0)[1]
+def tlv2bytes(b):
+    ptr = 1 + from_bytes_lenat(b,0)[1]
     return b[ptr:]
 
 class Asn1DerOctStr(Asn1DerBaseClass, bytes):
     typecode = TypeCodes[TypeNames.index('OctStr')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('OctStr')]):
-        super().frombytes(b, t=t)
-        return Asn1DerOctStr( bytes2octstr(b) )
+    def from_bytes(b):
+        return Asn1DerOctStr( tlv2bytes(b) )
 
-    def self2bytes(v):
-        return bytes(v)
+    def _to_bytes(self):
+        return bytes(self)
 
-
-def bytes2seq(b):
-    ptr = 1+frombytes_lenat(b,0)[1]
-    v = []
-    while ptr < len(b):
-        l, l_incr = frombytes_lenat(b, ptr)
-        v.append( TypeClasses[TypeCodes.index(b[ptr])].frombytes(b[ptr:ptr+1+l_incr+l]) )
-        ptr += 1+l_incr+l
-    return v
 
 class Asn1DerSeq(Asn1DerBaseClass, list):
     typecode = TypeCodes[TypeNames.index('Seq')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Seq')]):
-        super().frombytes(b, t=t)
-        return Asn1DerSeq( bytes2seq(b) )
+    def from_bytes(b, t=TypeCodes[TypeNames.index('Seq')]):
+        if b[0] != t:
+            raise ValueError('expected typecode '+hex(t)+' got '+hex(b[0]))
+        ptr = 1 + from_bytes_lenat(b,0)[1]
+        return decode(b[ptr:])
 
-    def self2bytes(self):
+    def _to_bytes(self):
         b = bytes()
         for i in self:
-            b += i.tobytes()
+            b += i.to_bytes()
         return b
 
 
-def bytes2null(b):
-    return None
-
-#select compact singleton approach
-#so `is Asn1DerNull` can be tested
 class Asn1DerNull(Asn1DerBaseClass):
     typecode = TypeCodes[TypeNames.index('Null')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Null')]):
-        super().frombytes(b, t=t)
-        return Asn1DerNull( bytes2null(b) )
+    def from_bytes(b):
+        return Asn1DerNull()
 
-    def self2bytes(v):
+    def _to_bytes(v):
         return b''
+    
+    def __call__(self):
+        return self
+
+#singleton
+Asn1DerNull = Asn1DerNull()
 
 
 TypeClasses = [
@@ -161,8 +135,13 @@ TypeClasses = [
         Asn1DerSeq
     ]
 
+def class_typecodeat(b, ptr):
+    try:
+        return TypeClasses[TypeCodes.index(b[ptr])]
+    except:
+        raise ValueError('unrecognised typecode '+hex(b[ptr])+' at '+str(ptr))
 
-def frombytes_lenat(b, ptr):
+def from_bytes_lenat(b, ptr):
     if b[ptr+1]&0x80 == 0x80:
         l = 0
         for i in b[ptr+2 : ptr+2+b[ptr+1]&0x7f]:
@@ -171,10 +150,24 @@ def frombytes_lenat(b, ptr):
     else:
         return b[ptr+1], 1
 
+def to_bytes_len(l):
+    if l < 0x80:
+        return bytes([l])
+    else:
+        b = bytes()
+        while l>0:
+            b = bytes([l&0xff]) + b
+            l //= 0x100
+        return bytes([0x80+len(b)]) + b
+
 def decode(b):
     v, ptr = [], 0
     while ptr < len(b):
-        l, l_incr = frombytes_lenat(b, ptr)
-        v.append( TypeClasses[TypeCodes.index(b[ptr])].frombytes(b[ptr:ptr+1+l_incr+l]) )
+        l, l_incr = from_bytes_lenat(b, ptr)
+        c = class_typecodeat(b, ptr)
+        v.append( c.from_bytes(b[ptr:ptr+1+l_incr+l]) )
         ptr += 1+l_incr+l
-    return v
+    if len(v) == 1:
+        return v[0]
+    else:
+        return v

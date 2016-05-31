@@ -54,23 +54,19 @@ TypeCodes.extend([
     ])
 
 
-def bytes2ip(b):
-    ptr = 1+frombytes_lenat(b,0)[1]
-    v = ''
-    while ptr < len(b):
-        v += '.' + str(b[ptr]) if v!='' else str(b[ptr])
-        ptr += 1
-    return v
-
 class SnmpIPAddr(Asn1DerBaseClass, str):
     typecode = TypeCodes[TypeNames.index('IPAddr')]
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('IPAddr')]):
-        super().frombytes(b, t=t)
-        return SnmpIPAddr( bytes2ip(b) )
+    def from_bytes(b, t=TypeCodes[TypeNames.index('IPAddr')]):
+        ptr = super().from_bytes(b, t=t)
+        v = ''
+        while ptr < len(b):
+            v += '.' + str(b[ptr]) if v!='' else str(b[ptr])
+            ptr += 1
+        return SnmpIPAddr(v)
 
-    def self2bytes(self):
+    def _to_bytes(self):
         b = bytes()
         for i in self.split('.'):
             b = b + bytes([int(i)])
@@ -81,8 +77,7 @@ class SnmpCounter(Asn1DerInt):
     typecode = TypeCodes[TypeNames.index('Counter')]
     
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Counter')]):
-        super().frombytes(b, t=t)
+    def from_bytes(b, t=TypeCodes[TypeNames.index('Counter')], c=SnmpCounter):
         return SnmpCounter( bytes2int(b) )
 
 
