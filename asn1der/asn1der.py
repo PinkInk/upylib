@@ -14,6 +14,12 @@ TypeCodes = [
         0x30
     ]
 
+def typecode_for_type(t):
+    return TypeCodes[TypeNames.index(t)]
+
+def check_typecode(b, t):
+    if b != t:
+        raise ValueError('expected typecode '+hex(t)+' got '+hex(b))
 
 class Asn1DerBaseClass:
     typecode = None
@@ -30,10 +36,11 @@ def tlv2int(b):
     return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
 
 class Asn1DerInt(Asn1DerBaseClass, int):
-    typecode = TypeCodes[TypeNames.index('Int')]
+    typecode = typecode_for_type('Int')
 
     @staticmethod
-    def from_bytes(b):
+    def from_bytes(b, t=typecode_for_type('Int')):
+        check_typecode(b[0], t)
         return Asn1DerInt( tlv2int(b) )
 
     def _to_bytes(self):
@@ -58,11 +65,15 @@ def tlv2oidstr(b):
         ptr += 1
     return v
 
+#equality test instance of subclass of str 
+#to instance of str's always returns False
+#in micropyhton (todo: raise ticket) 
 class Asn1DerOid(Asn1DerBaseClass, str):
-    typecode = TypeCodes[TypeNames.index('Oid')]
+    typecode = typecode_for_type('Oid')
 
     @staticmethod
-    def from_bytes(b):
+    def from_bytes(b, t=typecode_for_type('Oid')):
+        check_typecode(b[0], t)
         return Asn1DerOid( tlv2oidstr(b) )
 
     def _to_bytes(self):
@@ -78,15 +89,17 @@ class Asn1DerOid(Asn1DerBaseClass, str):
             b += ob
         return b
 
+
 def tlv2bytes(b):
     ptr = 1 + from_bytes_lenat(b,0)[1]
     return b[ptr:]
 
 class Asn1DerOctStr(Asn1DerBaseClass, bytes):
-    typecode = TypeCodes[TypeNames.index('OctStr')]
+    typecode = typecode_for_type('OctStr')
 
     @staticmethod
-    def from_bytes(b):
+    def from_bytes(b, t=typecode_for_type('OctStr')):
+        check_typecode(b[0], t)
         return Asn1DerOctStr( tlv2bytes(b) )
 
     def _to_bytes(self):
@@ -94,13 +107,15 @@ class Asn1DerOctStr(Asn1DerBaseClass, bytes):
 
 
 class Asn1DerSeq(Asn1DerBaseClass, list):
-    typecode = TypeCodes[TypeNames.index('Seq')]
+    typecode = typecode_for_type('Seq')
 
     @staticmethod
-    def from_bytes(b, t=TypeCodes[TypeNames.index('Seq')]):
-        if b[0] != t:
-            raise ValueError('expected typecode '+hex(t)+' got '+hex(b[0]))
-        ptr = 1 + from_bytes_lenat(b,0)[1]
+    def from_bytes(b, t=typecode_for_type('Seq')):
+        check_typecode(b[0], t)
+        l, l_incr = from_bytes_lenat(b,0)
+        if len(b) > 1+l_incr+l:
+            raise OverflowError('bytes contain multiple sequential tlv blocks')
+        ptr = 1 + l_incr
         return decode(b[ptr:])
 
     def _to_bytes(self):
@@ -111,10 +126,11 @@ class Asn1DerSeq(Asn1DerBaseClass, list):
 
 
 class Asn1DerNull(Asn1DerBaseClass):
-    typecode = TypeCodes[TypeNames.index('Null')]
+    typecode = typecode_for_type('Null')
 
     @staticmethod
-    def from_bytes(b):
+    def from_bytes(b, t=typecode_for_type('Null')):
+        check_typecode(b[0], t)
         return Asn1DerNull()
 
     def _to_bytes(v):
@@ -135,11 +151,8 @@ TypeClasses = [
         Asn1DerSeq
     ]
 
-def class_typecodeat(b, ptr):
-    try:
-        return TypeClasses[TypeCodes.index(b[ptr])]
-    except:
-        raise ValueError('unrecognised typecode '+hex(b[ptr])+' at '+str(ptr))
+def class_for_typecodeat(b, ptr):
+    return TypeClasses[TypeCodes.index(b[ptr])]
 
 def from_bytes_lenat(b, ptr):
     if b[ptr+1]&0x80 == 0x80:
@@ -164,10 +177,7 @@ def decode(b):
     v, ptr = [], 0
     while ptr < len(b):
         l, l_incr = from_bytes_lenat(b, ptr)
-        c = class_typecodeat(b, ptr)
+        c = class_for_typecodeat(b, ptr)
         v.append( c.from_bytes(b[ptr:ptr+1+l_incr+l]) )
         ptr += 1+l_incr+l
-    if len(v) == 1:
-        return v[0]
-    else:
-        return v
+    return v
