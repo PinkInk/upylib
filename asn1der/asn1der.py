@@ -65,6 +65,8 @@ def tlv2oidstr(b):
         ptr += 1
     return v
 
+#switch to subclass of bytes
+#---------------------------
 #equality test instance of subclass of str 
 #to instance of str's always returns False
 #in micropyhton (todo: raise ticket) 
