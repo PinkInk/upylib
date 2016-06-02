@@ -1,15 +1,9 @@
 from asn1der import *
 
 try:
-    from ucollections import OrderedDict
-except:
-    from collections import OrderedDict
-    
-try:
     const(1)
 except:
-    def const(v):
-        return v
+    const = lambda x : x
 
 ERR_NOERROR = const(0x00)
 ERR_TOOBIG = const(0x01)
@@ -30,8 +24,8 @@ TypeNames.extend([
         'Counter', 
         'Guage', 
         'TimeTicks',
-        'Opaque',
-        'NsApAddr',
+        # 'Opaque',
+        # 'NsApAddr',
         'GetRequest',
         'GetNextRequest',
         'GetResponse',
@@ -44,8 +38,8 @@ TypeCodes.extend([
         0x41, 
         0x42, 
         0x43,
-        0x44,
-        0x45,
+        # 0x44,
+        # 0x45,
         0xa0,
         0xa1,
         0xa2,
@@ -54,99 +48,158 @@ TypeCodes.extend([
     ])
 
 
-class SnmpIPAddr(Asn1DerBaseClass, str):
-    typecode = TypeCodes[TypeNames.index('IPAddr')]
+def tlv_v_to_ipaddr(b):
+    ptr = 1 + from_bytes_lenat(b, 0)[1]
+    v = ''
+    while ptr < len(b):
+        v += '.' + str(b[ptr]) if v!='' else str(b[ptr])
+        ptr += 1
+    return bytes(v, 'utf-8')
+
+#subclass of bytes 
+#subclasses of str do not behave as expected 
+#in current micropython version      
+class SnmpIPAddr(Asn1DerBaseClass, bytes):
+# class SnmpIPAddr(Asn1DerBaseClass, str):
+    typecode = typecode_for_type('IPAddr')
 
     @staticmethod
-    def from_bytes(b, t=TypeCodes[TypeNames.index('IPAddr')]):
-        ptr = super().from_bytes(b, t=t)
-        v = ''
-        while ptr < len(b):
-            v += '.' + str(b[ptr]) if v!='' else str(b[ptr])
-            ptr += 1
-        return SnmpIPAddr(v)
+    def from_bytes(b, t=typecode_for_type('IPAddr')):
+        check_typecode(b[0], t)
+        return SnmpIPAddr( tlv_v_to_ipaddr(b) )
 
     def _to_bytes(self):
         b = bytes()
-        for i in self.split('.'):
+        for i in self.split(b'.'):
             b = b + bytes([int(i)])
         return b
 
 
 class SnmpCounter(Asn1DerInt):    
-    typecode = TypeCodes[TypeNames.index('Counter')]
+    typecode = typecode_for_type('Counter')
     
     @staticmethod
-    def from_bytes(b, t=TypeCodes[TypeNames.index('Counter')], c=SnmpCounter):
-        return SnmpCounter( bytes2int(b) )
+    def from_bytes(b, t=typecode_for_type('Counter')):
+        check_typecode(b[0], t)    
+        return SnmpCounter( tlv_v_to_int(b) )
 
 
 class SnmpGuage(Asn1DerInt):    
-    typecode = TypeCodes[TypeNames.index('Guage')]
+    typecode = typecode_for_type('Guage')
     
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Guage')]):
-        super().frombytes(b, t=t)
-        return SnmpGuage( bytes2int(b) )
+    def from_bytes(b, t=typecode_for_type('Guage')):
+        check_typecode(b[0], t)    
+        return SnmpGuage( tlv_v_to_int(b) )
 
 
 class SnmpTimeTicks(Asn1DerInt):    
-    typecode = TypeCodes[TypeNames.index('TimeTicks')]
+    typecode = typecode_for_type('TimeTicks')
     
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('TimeTicks')]):
-        super().frombytes(b, t=t)
-        return SnmpTimeTicks( bytes2int(b) )
+    def from_bytes(b, t=typecode_for_type('TimeTicks')):
+        check_typecode(b[0], t)    
+        return SnmpTimeTicks( tlv_v_to_int(b) )
 
-class SnmpOpaque(): #not implemented, pending realworld case
-    pass 
 
-class SnmpNsApAddr(): #not implemented, pending realworld case
-    pass
+_SnmpGetSetTemplate = [
+    Asn1DerInt(0),  #request_id
+    Asn1DerInt(0),  #error_status
+    Asn1DerInt(0),  #error_id
+    Asn1DerSeq([])  #variable_bindings
+]
 
-class SnmpGetRequest(Asn1DerSeq):
-    typecode = TypeCodes[TypeNames.index('GetRequest')]
+class _SnmpGetSetBaseClass(Asn1DerSeq):
+    
+    def __init__(self):
+        if len(self) == 0:
+            #assume we were initialised without arg
+            for i in _SnmpGetSetTemplate:
+                self.append(i)
+        else:
+            #validate structure
+            for i,j in enumerate(self):
+                if type(j) != type(_SnmpGetSetTemplate[i]):
+                    raise ValueError('invalid initialisation data')
+        #micropython doesn't implements __getattr__, not __setattr__
+        self.id = self[0]
+        self.err_status = self[1]
+        self.err_id = self[2]
+        self.varbinds = self[3]
 
+
+class SnmpGetRequest(_SnmpGetSetBaseClass):
+    typecode = typecode_for_type('GetRequest')
+    
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('GetRequest')]):
-        super().frombytes(b, t=t)
-        return SnmpGetNextRequest( bytes2getrequest(b) )
+    def frombytes(b, t=typecode_for_type('GetRequest')):
+        check_typecode(b[0], t)    
+        return SnmpGetNextRequest( tlv_v_to_seq(b) )
     
 
-class SnmpGetNextRequest(Asn1DerSeq):
-    typecode = TypeCodes[TypeNames.index('GetNextRequest')]
+class SnmpGetNextRequest(_SnmpGetSetBaseClass):
+    typecode = typecode_for_type('GetNextRequest')
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('GetNextRequest')]):
-        super().frombytes(b, t=t)
-        return SnmpGetNextRequest( bytes2getrequest(b) )
+    def frombytes(b, t=typecode_for_type('GetNextRequest')):
+        check_typecode(b[0], t)    
+        return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
 
-class SnmpGetResponse(Asn1DerSeq):
-    typecode = TypeCodes[TypeNames.index('GetResponse')]
-
-    @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('GetResponse')]):
-        super().frombytes(b, t=t)
-        return SnmpGetNextRequest( bytes2getrequest(b) )
-
-
-class SnmpSetRequest(Asn1DerSeq):
-    typecode = TypeCodes[TypeNames.index('SetRequest')]
+class SnmpGetResponse(_SnmpGetSetBaseClass):
+    typecode = typecode_for_type('GetResponse')
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('SetRequest')]):
-        super().frombytes(b, t=t)
-        return SnmpGetNextRequest( bytes2getrequest(b) )
+    def frombytes(b, t=typecode_for_type('GetResponse')):
+        check_typecode(b[0], t)    
+        return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
+
+class SnmpSetRequest(_SnmpGetSetBaseClass):
+    typecode = typecode_for_type('SetRequest')
+
+    @staticmethod
+    def frombytes(b, t=typecode_for_type('SetRequest')):
+        check_typecode(b[0], t)    
+        return SnmpSetRequest( tlv_v_to_seq(b) )
+
+_SnmpTrapTemplate = [
+    Asn1DerOid(b'1.3.6.1.4.1'), #enterprise_oid
+    SnmpIPAddr(b'127.0.0.1'),   #ip_address
+    Asn1DerInt(0),              #generic_type
+    Asn1DerInt(0),              #specific_type
+    SnmpTimeTicks(0),           #timestamp
+    Asn1DerSeq([])              #variable_bindings
+]
+
+class _SnmpTrapBaseClass(Asn1DerSeq):
     
-class SnmpTrap(Asn1DerSeq):
-    typecode = TypeCodes[TypeNames.index('Trap')]
+    def __init__(self):
+        if len(self) == 0:
+            #assume we were initialised without arg
+            for i in _SnmpTrapTemplate:
+                self.append(i)
+        else:
+            #validate structure
+            for i,j in enumerate(self):
+                if type(j) != type(_SnmpTrapTemplate[i]):
+                    raise ValueError('invalid initialisation data')
+        #micropython doesn't implements __getattr__, not __setattr__
+        self.enterprise = self[0]
+        self.agent_addr = self[1]
+        self.generic_trap = self[2]
+        self.specific_trap = self[3]
+        self.timestamp = self[4]
+        self.varbinds = self[5]
+
+
+class SnmpTrap(_SnmpTrapBaseClass):
+    typecode = typecode_for_type('Trap')
 
     @staticmethod
-    def frombytes(b, t=TypeCodes[TypeNames.index('Trap')]):
-        super().frombytes(b, t=t)
-        return SnmpGetNextRequest( bytes2getrequest(b) )
+    def frombytes(b, t=typecode_for_type('Trap')):
+        check_typecode(b[0], t)    
+        return SnmpTrap( tlv_v_to_seq(b) )
 
 
 TypeClasses.extend([
@@ -154,8 +207,8 @@ TypeClasses.extend([
         SnmpCounter, 
         SnmpGuage, 
         SnmpTimeTicks,
-        SnmpOpaque,
-        SnmpNsApAddr,
+        # SnmpOpaque,
+        # SnmpNsApAddr,
         SnmpGetRequest,
         SnmpGetNextRequest,
         SnmpGetResponse,

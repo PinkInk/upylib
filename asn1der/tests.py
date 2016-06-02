@@ -38,7 +38,7 @@ assert a6[4] == a1, 'incorrect item'
 
 import snmp
 
-v7 = '172.26.236.1'
+v7 = b'172.26.236.1'
 a7 = snmp.SnmpIPAddr(v7)
 assert type(a7) == snmp.SnmpIPAddr, 'incorrect type'
 #why need to convert string
