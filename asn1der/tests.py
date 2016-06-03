@@ -41,8 +41,7 @@ import snmp
 v7 = b'172.26.236.1'
 a7 = snmp.SnmpIPAddr(v7)
 assert type(a7) == snmp.SnmpIPAddr, 'incorrect type'
-#why need to convert string
-assert v7 == str(snmp.SnmpIPAddr.from_bytes( a7.to_bytes() )), 'wrong value'
+assert v7 == snmp.SnmpIPAddr.from_bytes( a7.to_bytes() ), 'wrong value'
 
 v8 = 673633462
 a8 = snmp.SnmpCounter(v8)
@@ -59,4 +58,8 @@ a10 = snmp.SnmpTimeTicks(v10)
 assert type(a10) == snmp.SnmpTimeTicks, 'incorrect type'
 assert v10 == snmp.SnmpTimeTicks.from_bytes( a10.to_bytes() ), 'wrong value'
 
-
+import utime
+a10 = snmp.SnmpGetRequest()
+a.id = utime.ticks_us()
+a10.varbinds.append(snmp.Asn1DerSeq([snmp.Asn1DerOid(b'1.3.1.2.2.1.12.1'), snmp.Asn1DerNull()]))
+a10.varbinds.append(snmp.Asn1DerSeq([snmp.Asn1DerOid(b'1.3.1.2.2.1.12.2'), snmp.Asn1DerNull()]))
