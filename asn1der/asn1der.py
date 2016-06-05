@@ -1,10 +1,3 @@
-#------------------------------------------------
-# what about passing tlv_v_to_xxx into class 
-# specific to_bytes which just calls super().to_bytes()?
-# do check for type etc. in BaseClass to_bytes
-# or tlv_v_to_xxx?
-#------------------------------------------------
-
 #Ordered list of implemented type names for lookup
 #extend in subclasses to add types
 TypeNames = [

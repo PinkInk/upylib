@@ -5,11 +5,11 @@ a1 = asn1der.Asn1DerInt(v1)
 assert type(a1) == asn1der.Asn1DerInt, 'incorrect type'
 assert v1 == asn1der.Asn1DerInt.from_bytes( a1.to_bytes() ), 'wrong value'
 
-v2 = '1.3.1.2.2.1.234.746344.1.22'
+v2 = b'1.3.1.2.2.1.234.746344.1.22'
 a2 = asn1der.Asn1DerOid(v2)
 assert type(a2) == asn1der.Asn1DerOid, 'incorrect type'
 #why need to convert string?
-assert v2 == str(asn1der.Asn1DerOid.from_bytes( a2.to_bytes())), 'wrong value'
+assert v2 == asn1der.Asn1DerOid.from_bytes( a2.to_bytes()), 'wrong value'
 #assert v2 == asn1der.Asn1DerOid.from_bytes( a2.to_bytes()), 'wrong value'
 
 v3 = b'hello world'
@@ -57,6 +57,30 @@ v10 = 96782
 a10 = snmp.SnmpTimeTicks(v10)
 assert type(a10) == snmp.SnmpTimeTicks, 'incorrect type'
 assert v10 == snmp.SnmpTimeTicks.from_bytes( a10.to_bytes() ), 'wrong value'
+
+a11 = snmp.SnmpVarBinds()
+a11[snmp.Asn1DerOid(b'1.3.1.2.2.1.3.1')] = snmp.SnmpCounter(23)
+a11[snmp.Asn1DerOid(b'1.3.1.2.2.1.3.2')] = snmp.SnmpGuage(5346346)
+a11.to_bytes()
+snmp.SnmpVarBinds.from_bytes( a11.to_bytes() )
+
+a=OrderedDict()
+a['a']=23
+a['b']=25
+b=OrderedDict()
+b['a']=23
+b['b']=25
+a==b
+
+a=dict()
+a['a']=23
+a['b']=25
+b=dict()
+b['a']=23
+b['b']=25
+a==b
+
+
 
 import utime
 a10 = snmp.SnmpGetRequest()

@@ -1,9 +1,9 @@
 from asn1der import *
 
 try:
-    from ucollection import OrderedDict
+    from ucollections import OrderedDict
 except:
-    from collection import OrderedDict
+    from collections import OrderedDict
 
 try:
     const(1)
@@ -31,8 +31,6 @@ TypeNames.extend([
         'Counter', 
         'Guage', 
         'TimeTicks',
-        # 'Opaque',
-        # 'NsApAddr',
         'GetRequest',
         'GetNextRequest',
         'GetResponse',
@@ -45,8 +43,6 @@ TypeCodes.extend([
         0x41, 
         0x42, 
         0x43,
-        # 0x44,
-        # 0x45,
         0xa0,
         0xa1,
         0xa2,
@@ -108,17 +104,12 @@ class SnmpTimeTicks(Asn1DerInt):
         check_typecode(b[0], t)    
         return SnmpTimeTicks( tlv_v_to_int(b) )
 
-#------------------------------------------------
-# consider comments at top of asn1der.py first
-# and refactor all (reduction in code lines and
-# complexity) before further work
-#
+
 def tlv_v_to_varbinds(b):
-    v = {}
+    v = OrderedDict()
     ptr = 1 + from_bytes_lenat(b,0)[1] #skip into sequence
-    while ptr < len(b):
-        l, l_incr = from_bytes_lenat(b, ptr)
-        
+    for ov in decode(b[ptr:]):
+        v[ov[0]] = ov[1]
     return v
 
 class SnmpVarBinds(Asn1DerBaseClass, OrderedDict):
@@ -127,10 +118,13 @@ class SnmpVarBinds(Asn1DerBaseClass, OrderedDict):
     @staticmethod
     def from_bytes(b, t=typecode_for_type('Seq')):
         check_typecode(b[0], t)
-        return Asn1DerSeq( tlv_v_to_varbinds(b) )
+        return SnmpVarBinds( tlv_v_to_varbinds(b) )
     
     def _to_bytes(self):
-        pass
+        b = bytes()
+        for i in self:
+            b += Asn1DerSeq([ i, self[i] ]).to_bytes()
+        return b
 
 #------------------------------------------------
 
@@ -267,8 +261,6 @@ TypeClasses.extend([
         SnmpCounter, 
         SnmpGuage, 
         SnmpTimeTicks,
-        # SnmpOpaque,
-        # SnmpNsApAddr,
         SnmpGetRequest,
         SnmpGetNextRequest,
         SnmpGetResponse,
