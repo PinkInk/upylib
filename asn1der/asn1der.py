@@ -1,16 +1,16 @@
 TypeNames = [
-        'Int', 
-        'OctStr', 
-        'Null', 
-        'Oid', 
+        'Int',
+        'OctStr',
+        'Null',
+        'Oid',
         'Seq'
     ]
 
 TypeCodes = [
-        0x02, 
-        0x04, 
-        0x05, 
-        0x06, 
+        0x02,
+        0x04,
+        0x05,
+        0x06,
         0x30
     ]
 
@@ -24,10 +24,10 @@ def check_typecode(b, t):
 
 class Asn1DerBaseClass:
     typecode = None
-    
+
     def to_bytes(self):
         b = self._to_bytes()
-        return self.typecode.to_bytes(1) + to_bytes_len(len(b)) + b  
+        return self.typecode.to_bytes(1) + to_bytes_len(len(b)) + b
 
 
 def tlv_v_to_int(b):
@@ -44,7 +44,7 @@ class Asn1DerInt(Asn1DerBaseClass, int):
 
     def _to_bytes(self):
         b = (self+0).to_bytes( (len(hex(self+0))-1)//2 )
-        return bytes(1)+b if b[0]&0x80 == 0x80 else b 
+        return bytes(1)+b if b[0]&0x80 == 0x80 else b
 
 
 def tlv_v_to_oid(b):
@@ -111,7 +111,7 @@ def tlv_v_to_seq(b):
         v.append( c.from_bytes(b[ptr:ptr+1+l_incr+l]) )
         ptr += 1+l_incr+l
     return v
-    
+
 class Asn1DerSeq(Asn1DerBaseClass, list):
     typecode = typecode_for_type('Seq')
 
@@ -137,7 +137,7 @@ class Asn1DerNull(Asn1DerBaseClass):
 
     def _to_bytes(v):
         return b''
-    
+
     def __call__(self):
         return self
 
@@ -145,10 +145,10 @@ Asn1DerNull = Asn1DerNull() #to singleton
 
 
 TypeClasses = [
-        Asn1DerInt, 
-        Asn1DerOctStr, 
-        Asn1DerNull, 
-        Asn1DerOid, 
+        Asn1DerInt,
+        Asn1DerOctStr,
+        Asn1DerNull,
+        Asn1DerOid,
         Asn1DerSeq
     ]
 
