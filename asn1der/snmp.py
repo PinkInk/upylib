@@ -1,14 +1,11 @@
 from asn1der import *
-
-try:
-    from ucollections import OrderedDict
-except:
-    from collections import OrderedDict
+from ucollections import OrderedDict
 
 try:
     const(1)
 except:
-    const = lambda x : x
+    def const(v):
+        return v
 
 SNMP_VER1 = const(0x0)
 
@@ -59,11 +56,7 @@ def tlv_v_to_ipaddr(b):
         ptr += 1
     return bytes(v, 'utf-8')
 
-#subclass of bytes 
-#subclasses of str do not behave as expected 
-#in current micropython version      
 class SnmpIPAddr(Asn1DerBaseClass, bytes):
-# class SnmpIPAddr(Asn1DerBaseClass, str):
     typecode = typecode_for_type('IPAddr')
 
     @staticmethod
@@ -126,34 +119,48 @@ class SnmpVarBinds(Asn1DerBaseClass, OrderedDict):
             b += Asn1DerSeq([ i, self[i] ]).to_bytes()
         return b
 
-#------------------------------------------------
-
 
 _SnmpGetSetTemplate = [
-    Asn1DerInt(0),  #request_id
-    Asn1DerInt(0),  #error_status
-    Asn1DerInt(0),  #error_id
-    Asn1DerSeq([])  #variable_bindings
+    Asn1DerInt(0),          #request_id
+    Asn1DerInt(0),          #error_status
+    Asn1DerInt(0),          #error_id
+    SnmpVarBinds({})        #variable_bindings
 ]
 
 class _SnmpGetSetBaseClass(Asn1DerSeq):
     
     def __init__(self):
-        if len(self) == 0:
-            #initd without arg, load template
+        if len(self) == 0: #no args
             for i in _SnmpGetSetTemplate:
                 self.append(i)
-        else:
-            #initd with arg, validate
+        else: #args, validate
             for i,j in enumerate(self):
                 if type(j) != type(_SnmpGetSetTemplate[i]):
                     raise ValueError('invalid initialisation data')
-        #mpy implements __getattr__ but not __setattr__
-        #assignment must be appropriate class
-        self.id = self[0]
-        self.err_status = self[1]
-        self.err_id = self[2]
-        self.varbinds = self[3]
+
+        def id(self, id=None):
+            if id == None:
+                return self[0]
+            else:
+                self[0] = id
+        
+        def err_status(self, err_status=None):
+            if err_status == None:
+                return self[1]
+            else:
+                self[1] = err_status
+        
+        def err_id(self, err_id=None):
+            if err_id == None:
+                return self[2]
+            else:
+                self[2] = err_id
+        
+        def varbinds(self, varbinds=None):
+            if varbinds == None:
+                return self[3]
+            else:
+                self[3] == varbinds
 
 
 class SnmpGetRequest(_SnmpGetSetBaseClass):
@@ -191,29 +198,26 @@ class SnmpSetRequest(_SnmpGetSetBaseClass):
         check_typecode(b[0], t)    
         return SnmpSetRequest( tlv_v_to_seq(b) )
 
+
 _SnmpTrapTemplate = [
     Asn1DerOid(b'1.3.6.1.4.1'), #enterprise_oid
     SnmpIPAddr(b'127.0.0.1'),   #ip_address
     Asn1DerInt(0),              #generic_type
     Asn1DerInt(0),              #specific_type
     SnmpTimeTicks(0),           #timestamp
-    Asn1DerSeq([])              #variable_bindings
+    SnmpVarBinds({})            #variable_bindings
 ]
 
 class _SnmpTrapBaseClass(Asn1DerSeq):
     
     def __init__(self):
-        if len(self) == 0:
-            #initd without arg, load template
+        if len(self) == 0: #no args
             for i in _SnmpTrapTemplate:
                 self.append(i)
-        else:
-            #initd with arg, validate
+        else: #args, validate
             for i,j in enumerate(self):
                 if type(j) != type(_SnmpTrapTemplate[i]):
                     raise ValueError('invalid initialisation data')
-        #mpy implements __getattr__ but not __setattr__
-        #assignment must be appropriate class
         self.enterprise = self[0]
         self.agent_addr = self[1]
         self.generic_trap = self[2]
@@ -234,26 +238,37 @@ class SnmpTrap(_SnmpTrapBaseClass):
 _SnmpPacketTemplate = [
     Asn1DerInt(SNMP_VER1),
     Asn1DerOctStr(b'community'),
-    None
+    SnmpGetRequest()
 ]
 
 class SnmpPacket(Asn1DerSeq):
 
     def __init__(self, t=None):
-        if len(self) == 0:
-            #initd without arg, load template
+        if len(self) == 0: #no args
             for i in _SnmpPacketTemplate:
                 self.append(i)
-        else:
-            #initd with arg, validate
+        else: #args, validate
             for i,j in enumerate(self):
                 if type(j) != type(_SnmpPacketTemplate[i]):
                     raise ValueError('invalid initialisation data')
-        #mpy implements __getattr__ but not __setattr__
-        #assignment must be appropriate class
-        self.ver = self[0]
-        self.community = self[1]
-        self.varbinds = self[2]                
+    
+    def ver(self, ver=None):
+        if ver == None:
+            return self[0]
+        else:
+            self[0] = ver
+            
+    def community(self, community=None):
+        if community == None:
+            return self[1]
+        else:
+            self[1] = community
+   
+    def data(self, data=None): #wireshark name
+        if data == None:
+            return self[2]
+        else:
+            self[2] = data
     
 
 TypeClasses.extend([

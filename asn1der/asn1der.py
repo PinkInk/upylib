@@ -1,5 +1,3 @@
-#Ordered list of implemented type names for lookup
-#extend in subclasses to add types
 TypeNames = [
         'Int', 
         'OctStr', 
@@ -8,8 +6,6 @@ TypeNames = [
         'Seq'
     ]
 
-#Ordered list of implemented type codes for lookup
-#extend in subclasses to add types
 TypeCodes = [
         0x02, 
         0x04, 
@@ -20,85 +16,25 @@ TypeCodes = [
 
 
 def typecode_for_type(t):
-    """
-    typecode_for_type(t)
-    --------------------
-    Return type code(int) of type-name(t) as string
-    """
     return TypeCodes[TypeNames.index(t)]
 
 def check_typecode(b, t):
-    """
-    check_typecode(b, t)
-    --------------------
-    Check b(int), first byte of a t,l,v block, is of expected type(t)
-    """
     if b != t:
         raise ValueError('expected typecode '+hex(t)+' got '+hex(b))
 
 class Asn1DerBaseClass:
-    """
-    class Asn1DerBaseClass
-    ----------------------
-    Base class for Asn.1 DER useable classes
-    """
-    
-    #Placeholder for derived class type-code(int)
     typecode = None
-
-    @staticmethod
-    def from_bytes(b, t=None):
-    #def from_bytes(b, t=typecode_for_type('')):
-        """
-        from_bytes(b, t=typecode_for_type('<typename>'))
-        --------------------------------------
-        Placeholder for derived class from_bytes method
-        
-        Subclasses are expected to override with method
-        that returns instance of self, decoded from bytes
-        """
-        pass
     
-    #expects children to implement _to_bytes(self)
-    #returning byte encoded payload (which it wraps in t,l)
     def to_bytes(self):
-        """
-        to_bytes(self)
-        --------------
-        Returns t,l,v encoded as bytes, for transmission on nw
-        by wrapping output of subclass._to_bytes() in t,l 
-        """
         b = self._to_bytes()
-        return self.typecode.to_bytes(1) + to_bytes_len(len(b)) + b
-
-    def _to_bytes(self):
-        """
-        _to_bytes(self)
-        ---------------
-        Return type-specific value bytes encoding
-        Subclasses are expected to override this method        
-        """
-        pass
-  
+        return self.typecode.to_bytes(1) + to_bytes_len(len(b)) + b  
 
 
 def tlv_v_to_int(b):
-    """
-    tlv_v_to_int
-    ------------
-    Return an int from the encoded v element of a t,l,v block
-    Used by Asn1DerInt and derivative classes
-    """
     ptr = 1 + from_bytes_lenat(b,0)[1]
     return int.from_bytes(b[ptr:] if b[ptr]!=0 else b[ptr+1:])
 
 class Asn1DerInt(Asn1DerBaseClass, int):
-    """
-    Asn1DerInt
-    ----------
-    Asn.1 DER encoded integer class
-    Does not support -ve values
-    """
     typecode = typecode_for_type('Int')
 
     @staticmethod
@@ -112,12 +48,6 @@ class Asn1DerInt(Asn1DerBaseClass, int):
 
 
 def tlv_v_to_oid(b):
-    """
-    tlv_v_to_oid
-    ------------
-    Return an OID from the encoded v element of a t,l,v block
-    Used by Asn1DerOid and derivative classes (unlikely)
-    """
     ptr = 1 + from_bytes_lenat(b,0)[1]
     #first 2 indexes are encoded in single byte
     v = str(b[ptr]//0x28 )
@@ -134,16 +64,7 @@ def tlv_v_to_oid(b):
         ptr += 1
     return bytes(v, 'utf-8') #coerce to bytes
 
-#subclass of bytes 
-#subclasses of str do not behave as expected 
-#in current micropython version  
 class Asn1DerOid(Asn1DerBaseClass, bytes):
-# class Asn1DerOid(Asn1DerBaseClass, str):
-    """
-    Asn1DerOid
-    ----------
-    Asn.1 DER encoded Oid class
-    """
     typecode = typecode_for_type('Oid')
 
     @staticmethod
@@ -166,23 +87,10 @@ class Asn1DerOid(Asn1DerBaseClass, bytes):
 
 
 def tlv_v_to_octstr(b):
-    """
-    tlv_v_to_octstr
-    ---------------
-    Return bytes from the encoded v element of a t,l,v Octet String block
-    Used by Asn1DerOctStr and derivative classes (unlikely)
-    """
     ptr = 1 + from_bytes_lenat(b,0)[1]
     return b[ptr:]
 
 class Asn1DerOctStr(Asn1DerBaseClass, bytes):
-    """
-    Asn1DerOctStr
-    -------------
-    Asn.1 DER encoded Octet String class
-    Octet Strings can contain non-printables (e.g. MAC Addresses)
-    hence implementation as bytes derivative
-    """
     typecode = typecode_for_type('OctStr')
 
     @staticmethod
@@ -195,12 +103,6 @@ class Asn1DerOctStr(Asn1DerBaseClass, bytes):
 
 
 def tlv_v_to_seq(b):
-    """
-    tlv_v_to_seq
-    ------------
-    Return list from the encoded v element of a t,l,v Sequence block
-    Used by Asn1DerSeq and derivative classes
-    """
     v = []
     ptr = 1 + from_bytes_lenat(b,0)[1] #skip into sequence
     while ptr < len(b):
@@ -211,13 +113,6 @@ def tlv_v_to_seq(b):
     return v
     
 class Asn1DerSeq(Asn1DerBaseClass, list):
-    """
-    Asn1DerSeq
-    ----------
-    Asn.1 DER encoded Sequence class
-    Sequences are containers for other t,l,v's
-    hence implementation as list derivative
-    """
     typecode = typecode_for_type('Seq')
 
     @staticmethod
@@ -233,12 +128,6 @@ class Asn1DerSeq(Asn1DerBaseClass, list):
 
 
 class Asn1DerNull(Asn1DerBaseClass):
-    """
-    Asn1DerNull
-    ----------
-    Asn.1 DER encoded Null class
-    Implemented as a Singleton, to mimic behaviour of None
-    """
     typecode = typecode_for_type('Null')
 
     @staticmethod
@@ -252,12 +141,9 @@ class Asn1DerNull(Asn1DerBaseClass):
     def __call__(self):
         return self
 
-#turn into Singleton
-Asn1DerNull = Asn1DerNull()
+Asn1DerNull = Asn1DerNull() #to singleton
 
 
-#Ordered list of implemented type classes for lookup
-#extend in subclasses to add types
 TypeClasses = [
         Asn1DerInt, 
         Asn1DerOctStr, 
@@ -267,19 +153,9 @@ TypeClasses = [
     ]
 
 def class_for_typecodeat(b, ptr):
-    """
-    class_for_typecodeat
-    --------------------
-    Return type-class (class) of t,l,v starting @ at ptr in b
-    """
     return TypeClasses[TypeCodes.index(b[ptr])]
 
 def from_bytes_lenat(b, ptr):
-    """
-    from_bytes_lenat
-    ----------------
-    Return length (int) of t,l,v starting @ ptr in b
-    """
     if b[ptr+1]&0x80 == 0x80:
         l = 0
         for i in b[ptr+2 : ptr+2+b[ptr+1]&0x7f]:
@@ -289,11 +165,6 @@ def from_bytes_lenat(b, ptr):
         return b[ptr+1], 1
 
 def to_bytes_len(l):
-    """
-    to_bytes_len
-    ------------
-    Return byte encoded l (int) of t,l,v block
-    """
     if l < 0x80:
         return bytes([l])
     else:
@@ -304,12 +175,6 @@ def to_bytes_len(l):
         return bytes([0x80+len(b)]) + b
 
 def decode(b):
-    """
-    decode
-    ------
-    Recursively decode Asn.1 DER encoded binary data into list
-    of appropriate types  
-    """
     v, ptr = [], 0
     while ptr < len(b):
         l, l_incr = from_bytes_lenat(b, ptr)
