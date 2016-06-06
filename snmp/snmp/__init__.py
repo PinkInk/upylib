@@ -1,6 +1,6 @@
 from asn1der import *
-from snmp.simpletypes import *
-from snmp.compoundtypes import *
+from snmp.getset import * 
+from snmp.trap import *
 
 try:
     const(1)
