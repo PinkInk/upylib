@@ -77,7 +77,7 @@ class SnmpGetNextRequest(_SnmpGetSetBaseClass):
     typecode = typecode_for_type('GetNextRequest')
 
     @staticmethod
-    def frombytes(b, t=typecode_for_type('GetNextRequest')):
+    def from_bytes(b, t=typecode_for_type('GetNextRequest')):
         check_typecode(b[0], t)
         return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
@@ -86,7 +86,7 @@ class SnmpGetResponse(_SnmpGetSetBaseClass):
     typecode = typecode_for_type('GetResponse')
 
     @staticmethod
-    def frombytes(b, t=typecode_for_type('GetResponse')):
+    def from_bytes(b, t=typecode_for_type('GetResponse')):
         check_typecode(b[0], t)
         return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
@@ -95,7 +95,7 @@ class SnmpSetRequest(_SnmpGetSetBaseClass):
     typecode = typecode_for_type('SetRequest')
 
     @staticmethod
-    def frombytes(b, t=typecode_for_type('SetRequest')):
+    def from_bytes(b, t=typecode_for_type('SetRequest')):
         check_typecode(b[0], t)
         return SnmpSetRequest( tlv_v_to_seq(b) )
 
