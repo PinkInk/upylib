@@ -27,7 +27,7 @@ TRAP_EGPNEIGHLOSS = const(0x5)
 
 _SnmpPacketTemplate = [
     Asn1DerInt(SNMP_VER1),
-    Asn1DerOctStr(b'community'),
+    Asn1DerOctStr(b'public'),
     SnmpGetRequest()
 ]
 
