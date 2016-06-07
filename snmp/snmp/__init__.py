@@ -43,11 +43,13 @@ class SnmpPacket(Asn1DerSeq):
                     if type(j) != type(_SnmpPacketTemplate[i]):
                         raise ValueError('invalid initialisation data')
                 else:
-                    if not( isinstance(j, SnmpGetSetBaseClass) 
-                            or isinstance(j, SnmpTrapBaseClass)
+                    if not(     isinstance(j, SnmpGetSetBaseClass) 
+                            or 
+                                isinstance(j, SnmpTrapBaseClass)
                           ):
                         raise ValueError('invalid initialisation data')
         self.data = self[2] #expose object directly
+        self.varbinds = self.data.varbinds #convenience shortcut
 
     def ver(self, ver=None):
         if ver == None:
