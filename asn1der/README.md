@@ -1,10 +1,9 @@
 #DER encoded Asn.1 codec, for [Micropython](www.micropython.org)
 
 Codes and decodes a subset of DER encoded Asn.1 datatypes into to/from 
-binary format. 
-
-In the spirit of minimal only the Asn.1 data types that I've so far
-come across in real world (aka are used by SNMPv1) are implemented i.e.;
+binary format.  In the spirit of minimal; only the Asn.1 data types that 
+I've so far encountered in the real-world(tm) (aka are used by SNMPv1) 
+are implemented i.e.;
 
 - Null (Asn1DerNull as standalone Singleton)
 - Int (Asn1DerInt as subclass of python int)
