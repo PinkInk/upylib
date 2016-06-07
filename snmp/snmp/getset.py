@@ -1,6 +1,5 @@
 from asn1der import *
 from snmp.integers import *
-# from snmp.varbinds import *
 
 TypeNames.extend([
         'GetRequest',
@@ -90,7 +89,7 @@ class SnmpGetResponse(_SnmpGetSetBaseClass):
     @staticmethod
     def from_bytes(b, t=typecode_for_type('GetResponse')):
         check_typecode(b[0], t)
-        return SnmpGetNextRequest( tlv_v_to_seq(b) )
+        return SnmpGetResponse( tlv_v_to_seq(b) )
 
 
 class SnmpSetRequest(_SnmpGetSetBaseClass):

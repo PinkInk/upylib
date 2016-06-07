@@ -1,7 +1,6 @@
 from asn1der import *
 from snmp.integers import *
 from snmp.ipaddr import *
-# from snmp.varbinds import *
 
 TypeNames.extend([
         'Trap'
