@@ -43,7 +43,7 @@ TypeError: unsupported types for __add__: 'int', 'Asn1DerInt'
 ```
 
 This behaviour may be mitigable.  However undoubtedly not in a way
-consisten with a micro necessity.  Or maybe not; my python isn't that 
+consistent with a micro philosophy.  Or maybe not; my python isn't that 
 good, and this is part and parcel of a Learning Experience&trade;.
 
 ##the Asn.1 DER format
