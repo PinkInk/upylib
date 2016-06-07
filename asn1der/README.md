@@ -12,11 +12,11 @@ are used by SNMPv1) are implemented i.e.;
 - OID (**Asn1DerOid** as subclass of python bytes)
 - SEQuence (**Asn1DerSeq** as subclass of python list)
 
-The generic `decode` function takes any arbitary chunk of binary data 
-and returns the decoded data in a list.  This function necessarily utilises
-recursion to decode SEQuences (which in turn commonly contain more SEQuences).
-On a constrained system it may be sane to pre-process binary data into logical
-units, before decoding it.
+The generic `decode` function takes an arbitary chunk of Asn.1 DER encoded
+binary data and returns the decoded data as a list.  This function 
+necessarily utilises recursion to decode SEQuences (which in turn commonly
+contain more SEQuences).  On a constrained system it may be sane to 
+pre-process binary data into logical units, before decoding it.
 
 ##the Asn.1 DER format
 
