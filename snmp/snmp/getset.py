@@ -1,6 +1,6 @@
 from asn1der import *
 from snmp.integers import *
-from snmp.varbinds import *
+# from snmp.varbinds import *
 
 TypeNames.extend([
         'GetRequest',
@@ -18,15 +18,17 @@ TypeCodes.extend([
 
 
 _SnmpGetSetTemplate = [
-    Asn1DerInt(0),          #request_id
-    Asn1DerInt(0),          #error_status
-    Asn1DerInt(0),          #error_id
-    SnmpVarBinds({})        #variable_bindings
+    Asn1DerInt(0),  #request_id
+    Asn1DerInt(0),  #error_status
+    Asn1DerInt(0),  #error_id
+    Asn1DerSeq()    #variable_bindings
 ]
 
 class _SnmpGetSetBaseClass(Asn1DerSeq):
 
-    def __init__(self):
+    #if class initialised with data, this is passed
+    #to __init__, albeit self is already constructed from it
+    def __init__(self, v=None):
         if len(self) == 0: #no args
             for i in _SnmpGetSetTemplate:
                 self.append(i)

@@ -1,7 +1,7 @@
 from asn1der import *
 from snmp.integers import *
 from snmp.ipaddr import *
-from snmp.varbinds import *
+# from snmp.varbinds import *
 
 TypeNames.extend([
         'Trap'
@@ -18,7 +18,7 @@ _SnmpTrapTemplate = [
     Asn1DerInt(0),              #generic_type
     Asn1DerInt(0),              #specific_type
     SnmpTimeTicks(0),           #timestamp
-    SnmpVarBinds({})            #variable_bindings
+    Asn1DerSeq()                #variable_bindings
 ]
 
 class _SnmpTrapBaseClass(Asn1DerSeq):
