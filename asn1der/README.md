@@ -2,7 +2,7 @@
 
 Codes and decodes a subset of DER encoded Asn.1 datatypes into to/from 
 binary format.  In the spirit of minimal; only the Asn.1 data types that 
-I've so far encountered in the real-world(tm) (aka are used by SNMPv1) 
+I've so far encountered in the real-world&trade; (aka are used by SNMPv1) 
 are implemented i.e.;
 
 - Null (Asn1DerNull as standalone Singleton)
