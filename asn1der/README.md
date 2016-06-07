@@ -18,7 +18,7 @@ necessarily utilises recursion to decode SEQuences (which in turn commonly
 contain more SEQuences).  On a constrained system it may be sane to 
 pre-process binary data into logical units before decoding it.
 
-##micro side-effects
+##known-issues
 
 This is a micro module, for constrained environements.
 
@@ -42,10 +42,9 @@ e.g.
 TypeError: unsupported types for __add__: 'int', 'Asn1DerInt'
 ```
 
-This behaviour may be mitigable at the module level.  However undoubtedly
-not in a micro way.  Or maybe not; my python isn't that good, and this
-whole thing is part and parcel of (slowly) improving it via the lessons
-learned methodology.
+This behaviour may be mitigable.  However undoubtedly not in a way
+consisten with a micro necessity.  Or maybe not; my python isn't that 
+good, and this is part and parcel of a Learning Experience&trade;.
 
 ##the Asn.1 DER format
 
