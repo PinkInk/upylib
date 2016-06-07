@@ -20,7 +20,7 @@ _SnmpTrapTemplate = [
     Asn1DerSeq()                #variable_bindings
 ]
 
-class _SnmpTrapBaseClass(Asn1DerSeq):
+class SnmpTrapBaseClass(Asn1DerSeq):
 
     def __init__(self):
         if len(self) == 0: #no args
@@ -78,7 +78,7 @@ class _SnmpTrapBaseClass(Asn1DerSeq):
                 raise ValueError('expected an SnmpTimeTicks')            
 
 
-class SnmpTrap(_SnmpTrapBaseClass):
+class SnmpTrap(SnmpTrapBaseClass):
     typecode = typecode_for_type('Trap')
 
     @staticmethod

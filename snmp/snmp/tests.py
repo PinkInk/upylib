@@ -38,7 +38,6 @@ b=b"0?\x02\x01\x00\x04\x06public\xa22\x02\x01\x00\x02\x01\x00\x02\x01\x000'0\x13
 c=snmp.decode(b)
 assert type(c[0][2]) == snmp.SnmpGetResponse, 'decoded as wrong type'
 p=snmp.SnmpPacket(c[0])
-isinstance(p.data, snmp.SnmpGetSetBaseClass)
 
 import utime
 a10 = snmp.SnmpGetRequest()

@@ -39,8 +39,14 @@ class SnmpPacket(Asn1DerSeq):
                 self.append(i)
         else: #args, validate
             for i,j in enumerate(self):
-                if type(j) != type(_SnmpPacketTemplate[i]):
-                    raise ValueError('invalid initialisation data')
+                if i < 2:
+                    if type(j) != type(_SnmpPacketTemplate[i]):
+                        raise ValueError('invalid initialisation data')
+                else:
+                    if not( isinstance(j, SnmpGetSetBaseClass) 
+                            or isinstance(j, SnmpTrapBaseClass)
+                          ):
+                        raise ValueError('invalid initialisation data')
         self.data = self[2] #expose object directly
 
     def ver(self, ver=None):
@@ -60,3 +66,4 @@ class SnmpPacket(Asn1DerSeq):
                 self[1] = community
             else:
                 raise ValueError('expected an Asn1DerOctStr')
+    

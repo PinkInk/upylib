@@ -23,7 +23,7 @@ _SnmpGetSetTemplate = [
     Asn1DerSeq()    #variable_bindings
 ]
 
-class _SnmpGetSetBaseClass(Asn1DerSeq):
+class SnmpGetSetBaseClass(Asn1DerSeq):
 
     #if class initialised with data, this is passed
     #to __init__, albeit self is already constructed from it
@@ -65,7 +65,7 @@ class _SnmpGetSetBaseClass(Asn1DerSeq):
                 raise ValueError('expected an Asn1DerInt')
 
 
-class SnmpGetRequest(_SnmpGetSetBaseClass):
+class SnmpGetRequest(SnmpGetSetBaseClass):
     typecode = typecode_for_type('GetRequest')
 
     @staticmethod
@@ -74,7 +74,7 @@ class SnmpGetRequest(_SnmpGetSetBaseClass):
         return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
 
-class SnmpGetNextRequest(_SnmpGetSetBaseClass):
+class SnmpGetNextRequest(SnmpGetSetBaseClass):
     typecode = typecode_for_type('GetNextRequest')
 
     @staticmethod
@@ -83,7 +83,7 @@ class SnmpGetNextRequest(_SnmpGetSetBaseClass):
         return SnmpGetNextRequest( tlv_v_to_seq(b) )
 
 
-class SnmpGetResponse(_SnmpGetSetBaseClass):
+class SnmpGetResponse(SnmpGetSetBaseClass):
     typecode = typecode_for_type('GetResponse')
 
     @staticmethod
@@ -92,7 +92,7 @@ class SnmpGetResponse(_SnmpGetSetBaseClass):
         return SnmpGetResponse( tlv_v_to_seq(b) )
 
 
-class SnmpSetRequest(_SnmpGetSetBaseClass):
+class SnmpSetRequest(SnmpGetSetBaseClass):
     typecode = typecode_for_type('SetRequest')
 
     @staticmethod
