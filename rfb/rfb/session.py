@@ -77,7 +77,7 @@ class RfbSession():
         if msg == b'': #closed by remote peer
             return False
         elif msg is not None:
-            # TODO: handle of multiple msgs in buffer 
+            # TODO: handle multiple msgs in buffer 
             if msg[0] == 1:
                 self.ClientSetPixelFormat(
                     msg[2],
