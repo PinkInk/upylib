@@ -1,27 +1,18 @@
-RectEncRaw = 0
-RectEncCopyRect = 1
-RectEncRRE = 2
-RectEncCoRRE = 4
-RectEncHextile = 5
-
 def ServerFrameBufferUpdate(rectangles):
-    return b'\x00\x00' \
-            + len(rectangles).to_bytes(2, 'big')
-
-# colours = ((r,g,b), (r,g,b), etc.)
-def ServerSetColourMapEntries(colours):
-    print(colours)
-    # TODO: must be a less ugly method
     b = bytearray()
-    for colour in colours:
-        b.extend( 
-            colour[0].to_bytes(2, 'big'), 
-            colour[1].to_bytes(2, 'big'), 
-            colour[2].to_bytes(2, 'big') 
-        )
-    return b'\x01\x00' \
-           + b'\x00\x01' \
-           + len(colours).to_bytes(2, 'big') \
+    for rect in rectangles:
+        b.extend( rect.to_bytes() ) 
+    return b'\x00\x00' \
+            + len(rectangles).to_bytes(2, 'big') \
+            + b
+
+def ServerSetColourMapEntries(colourmap):
+    b = bytearray()
+    for clr in colourmap:
+        for ch in clr:
+            b.extend( ch.to_bytes(2, 'big') )
+    return b'\x01\x00\x00\x01' \
+           + len(colourmap).to_bytes(2, 'big') \
            + b
 
 def ServerBell():
@@ -32,6 +23,54 @@ def ServerCutText(text):
            + len(text) \
            + bytes(text, 'utf-8')
 
+# class CopyRect:
+#     def __init__(self):
+#         self.encoding = 1
 
-class Rectangle():
-    pass
+class RawRect:
+
+    def __init__(self, 
+                 x, y, 
+                 w, h, 
+                 bpp, depth, true, 
+                 colourmap=None, rgbshift=None
+                ):
+        self.encoding = 0 # raw
+        self.x = x
+        self.y = y
+        # TODO: protect props that can't change post init?
+        self.w = w
+        self.h = h
+        self.bpp = bpp
+        self.depth = depth
+        self.true = true
+        self.colourmap = colourmap
+        self.rgbshift = rgbshift
+        self.buffer = bytearray( (bpp//8)*w*h )
+
+    def setpixel(self, x, y, colour):
+        first = (y*self.w*(self.bpp//8))+(x*(self.bpp//8))
+        if self.true \
+                and type(colour) is tuple \
+                and len(colour)==3:
+            # blurk!!!
+            self.buffer[first] = colour[0]
+            self.buffer[first+1] = colour[1]
+            self.buffer[first+2] = colour[2]            
+        elif not self.true \
+                and type(colour) is int \
+                and 0<=colour<len(self.colourmap):
+            self.buffer[first] = colour
+        else:
+            raise Exception('setpixel: invalid colour', colour)
+
+    def fill(self, colour):
+        pass
+    
+    def to_bytes(self):
+        return self.x.to_bytes(2, 'big') \
+               + self.y.to_bytes(2, 'big') \
+               + self.w.to_bytes(2, 'big') \
+               + self.h.to_bytes(2, 'big') \
+               + self.encoding.to_bytes(4, 'big') \
+               + self.buffer

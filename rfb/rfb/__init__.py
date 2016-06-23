@@ -1,6 +1,7 @@
+DEBUG = True
 import socket
 from rfb.session import *
-from time import sleep # DEBUG
+if DEBUG: from time import sleep
 
 
 class RfbServer():
@@ -8,13 +9,13 @@ class RfbServer():
     def __init__(self, 
                  w, h, 
                  colourmap = None,
-                 name=b'rfb', 
-                 addr=('', 5900), 
-                 backlog=3
+                 name = b'rfb', 
+                 handler = RfbSession,
+                 addr = ('', 5900), 
+                 backlog = 3,
                 ):
         self.w = w
         self.h = h
-        self.addr = addr
         if colourmap and len(colourmap) > 0xff:
             raise Exception('>255 colours in colourmap')
         self.colourmap = colourmap
@@ -22,12 +23,13 @@ class RfbServer():
         if len(name) < 1:
             raise ValueError('name cannot be empty')
         self.name = name
-        self.backlog = backlog
+        self.handler = handler
+        self.DEBUG = DEBUG
         self.sessions = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(0)
-        self.s.bind(self.addr)
-        self.s.listen(self.backlog)
+        self.s.bind(addr)
+        self.s.listen(backlog)
 
     def serve(self, delay=1):
         while True:
@@ -35,12 +37,12 @@ class RfbServer():
             self.accept()
             # handle established connections
             self.service()
-            sleep(0.1) # DEBUG
+            if DEBUG: sleep(0.1) # slow down
     
     def accept(self):
         try:
             self.sessions.append( 
-                RfbSession(self.s.accept(),
+                self.handler(self.s.accept(),
                             self.w, 
                             self.h,
                             self.colourmap,
@@ -49,11 +51,16 @@ class RfbServer():
             )
         except BlockingIOError:
             pass
-        except: # DEBUG
-            pass
+        except Exception as err:
+            if DEBUG:
+                print(err)
+            else:
+                pass
 
     def service(self):
         for idx,session in enumerate( self.sessions ):
             alive = session.dispatch_msgs()
             if not alive:
                 del( self.sessions[idx] )
+            else:
+                session.update()

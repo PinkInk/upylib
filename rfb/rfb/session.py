@@ -5,12 +5,13 @@ from time import sleep
 class RfbSession():
 
     # on fails raise; so session not added to svr.sessions
+    # colourmap = ((r,g,b), (r,g,b), etc.)
     def __init__(self, conn, w, h, colourmap, name):
         self.conn, self.addr = conn
         self.w = w
         self.h = h
         self.colourmap = colourmap
-        self.big = True
+        self.big = False # True inverts interpretation of rgb shift
         self.bpp = 8 if colourmap else 32
         self.depth = 8 if colourmap else 24
         self.true = False if colourmap else True
@@ -63,6 +64,10 @@ class RfbSession():
     def send(self, b):
         # print(b) # DEBUG
         self.conn.send(b)
+
+    # over-ride to send remote framebuffer updates
+    def update(self):
+        pass
 
     def dispatch_msgs(self):
         msg = self.recv()
@@ -133,11 +138,11 @@ class RfbSession():
         return True
     
     def ClientSetPixelFormat(self, 
-                       bpp, depth, 
-                       big, true, 
-                       r_max, g_max, b_max, 
-                       r_shift, g_shift, b_shift 
-                      ):
+                             bpp, depth, 
+                             big, true, 
+                             r_max, g_max, b_max, 
+                             r_shift, g_shift, b_shift 
+                            ):
         print('ClientSetPixelFormat',
               bpp, depth, 
               big, true, 
