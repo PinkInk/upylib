@@ -1,4 +1,11 @@
-import time
+from codecs import *
+from time import sleep
+
+# TODO: msg codecs in seperate python specific
+# module and conditional import e.g.
+# if py==micropython 
+#   import codecs_upy (using ucstruct)
+# else import codecs_cpy (using other)
 
 # recv buffer len
 # TODO: consider initable class property or
@@ -22,6 +29,7 @@ class RfbSession():
         self.w = w
         self.h = h
         self.name = name
+        self.encodings = [] # encodings client supports
 
         # HandShake
         self.conn.send(self._InitHandShake)
@@ -37,7 +45,7 @@ class RfbSession():
             raise Exception('Client rejected security (None)')
 
         # ServerInit
-        # TODO: determine whether int.to_bytes, ustruct 
+        # TODO: determine whether int.to/from_bytes, ustruct 
         # or uctypes is most efficient / generally useful
         # TODO: implement variable bitdepth and colourmap
         self.conn.send(
@@ -62,8 +70,13 @@ class RfbSession():
         #TODO: send colourmap (if not true-colour)
 
     def recv(self, blocking=False):
-        time.sleep(0.1) # ??? init fails without delay ???
+        # ??? init fails at client side without a delay ???
+        sleep(0.1)
         while blocking:
+            # TODO: wrap in try/except as non-blocking case?
+            # OR: replace by settimeout(None)?
+            # only currently used in init, which itself is
+            # wrapped in try/except hence not yet reqd
             r = self.conn.recv(_BLEN)
             if r is not None:
                 return r
@@ -92,6 +105,7 @@ class RfbSession():
                     msg[14]
                 )
             elif msg[0] == 2:
+                # TODO: replace list-comprehension
                 encodings = []
                 for i in range( int.from_bytes(msg[2:4], 'big') ):
                     encodings.append(
@@ -99,6 +113,7 @@ class RfbSession():
                         # unreasonable amounts of memory ??? 
                         int.from_bytes(msg[4+(i*4) : 8+(i*4)], 'big') 
                     )
+                # TODO: set self.encodings
                 self.ClientSetEncodings(encodings)
             elif msg[0] == 3:
                 self.ClientFrameBufferUpdateRequest(
@@ -157,23 +172,3 @@ class RfbSession():
     
     def ClientOtherMsg(self, msg):
         print('ClientOtherMsg', msg)
-    
-    # TODO: server msgs don't need to be class methods
-    # break out into seperate file as functions
-
-    def ServerFrameBufferUpdate(self, rectangles):
-        return b'\x00\x00' \
-               + len(rectangles).to_bytes(2, 'big')
-    
-    def ServerSetColourMapEntries(self):
-        return b'\x01\x00'
-    
-    def ServerBell(self):
-        return b'\x02'
-    
-    def ServerCutText(self):
-        return b'\x03\x00'
-
-
-class Rectangle():
-    pass
