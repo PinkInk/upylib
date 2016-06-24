@@ -4,7 +4,7 @@ from time import sleep
 
 class RfbSession():
 
-    # on fail raise; so session not added to svr.sessions
+    # on fail raise; to prevent invalid session at parent
     def __init__(self, conn, w, h, colourmap, name):
         self.conn, self.addr = conn
         self.w = w
@@ -76,23 +76,28 @@ class RfbSession():
 
         elif msg is not None:
 
-            # TODO: handle multiple msgs in queue 
+            # TODO: handle multiple msgs in queue
 
-            if msg[0] == 1: # SetPixelFormat
+            # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
+            if msg[0] == 1 and hasattr(self, 'ClientSetPixelFormat'): 
                 self.ClientSetPixelFormat(
                     msg[2],
                     msg[3],
                     msg[4] == 1,
                     msg[5] == 1,
-                    int.from_bytes(msg[6:8], 'big'),
-                    int.from_bytes(msg[8:10], 'big'),
-                    int.from_bytes(msg[10:12], 'big'),
-                    msg[12],
-                    msg[13],
-                    msg[14]
+                    (
+                        int.from_bytes(msg[6:8], 'big'),
+                        int.from_bytes(msg[8:10], 'big'),
+                        int.from_bytes(msg[10:12], 'big')
+                    ),
+                    (
+                        msg[12],
+                        msg[13],
+                        msg[14]
+                    )
                 )
 
-            # SetEncodings
+            # ClientSetEncodings(self, encodings)
             elif msg[0] == 2:
                 # TODO: consider list-comprehension?
                 encodings = []
@@ -103,10 +108,11 @@ class RfbSession():
                         int.from_bytes(msg[4+(i*4) : 8+(i*4)], 'big') 
                     )
                 self.encodings = encodings
-                self.ClientSetEncodings(encodings)
+                if hasattr(self, 'ClientSetEncodings'):
+                    self.ClientSetEncodings(encodings)
 
-            # FrameBufferUpdateRequest
-            elif msg[0] == 3: 
+            # ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)
+            elif msg[0] == 3 and hasattr(self, 'ClientFrameBufferUpdateRequest'): 
                 self.ClientFrameBufferUpdateRequest(
                     msg[1] == 1,
                     int.from_bytes(msg[2:4], 'big'),
@@ -115,66 +121,29 @@ class RfbSession():
                     int.from_bytes(msg[8:10], 'big'),
                 )
 
-            # KeyEvent
-            elif msg[0] == 4:
+            # ClientKeyEvent(self, down, key)
+            elif msg[0] == 4 and hasattr(self, 'ClientKeyEvent'):
                 self.ClientKeyEvent(
                     msg[1] == 1,
                     int.from_bytes(msg[4:8], 'big')
                 )
 
-            # PointerEvent
-            elif msg[0] == 5: 
+            # ClientPointerEvent(self, buttons, x, y)
+            elif msg[0] == 5 and hasattr(self, 'ClientPointerEvent'): 
                 self.ClientPointerEvent(
                     msg[1],
                     int.from_bytes(msg[2:4], 'big'),
                     int.from_bytes(msg[4:6], 'big')
                 )
 
-            # ClientCutText
-            elif msg[0] == 6:
+            # ClientCutText(self, text)
+            elif msg[0] == 6 and hasattr(self, 'ClientCutText'):
                 self.ClientCutText(
                     msg[6 : int.from_bytes(msg[2:6], 'big')]
                 )
 
-            else:
+            elif msg[0] > 6 and hasattr(self, 'ClientOtherMsg'):
                 self.ClientOtherMsg(msg)
 
         return True
     
-    def ClientSetPixelFormat(self, 
-                             bpp, depth, 
-                             big, true, 
-                             r_max, g_max, b_max, 
-                             r_shift, g_shift, b_shift 
-                            ):
-        # print('ClientSetPixelFormat',
-        #       bpp, depth, 
-        #       big, true, 
-        #       r_max, g_max, b_max, 
-        #       r_shift, g_shift, b_shift 
-        # ) # DEBUG
-        pass
-
-    def ClientSetEncodings(self, encodings):
-        # print('ClientSetEncodings', encodings) # DEBUG
-        pass 
-
-    def ClientFrameBufferUpdateRequest(self, incr, x, y, w, h):
-        # print('ClientFrameBufferUpdateRequest', incr, x, y, w, h) # DEBUG
-        pass
-
-    def ClientKeyEvent(self, down, key):
-        # print('ClientKeyEvent', down, hex(key)) # DEBUG
-        pass        
-
-    def ClientPointerEvent(self, buttons, x, y):
-        # print('ClientPointerEvent', buttons, x, y) # DEBUG
-        pass
-    
-    def ClientCutText(self, text):
-        # print('ClientClientCutText', text) # DEBUG
-        pass
-    
-    def ClientOtherMsg(self, msg):
-        # print('ClientOtherMsg', msg) # DEBUG
-        pass

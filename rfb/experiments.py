@@ -25,6 +25,8 @@ class Tetris(rfb.RfbSession):
     def update(self):
         for rect in self.rectangles:
             rect.fill(tuple(os.urandom(3)))
+            for i in range(10):
+                rect.setpixel(i,i,(0,0,0))
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         
 

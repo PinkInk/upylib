@@ -47,10 +47,10 @@ class RfbServer():
                             self.name
                 )
             )
-        # except (BlockingIOError): # DEBUG
-        #     pass
-        except:
+        except (BlockingIOError): # DEBUG
             pass
+        # except:
+        #     pass
 
     def service(self):
         for idx,session in enumerate( self.sessions ):
