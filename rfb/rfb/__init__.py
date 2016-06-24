@@ -1,7 +1,6 @@
-DEBUG = True
 import socket
 from rfb.session import *
-if DEBUG: from time import sleep
+from time import sleep # DEBUG
 
 
 class RfbServer():
@@ -24,7 +23,6 @@ class RfbServer():
             raise ValueError('name cannot be empty')
         self.name = name
         self.handler = handler
-        self.DEBUG = DEBUG
         self.sessions = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.settimeout(0)
@@ -37,7 +35,7 @@ class RfbServer():
             self.accept()
             # handle established connections
             self.service()
-            if DEBUG: sleep(0.1) # slow down
+            # sleep(0.1) # DEBUG: slow down
     
     def accept(self):
         try:
@@ -49,13 +47,10 @@ class RfbServer():
                             self.name
                 )
             )
-        except BlockingIOError:
+        # except (BlockingIOError): # DEBUG
+        #     pass
+        except:
             pass
-        except Exception as err:
-            if DEBUG:
-                print(err)
-            else:
-                pass
 
     def service(self):
         for idx,session in enumerate( self.sessions ):
@@ -63,4 +58,7 @@ class RfbServer():
             if not alive:
                 del( self.sessions[idx] )
             else:
-                session.update()
+                try:
+                    session.update()
+                except ConnectionAbortedError:
+                    del( self.sessions[idx] )

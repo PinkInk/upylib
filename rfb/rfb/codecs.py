@@ -1,3 +1,6 @@
+RAWRECT = 0
+COPYRECT = 1
+
 def ServerFrameBufferUpdate(rectangles):
     b = bytearray()
     for rect in rectangles:
@@ -33,9 +36,9 @@ class RawRect:
                  x, y, 
                  w, h, 
                  bpp, depth, true, 
-                 colourmap=None, rgbshift=None
+                 colourmap=None, shift=None
                 ):
-        self.encoding = 0 # raw
+        self.encoding = RAWRECT # raw
         self.x = x
         self.y = y
         # TODO: protect props that can't change post init?
@@ -45,8 +48,22 @@ class RawRect:
         self.depth = depth
         self.true = true
         self.colourmap = colourmap
-        self.rgbshift = rgbshift
+        self.shift = shift
         self.buffer = bytearray( (bpp//8)*w*h )
+
+    def fill(self, colour):
+        if self.true \
+                and type(colour) is tuple \
+                and len(colour) is 3:
+            for i in range(0, self.w*self.h*(self.bpp//8), self.bpp//8):
+                self.buffer[i:i+(self.depth//8)] = colour
+        elif not self.true \
+                and type(colour) is int \
+                and 0<=colour<len(self.colourmap):
+            for i in self.buffer:
+                self.buffer[i] = colour
+        else:
+            raise Exception('setpixel: invalid colour', colour)
 
     def setpixel(self, x, y, colour):
         first = (y*self.w*(self.bpp//8))+(x*(self.bpp//8))
@@ -63,9 +80,6 @@ class RawRect:
             self.buffer[first] = colour
         else:
             raise Exception('setpixel: invalid colour', colour)
-
-    def fill(self, colour):
-        pass
     
     def to_bytes(self):
         return self.x.to_bytes(2, 'big') \
