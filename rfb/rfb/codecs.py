@@ -33,13 +33,14 @@ def ServerCutText(text):
 
 class RawRect:
 
+    encoding = RAWRECT # raw
+
     def __init__(self, 
                  x, y, 
                  w, h, 
                  bpp, depth, true, 
                  colourmap=None, shift=None
                 ):
-        self.encoding = RAWRECT # raw
         self.x = x
         self.y = y
         self._w = w
@@ -107,7 +108,7 @@ class RawRect:
     def to_bytes(self):
         return self.x.to_bytes(2, 'big') \
                + self.y.to_bytes(2, 'big') \
-               + self.w.to_bytes(2, 'big') \
-               + self.h.to_bytes(2, 'big') \
+               + self._w.to_bytes(2, 'big') \
+               + self._h.to_bytes(2, 'big') \
                + self.encoding.to_bytes(4, 'big') \
                + self.buffer
