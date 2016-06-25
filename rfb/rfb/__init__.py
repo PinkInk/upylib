@@ -1,6 +1,5 @@
 import socket
 from rfb.session import *
-# from time import sleep # DEBUG
 
 
 class RfbServer():
@@ -35,7 +34,6 @@ class RfbServer():
             self.accept()
             # handle established connections
             self.service()
-            # sleep(0.1) # DEBUG: slow down
     
     def accept(self):
         try:

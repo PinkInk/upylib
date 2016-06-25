@@ -3,10 +3,10 @@ COPYRECT = 1
 
 def ServerFrameBufferUpdate(rectangles):
     buffer = bytes()
-    for i,rect in enumerate(rectangles):
+    for idx,rect in enumerate( rectangles ):
         b = rect.to_bytes()
         if b is None: # done with this rectangle
-            del(rectangles[i]) 
+            del( rectangles[idx] ) 
         elif b is False:
             pass # no update required
         else:
@@ -17,10 +17,10 @@ def ServerFrameBufferUpdate(rectangles):
 
 # colourmap as ((r,g,b), (r,g,b), (r,g,b), etc.), len<=255
 def ServerSetColourMapEntries(colourmap):
-    b = bytearray()
+    b = bytes()
     for clr in colourmap:
         for ch in clr:
-            b.extend( ch.to_bytes(2, 'big') )
+            b += ch.to_bytes(2, 'big')
     return b'\x01\x00\x00\x01' \
            + len(colourmap).to_bytes(2, 'big') \
            + b
@@ -59,10 +59,12 @@ class Rectangle:
         self._h = h
     
     @property
-    def w(self): return self._w
+    def w(self): 
+        return self._w
 
     @property
-    def h(self): return self._h
+    def h(self): 
+        return self._h
 
     # return bytes or
     #   None = delete from rectangles
@@ -113,19 +115,24 @@ class RawRect(Rectangle):
         self.buffer = bytearray( (bpp//8)*w*h )
 
     @property 
-    def bpp(self): return self._bpp
+    def bpp(self): 
+        return self._bpp
 
     @property
-    def depth(self): return self._depth
+    def depth(self): 
+        return self._depth
 
     @property
-    def true(self): return self._true
+    def true(self): 
+        return self._true
 
     @property
-    def colourmap(self): return self._colourmap
+    def colourmap(self): 
+        return self._colourmap
 
     @property
-    def shift(self): return self._shift
+    def shift(self): 
+        return self._shift
 
     def colour_is_true(self, colour):
         return colour_is_true(colour, self.true, self.colourmap)
