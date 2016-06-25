@@ -1,4 +1,4 @@
-from rfb.codecs import *
+from rfb.servermsgs import *
 from time import sleep
 
 

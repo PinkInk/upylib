@@ -2,12 +2,18 @@ RAWRECT = 0
 COPYRECT = 1
 
 def ServerFrameBufferUpdate(rectangles):
-    b = bytes()
-    for rect in rectangles:
-        b += rect.to_bytes()
+    buffer = bytes()
+    for i,rect in enumerate(rectangles):
+        b = rect.to_bytes()
+        if b is None: # done with this rectangle
+            del(rectangles[i]) 
+        elif b is False:
+            pass # no update required
+        else:
+            buffer += b
     return b'\x00\x00' \
             + len(rectangles).to_bytes(2, 'big') \
-            + b
+            + buffer
 
 # colourmap as ((r,g,b), (r,g,b), (r,g,b), etc.), len<=255
 def ServerSetColourMapEntries(colourmap):
@@ -46,7 +52,6 @@ class Rectangle:
 
     encoding = None
 
-    # TODO: consider 2tuple for pos/size pairs?
     def __init__(self, x, y, w, h):
         self.x = x
         self.y = y
@@ -59,6 +64,9 @@ class Rectangle:
     @property
     def h(self): return self._h
 
+    # return bytes or
+    #   None = delete from rectangles
+    #   False = no update required
     def to_bytes(self):
         return self.x.to_bytes(2, 'big') \
                + self.y.to_bytes(2, 'big') \
@@ -140,9 +148,6 @@ class RawRect(Rectangle):
         else:
             self.buffer[start] = colour
     
-    # TODO consider returning 2tuple of (keepalive,bytes)
-    # if keepalive=False, RfbSession can del rectangles[]
-    # CONSIDER: CopyRect requirements
     def to_bytes(self):
         return super().to_bytes() \
                + self.buffer
