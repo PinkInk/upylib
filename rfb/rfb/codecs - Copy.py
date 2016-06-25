@@ -2,9 +2,9 @@ RAWRECT = 0
 COPYRECT = 1
 
 def ServerFrameBufferUpdate(rectangles):
-    b = bytes()
+    b = bytearray()
     for rect in rectangles:
-        b += rect.to_bytes()
+        b.extend( rect.to_bytes() ) 
     return b'\x00\x00' \
             + len(rectangles).to_bytes(2, 'big') \
             + b
@@ -81,28 +81,39 @@ class CopyRect(Rectangle):
         self.src_y = src_y
 
     def to_bytes(self):
-        return super().to_bytes() \
+        return super().to_bytes() \ 
                + self.src_x.to_bytes(2, 'big') \
                + self.src_x.to_bytes(2, 'big')
 
 
-class RawRect(Rectangle):
+# TODO: common base-class with CopyRect?
+class RawRect:
 
     encoding = RAWRECT
 
+    # TODO: consider 2tuple for pos/size pairs?
     def __init__(self, 
                  x, y, 
                  w, h, 
                  bpp, depth, true, 
                  colourmap=None, shift=None
                 ):
-        super().__init__(x, y, w, h)
+        self.x = x
+        self.y = y
+        self._w = w
+        self._h = h
         self._bpp = bpp
         self._depth = depth
         self._true = true
         self._colourmap = colourmap
         self._shift = shift
         self.buffer = bytearray( (bpp//8)*w*h )
+    
+    @property
+    def w(self): return self._w
+
+    @property
+    def h(self): return self._h
 
     @property 
     def bpp(self): return self._bpp
@@ -144,5 +155,9 @@ class RawRect(Rectangle):
     # if keepalive=False, RfbSession can del rectangles[]
     # CONSIDER: CopyRect requirements
     def to_bytes(self):
-        return super().to_bytes() \
+        return self.x.to_bytes(2, 'big') \
+               + self.y.to_bytes(2, 'big') \
+               + self._w.to_bytes(2, 'big') \
+               + self._h.to_bytes(2, 'big') \
+               + self.encoding.to_bytes(4, 'big') \
                + self.buffer

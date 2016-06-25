@@ -25,7 +25,7 @@ class RfbSession():
             raise Exception('peer did not accept version proposal')
 
         # Security
-        self.send( self.security.to_bytes(4, 'big'))
+        self.send( self.security.to_bytes(4, 'big') )
         if self.recv(True)[0] not in (0,1):
             raise Exception('peer rejected security (None)')
 
@@ -47,11 +47,8 @@ class RfbSession():
             self.send( ServerSetColourMapEntries( self.colourmap ) )
 
     def recv(self, blocking=False):
-        # ??? init fails at peer side without delay ???
-        sleep(0.1)
+        sleep(0.1) #init fails at peer without this delay???
         while blocking:
-            # TODO: wrap in try/except as for non-blocking?
-            # OR: replace loop by settimeout wrapper?
             r = self.conn.recv(1024)
             if r is not None:
                 return r
@@ -99,14 +96,8 @@ class RfbSession():
 
             # ClientSetEncodings(self, encodings)
             elif msg[0] == 2:
-                # TODO: consider list-comprehension?
-                encodings = []
-                for i in range( int.from_bytes(msg[2:4], 'big') ):
-                    encodings.append(
-                        # ??? this bugs-out micropython allocating
-                        # unreasonable amounts of memory ??? 
-                        int.from_bytes(msg[4+(i*4) : 8+(i*4)], 'big') 
-                    )
+                encodings = \
+                    [int.from_bytes(msg[i:i+4],'big') for i in range(4,len(msg),4)]
                 self.encodings = encodings
                 if hasattr(self, 'ClientSetEncodings'):
                     self.ClientSetEncodings(encodings)

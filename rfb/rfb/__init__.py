@@ -1,6 +1,6 @@
 import socket
 from rfb.session import *
-from time import sleep # DEBUG
+# from time import sleep # DEBUG
 
 
 class RfbServer():
