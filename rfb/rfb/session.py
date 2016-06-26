@@ -1,4 +1,3 @@
-from rfb.servermsgs import *
 from time import sleep
 
 

@@ -30,5 +30,5 @@ class Tetris(rfb.RfbSession):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         
 
-a=rfb.RfbServer(255, 255, name=b'tetris', handler=Tetris)
-a.serve()
+svr = rfb.RfbServer(255, 255, name=b'random', handler=Tetris)
+svr.serve()

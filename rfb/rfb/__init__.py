@@ -1,6 +1,8 @@
 import socket
 from rfb.session import *
-
+from rfb.servermsgs import *
+from rfb.encodings import *
+# from time import sleep # DEBUG
 
 class RfbServer():
 
@@ -20,7 +22,7 @@ class RfbServer():
         # rfb session init fails with 0 length name
         if len(name) < 1:
             raise ValueError('name cannot be empty')
-        self.name = name
+        self.name = name if type(name) is bytes else bytes(name,'utf-8')
         self.handler = handler
         self.sessions = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -34,6 +36,7 @@ class RfbServer():
             self.accept()
             # handle established connections
             self.service()
+            # sleep(0.1) # DEBUG
     
     def accept(self):
         try:
