@@ -19,7 +19,8 @@ def ServerSetColourMapEntries(colourmap):
     for clr in colourmap:
         for ch in clr:
             b += ch.to_bytes(2, 'big')
-    return b'\x01\x00\x00\x01' \
+    return b'\x01\x00' \
+           + int(0).to_bytes(2, 'big') \
            + len(colourmap).to_bytes(2, 'big') \
            + b
 

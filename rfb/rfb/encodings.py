@@ -41,8 +41,8 @@ class Rectangle:
     def to_bytes(self):
         return self.x.to_bytes(2, 'big') \
                + self.y.to_bytes(2, 'big') \
-               + self._w.to_bytes(2, 'big') \
-               + self._h.to_bytes(2, 'big') \
+               + self.w.to_bytes(2, 'big') \
+               + self.h.to_bytes(2, 'big') \
                + self.encoding.to_bytes(4, 'big') \
 
 

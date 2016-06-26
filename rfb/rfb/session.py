@@ -1,5 +1,5 @@
 from time import sleep
-
+from rfb.servermsgs import ServerSetColourMapEntries
 
 class RfbSession():
 
@@ -9,7 +9,10 @@ class RfbSession():
         self.w = w
         self.h = h
         self.colourmap = colourmap
+        # TODO: try matching encoding to system endianess
+        # currently colour = (b,g,r) instead (r,g,b)
         self.big = True
+        # TODO: colourmap's don't work ...
         self.bpp = 8 if colourmap else 32
         self.depth = 8 if colourmap else 24
         self.true = False if colourmap else True
