@@ -2,11 +2,6 @@ import rfb
 # from rfb.fonts.mono4x6 import mono4x6 as font
 from rfb.fonts.mono6x8 import mono6x8 as font
 
-# TODO: either I'm having a mental spasm, or;
-# for no particular reason CopyRect upwards from 
-# bottom of screen doesn't work 
-# (without with rfb terminal is not going to work)
-
 class TypeWriter(rfb.RfbSession):
 
     def __init__(self, conn, w, h, colourmap, name):
@@ -23,7 +18,7 @@ class TypeWriter(rfb.RfbSession):
     def update(self):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         # chuck any rectangles already sent to display
-        self.rectangles = [] # doesn't destroy self.char
+        self.rectangles = []
 
     def ClientKeyEvent(self, down, key):
 
@@ -33,7 +28,8 @@ class TypeWriter(rfb.RfbSession):
                 bits = font.getbitmap_str(key)
                 for idx, bit in enumerate(bits):
                     colour = bytes((255,255,255) if int(bit) else (0,0,0))
-                    self.char.buffer[idx*(self.bpp//8) : idx*(self.bpp//8)+3] = colour 
+                    start = idx*(self.bpp//8)
+                    self.char.buffer[start : start+3] = colour 
                 self.rectangles.append( self.char )
                 self.char.x += font.w
             except:

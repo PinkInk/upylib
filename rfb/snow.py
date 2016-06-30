@@ -1,4 +1,5 @@
-import rfb, os
+import rfb
+from os import urandom
 
 class Snow(rfb.RfbSession):
 
@@ -17,14 +18,15 @@ class Snow(rfb.RfbSession):
                 if flake.y + flake.h + flake.vector >= 255:
                     del( self.snowflakes[idx] )
                 else:
-                    flake.y += flake.vector 
+                    flake.y += flake.vector
+                    flake.src_y + flake.vector 
 
         # create new snowflakes
-        for i in range( os.urandom(1)[0]%20 ):
-            x = os.urandom(2)[0]
+        for i in range( urandom(1)[0]%20 ):
+            x = urandom(2)[0]
             x = x if x<self.w-4 else x-4
             y = 0
-            w = h = os.urandom(1)[0]%3+1
+            w = h = urandom(1)[0]%3+1
             vector = 4-w
             self.snowflakes.append(
                 rfb.RawRect(
@@ -40,7 +42,7 @@ class Snow(rfb.RfbSession):
                 rfb.CopyRect(
                     x, y,
                     w, h,
-                    0, vector
+                    0, y+vector
                 )
             )
             # add vector property

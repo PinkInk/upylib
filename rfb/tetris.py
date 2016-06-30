@@ -26,6 +26,7 @@ class Tetris(rfb.RfbSession):
         )
         # scale the framebuffer to display
         self.fbscale = fbscale 
+
         # fill first row of framebuffer with colourmap 
         # rectangles so that we can use CopyRect subsequently
         # Use single RawRect, a 20x20 rgb buffer = 1.2kb
@@ -42,8 +43,12 @@ class Tetris(rfb.RfbSession):
             rectangles[-1].x = i*self.fbscale
             rectangles[-1].fill(self.fbcolourmap[i])
             self.send( rfb.ServerFrameBufferUpdate(rectangles) )
-        self.tet = Tet(self.fbw, self.fbh, self.fbscale, self.send)
+        
+        # create a tet
+        self.tet = Tet(self.fb, self.fbw, self.fbh, self.fbscale, self.send)
 
+    def update(self):
+        self.tet.movedown()
 
 class Tet:
 
@@ -60,23 +65,35 @@ class Tet:
         (3, 2, b'\x00\x01\x01\x01\x01\x00',         5, True),
         (4, 2, b'\x00\x00\x00\x01\x01\x01\x01\x01', 3, True),
         (4, 2, b'\x01\x00\x00\x00\x01\x01\x01\x01', 6, True),
+        # this one bugs out when it hits the deck lieing flat ...
         (4, 1, b'\x01\x01\x01\x01',                 7, True)
     )
 
-    def __init__(self, fbw, fbh, fbscale, send):
+    def __init__(self, fb, fbw, fbh, fbscale, send):
+        self.fb = fb # verify that this is a pointer to parent fb?
         self.fbw = fbw
         self.fbh = fbh
         self.fbscale = fbscale
         self.send = send # really? child sent a parents method?
-        # select a tet from tets and load its properties
+        self.initshape()
+        self.display()
+
+    def movedown(self):
+        if self.y+(self.h//2) < self.fbh:
+            self.display(False)
+            self.y += 1
+            self.display()
+        else:
+            # move into background
+            self.initshape()
+
+    def initshape(self):            
         self.w, self.h, \
         self.bitmap, \
         self.colour, \
         self.rotatable = self.tets[ urandom(1)[0]%len(self.tets) ]
-        # co-ords
         self.x, self.y = fbw//2, 1 + (self.h//2)
-        self.display()
-        
+
     # TODO: optimise out show/hide
     # we should only adjust changed pixels
     # to reduce flicker, memory & net traffic
