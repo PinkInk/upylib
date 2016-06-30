@@ -2,7 +2,6 @@ import socket
 from rfb.session import *
 from rfb.servermsgs import *
 from rfb.encodings import *
-# from time import sleep # DEBUG
 
 class RfbServer():
 
@@ -17,7 +16,7 @@ class RfbServer():
         self.w = w
         self.h = h
         if colourmap and len(colourmap) > 0xff:
-            raise Exception('>255 colours in colourmap')
+            raise ValueError('>255 colours in colourmap')
         self.colourmap = colourmap
         # rfb session init fails with 0 length name
         if len(name) < 1:
@@ -36,7 +35,6 @@ class RfbServer():
             self.accept()
             # handle established connections
             self.service()
-            # sleep(0.1) # DEBUG
     
     def accept(self):
         try:
@@ -48,10 +46,8 @@ class RfbServer():
                             self.name
                 )
             )
-        except (BlockingIOError): # DEBUG
+        except (BlockingIOError): # TODO: micropython equiv error
             pass
-        # except:
-        #     pass
 
     def service(self):
         for idx,session in enumerate( self.sessions ):

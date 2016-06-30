@@ -9,8 +9,7 @@ class RfbSession():
         self.w = w
         self.h = h
         self.colourmap = colourmap
-        # TODO: try matching encoding to system endianess
-        # currently colour = (b,g,r) instead (r,g,b)
+        # TODO: currently colour = (b,g,r) instead (r,g,b)
         self.big = True
         # TODO: colourmap's don't work ...
         self.bpp = 8 if colourmap else 32
@@ -24,12 +23,12 @@ class RfbSession():
         # HandShake
         self.send( b'RFB 003.003\n' )
         if self.recv(True) != b'RFB 003.003\n':
-            raise Exception('peer did not accept version proposal')
+            raise RfbSessionRejected('version proposal')
 
         # Security
         self.send( self.security.to_bytes(4, 'big') )
         if self.recv(True)[0] not in (0,1):
-            raise Exception('peer rejected security (None)')
+            raise RfbSessionRejected('no security')
 
         # ServerInit
         self.send(
@@ -60,8 +59,8 @@ class RfbSession():
             pass
 
     def send(self, b):
-        # print(b) # DEBUG
-        self.conn.send(b)
+        if b: # None and b'' are False
+            self.conn.send(b)
 
     # over-ride to send remote framebuffer updates
     def update(self):
@@ -75,68 +74,90 @@ class RfbSession():
 
         elif msg is not None:
 
-            # TODO: handle multiple msgs in queue
+            # handle multiple messages
+            ptr = 0
+            while ptr < len(msg):
 
-            # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
-            if msg[0] == 1 and hasattr(self, 'ClientSetPixelFormat'): 
-                self.ClientSetPixelFormat(
-                    msg[2],
-                    msg[3],
-                    msg[4] == 1,
-                    msg[5] == 1,
-                    (
-                        int.from_bytes(msg[6:8], 'big'),
-                        int.from_bytes(msg[8:10], 'big'),
-                        int.from_bytes(msg[10:12], 'big')
-                    ),
-                    (
-                        msg[12],
-                        msg[13],
-                        msg[14]
-                    )
-                )
+                # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
+                if msg[ptr] == 0:
+                    if hasattr(self, 'ClientSetPixelFormat'): 
+                        self.ClientSetPixelFormat(
+                            msg[ptr+4],
+                            msg[ptr+5],
+                            msg[ptr+6] == 1,
+                            msg[ptr+7] == 1,
+                            (
+                                int.from_bytes(msg[ptr+8:ptr+10], 'big'),
+                                int.from_bytes(msg[ptr+10:ptr+12], 'big'),
+                                int.from_bytes(msg[ptr+12:ptr+14], 'big')
+                            ),
+                            (
+                                msg[ptr+14],
+                                msg[ptr+15],
+                                msg[ptr+16]
+                            )
+                        )
+                    ptr += 20 # includes trailing padding
 
-            # ClientSetEncodings(self, encodings)
-            elif msg[0] == 2:
-                encodings = \
-                    [int.from_bytes(msg[i:i+4],'big') for i in range(4,len(msg),4)]
-                self.encodings = encodings
-                if hasattr(self, 'ClientSetEncodings'):
-                    self.ClientSetEncodings(encodings)
+                # ClientSetEncodings(self, encodings)
+                elif msg[ptr] == 2:
+                    count = int.from_bytes(msg[ptr+2:ptr+4], 'big')
+                    encodings = [
+                        int.from_bytes(msg[ptr+4+i : ptr+8+i], 'big') 
+                        for i in range(0, count*4, 4)
+                    ]
+                    self.encodings = encodings
+                    if hasattr(self, 'ClientSetEncodings'):
+                        self.ClientSetEncodings(encodings)
+                    ptr += 4 + (count*4)
 
-            # ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)
-            elif msg[0] == 3 and hasattr(self, 'ClientFrameBufferUpdateRequest'): 
-                self.ClientFrameBufferUpdateRequest(
-                    msg[1] == 1,
-                    int.from_bytes(msg[2:4], 'big'),
-                    int.from_bytes(msg[4:6], 'big'),
-                    int.from_bytes(msg[6:8], 'big'),
-                    int.from_bytes(msg[8:10], 'big'),
-                )
+                # ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)
+                elif msg[ptr] == 3:
+                    if hasattr(self, 'ClientFrameBufferUpdateRequest'): 
+                        self.ClientFrameBufferUpdateRequest(
+                            msg[ptr+1] == 1,
+                            int.from_bytes(msg[ptr+2:ptr+4], 'big'),
+                            int.from_bytes(msg[ptr+4:ptr+6], 'big'),
+                            int.from_bytes(msg[ptr+6:ptr+8], 'big'),
+                            int.from_bytes(msg[ptr+8:ptr+10], 'big'),
+                        )
+                    ptr += 10
 
-            # ClientKeyEvent(self, down, key)
-            elif msg[0] == 4 and hasattr(self, 'ClientKeyEvent'):
-                self.ClientKeyEvent(
-                    msg[1] == 1,
-                    int.from_bytes(msg[4:8], 'big')
-                )
+                # ClientKeyEvent(self, down, key)
+                elif msg[ptr] == 4:
+                    if hasattr(self, 'ClientKeyEvent'):
+                        self.ClientKeyEvent(
+                            msg[ptr+1] == 1,
+                            int.from_bytes(msg[ptr+4:ptr+8], 'big')
+                        )
+                    ptr += 8
 
-            # ClientPointerEvent(self, buttons, x, y)
-            elif msg[0] == 5 and hasattr(self, 'ClientPointerEvent'): 
-                self.ClientPointerEvent(
-                    msg[1],
-                    int.from_bytes(msg[2:4], 'big'),
-                    int.from_bytes(msg[4:6], 'big')
-                )
+                # ClientPointerEvent(self, buttons, x, y)
+                elif msg[ptr] == 5:
+                    if hasattr(self, 'ClientPointerEvent'): 
+                        self.ClientPointerEvent(
+                            msg[ptr+1],
+                            int.from_bytes(msg[ptr+2:ptr+4], 'big'),
+                            int.from_bytes(msg[ptr+4:ptr+6], 'big')
+                        )
+                    ptr += 6
 
-            # ClientCutText(self, text)
-            elif msg[0] == 6 and hasattr(self, 'ClientCutText'):
-                self.ClientCutText(
-                    msg[6 : int.from_bytes(msg[2:6], 'big')]
-                )
+                # ClientCutText(self, text)
+                elif msg[ptr] == 6:
+                    if hasattr(self, 'ClientCutText'):
+                        l = int.from_bytes(msg[2:6], 'big')
+                        self.ClientCutText(
+                            msg[ptr+6 : ptr+l]
+                        )
+                    ptr += 6 + len
 
-            elif msg[0] > 6 and hasattr(self, 'ClientOtherMsg'):
-                self.ClientOtherMsg(msg)
+                elif msg[ptr] > 6 and hasattr(self, 'ClientOtherMsg'):
+                    # skip all messages
+                    # ... no way to tell how long the msg is ... 
+                	ptr = len(msg)
 
         return True
-    
+
+
+class RfbSessionRejected(Exception):
+    pass

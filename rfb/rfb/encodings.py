@@ -12,9 +12,9 @@ def colour_is_true(colour, true, colourmap):
                 and 0<=colour<len(colourmap):
             return False
         else:
-            raise Exception('invalid ' + \
-                            + ('true' if true else 'mapped') \
-                            + ' colour', colour)
+            raise RfbEncodingError('invalid ' + \
+                                   + ('true' if true else 'mapped') \
+                                   + ' colour', colour)
 
 
 class Rectangle:
@@ -54,14 +54,13 @@ class RawRect(Rectangle):
                  x, y, 
                  w, h, 
                  bpp, depth, true, 
-                 colourmap=None, shift=None
+                 colourmap=None
                 ):
         super().__init__(x, y, w, h)
         self._bpp = bpp
         self._depth = depth
         self._true = true
         self._colourmap = colourmap
-        self._shift = shift
         self.buffer = bytearray( (bpp//8)*w*h )
 
     @property 
@@ -79,10 +78,6 @@ class RawRect(Rectangle):
     @property
     def colourmap(self): 
         return self._colourmap
-
-    @property
-    def shift(self): 
-        return self._shift
 
     def colour_is_true(self, colour):
         return colour_is_true(colour, self.true, self.colourmap)
@@ -126,4 +121,7 @@ class CopyRect(Rectangle):
     def to_bytes(self):
         return super().to_bytes() \
                + self.src_x.to_bytes(2, 'big') \
-               + self.src_x.to_bytes(2, 'big')
+               + self.src_y.to_bytes(2, 'big')
+
+class RfbEncodingError:
+    pass

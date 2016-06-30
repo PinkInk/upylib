@@ -16,7 +16,7 @@ class Tetris(rfb.RfbSession):
                     x, y,
                     w, h, 
                     self.bpp, self.depth, self.true,
-                    self.colourmap, self.shift
+                    self.colourmap
                 )
             )
             self.rectangles[-1].fill(tuple(os.urandom(3)))

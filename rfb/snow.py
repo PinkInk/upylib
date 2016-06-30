@@ -31,7 +31,7 @@ class Snow(rfb.RfbSession):
                     x, y,
                     w, h,
                     self.bpp, self.depth, self.true,
-                    self.colourmap, self.shift
+                    self.colourmap
                 )
             )
             self.snowflakes[-1].fill((255,255,255))

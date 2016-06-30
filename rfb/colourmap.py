@@ -1,1 +1,0 @@
-# raw colourmap test
