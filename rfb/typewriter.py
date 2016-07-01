@@ -67,6 +67,8 @@ class TypeWriter(rfb.RfbSession):
             )
         )
         # clear
+        # TODO: this generates a huge blob, write a single <space>
+        # and CopyRect it across the row instead
         self.rectangles.append(
             rfb.RawRect(
                 0, self.h-font.h,

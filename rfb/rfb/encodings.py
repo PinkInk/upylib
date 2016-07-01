@@ -1,3 +1,8 @@
+try:
+    from ustruct import pack
+except:
+    from struct import pack
+
 RAWRECT = 0
 COPYRECT = 1
 
@@ -39,11 +44,11 @@ class Rectangle:
     #   None = delete from rectangles
     #   False = no update required
     def to_bytes(self):
-        return self.x.to_bytes(2, 'big') \
-               + self.y.to_bytes(2, 'big') \
-               + self.w.to_bytes(2, 'big') \
-               + self.h.to_bytes(2, 'big') \
-               + self.encoding.to_bytes(4, 'big') \
+        return pack('>4HL',
+                    self.x, self.y,
+                    self.w, self.h,
+                    self.encoding
+               )
 
 
 class RawRect(Rectangle):
@@ -120,8 +125,8 @@ class CopyRect(Rectangle):
 
     def to_bytes(self):
         return super().to_bytes() \
-               + self.src_x.to_bytes(2, 'big') \
-               + self.src_y.to_bytes(2, 'big')
+               + pack('>2H', self.src_x, self.src_y) 
 
-class RfbEncodingError:
+
+class RfbEncodingError(Exception):
     pass

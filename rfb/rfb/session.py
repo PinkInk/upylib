@@ -1,4 +1,9 @@
-from time import sleep
+try:
+    from utime import sleep
+    from ustruct import pack
+except:
+    from time import sleep
+    from struct import pack
 from rfb.servermsgs import ServerSetColourMapEntries
 
 class RfbSession():
@@ -26,21 +31,18 @@ class RfbSession():
             raise RfbSessionRejected('version proposal')
 
         # Security
-        self.send( self.security.to_bytes(4, 'big') )
+        self.send( pack('>L', self.security) )
         if self.recv(True)[0] not in (0,1):
             raise RfbSessionRejected('no security')
 
         # ServerInit
         self.send(
-            w.to_bytes(2, 'big') + h.to_bytes(2, 'big') \
-            + bytes([ self.bpp ]) \
-            + bytes([ self.depth ]) \
-            + bytes([ self.big ]) \
-            + bytes([ self.true ]) \
-            + (2**(self.depth//3)-1 if self.true else 0).to_bytes(2, 'big') * 3 \
-            + bytes( self.shift ) \
-            + bytes(3) \
-            + len(name).to_bytes(4, 'big') + name
+            pack('>2H4BH3B',
+                 w, h, 
+                 self.bpp, self.depth, self.big, self.true,
+                 (2**(self.depth//3)-1 if self.true else 0),
+                 self.shift[0], self.shift[1], self.shift[2]
+            ) + bytes(3) + pack('>L', len(name)) + name
         )
 
         # ColourMap (optional)

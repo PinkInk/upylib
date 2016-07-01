@@ -1,5 +1,10 @@
 # generically: return None on empty args
 
+try:
+    from ustruct import pack
+except:
+    from struct import pack
+
 def ServerFrameBufferUpdate(rectangles):
     if rectangles: # empty list is False
         buffer = bytes()
@@ -12,7 +17,7 @@ def ServerFrameBufferUpdate(rectangles):
             else:
                 buffer += b
         return b'\x00\x00' \
-                + len(rectangles).to_bytes(2, 'big') \
+                + pack('>H', len(rectangles)) \
                 + buffer
 
 
@@ -22,10 +27,9 @@ def ServerSetColourMapEntries(colourmap):
         b = bytes()
         for clr in colourmap:
             for ch in clr:
-                b += ch.to_bytes(2, 'big')
-        return b'\x01\x00' \
-            + int(0).to_bytes(2, 'big') \
-            + len(colourmap).to_bytes(2, 'big') \
+                b += pack('>H', ch)
+        return b'\x01\x00\x00\x00' \
+            pack('>H', len(colourmap)) \
             + b
 
 

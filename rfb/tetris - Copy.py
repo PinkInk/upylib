@@ -7,22 +7,6 @@ fbscale = 20
 
 class Tetris(rfb.RfbSession):
     
-    tets = (
-        (
-            2, 2, # width, height 
-            # bitmap
-            b'\x01\x01\x01\x01',
-            1, # colour index .. horrible; assumes colourmap ...
-            False # Can rotate
-        ),
-        (3, 2, b'\x00\x01\x00\x01\x01\x01',         4, True),
-        (3, 2, b'\x01\x01\x00\x00\x01\x01',         2, True),
-        (3, 2, b'\x00\x01\x01\x01\x01\x00',         5, True),
-        (4, 2, b'\x00\x00\x00\x01\x01\x01\x01\x01', 3, True),
-        (4, 2, b'\x01\x00\x00\x00\x01\x01\x01\x01', 6, True),
-        (4, 1, b'\x01\x01\x01\x01',                 7, True)
-    )
-
     def __init__(self, conn, w, h, colourmap, name):
         super().__init__(conn, w, h, colourmap, name)
         self.fbw = fbw
@@ -58,53 +42,79 @@ class Tetris(rfb.RfbSession):
             self.send( rfb.ServerFrameBufferUpdate(rectangles) )
         
         # create a tet
-        # self.tet = Tet(self.fb, self.fbw, self.fbh, self.fbscale, self.send)
-        self.tet_init()
-        self.tet_display()
+        self.tet = Tet(self.fb, self.fbw, self.fbh, self.fbscale, self.send)
 
     def update(self):
-        self.tet_scroll()
+        self.tet.scroll()
 
-    def tet_scroll(self):
+
+# no longer sure that this should or needs-to be a seperate class
+class Tet:
+
+    tets = (
+        (
+            2, 2, # width, height 
+            # bitmap
+            b'\x01\x01\x01\x01',
+            1, # colour index .. horrible; assumes colourmap ...
+            False # Can rotate
+        ),
+        (3, 2, b'\x00\x01\x00\x01\x01\x01',         4, True),
+        (3, 2, b'\x01\x01\x00\x00\x01\x01',         2, True),
+        (3, 2, b'\x00\x01\x01\x01\x01\x00',         5, True),
+        (4, 2, b'\x00\x00\x00\x01\x01\x01\x01\x01', 3, True),
+        (4, 2, b'\x01\x00\x00\x00\x01\x01\x01\x01', 6, True),
+        (4, 1, b'\x01\x01\x01\x01',                 7, True)
+    )
+
+    def __init__(self, fb, fbw, fbh, fbscale, send):
+        self.fb = fb # verify that this is a pointer to parent fb?
+        self.fbw = fbw
+        self.fbh = fbh
+        self.fbscale = fbscale
+        self.send = send # really? child sent a parents method?
+        self.initshape()
+        self.display()
+
+    def scroll(self):
         # TODO: check for collisions
         # TODO: flat shape overflows buffer if it hits flat
-        if self.tet_y+(self.tet_h//2) < self.fbh:
-            self.tet_display(False)
-            self.tet_y += 1
-            self.tet_display()
+        if self.y+(self.h//2) < self.fbh:
+            self.display(False)
+            self.y += 1
+            self.display()
         else:
             # TODO: move into background fb
             # TODO: collapse full fb rows and score points
-            self.tet_init()
+            self.initshape()
 
-    def tet_init(self):            
-        self.tet_w, self.tet_h, \
-        self.tet_bitmap, \
-        self.tet_colour, \
-        self.tet_rotatable = self.tets[ urandom(1)[0]%len(self.tets) ]
-        self.tet_x, self.tet_y = self.fbw//2, 1 + (self.tet_h//2)
+    def initshape(self):            
+        self.w, self.h, \
+        self.bitmap, \
+        self.colour, \
+        self.rotatable = self.tets[ urandom(1)[0]%len(self.tets) ]
+        self.x, self.y = fbw//2, 1 + (self.h//2)
 
-    def tet_display(self, show=True):
+    def display(self, show=True):
         rectangles = []
-        for x in range(self.tet_w):
-            for y in range(self.tet_h):
-                pixel = self.tet_bitmap[x+(y*self.tet_w)]
+        for x in range(self.w):
+            for y in range(self.h):
+                pixel = self.bitmap[x+(y*self.w)]
                 if pixel:
                     rectangles.append(
                         self.setpixel(
-                            self.tet_x-(self.tet_w//2)+x,
-                            self.tet_y-(self.tet_h//2)+y,
-                            self.tet_colour,
+                            self.x-(self.w//2)+x,
+                            self.y-(self.h//2)+y,
                             show
                         )
                     )
         self.send( rfb.ServerFrameBufferUpdate(rectangles) )
     
-    def setpixel(self, x, y, colour, show=True):
+    def setpixel(self, x, y, show=True):
         return rfb.CopyRect(
             x*self.fbscale, y*self.fbscale,
             self.fbscale, self.fbscale,
-            colour*self.fbscale if show else 0, 0
+            self.colour*self.fbscale if show else 0, 0
         )
 
 

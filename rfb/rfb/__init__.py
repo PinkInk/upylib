@@ -1,7 +1,17 @@
-import socket
+try:
+    import usocket as socket
+except:
+    import socket
 from rfb.session import *
 from rfb.servermsgs import *
 from rfb.encodings import *
+
+try: # mpy/cpython compat in main loop
+    raise BlockingIOError
+except:
+    class BlockingIOError(Exception):
+        pass
+
 
 class RfbServer():
 
@@ -10,7 +20,7 @@ class RfbServer():
                  colourmap = None,
                  name = b'rfb', 
                  handler = RfbSession,
-                 addr = ('', 5900), 
+                 addr = ('0.0.0.0', 5900), #mpy doesn't like b'' 
                  backlog = 3,
                 ):
         self.w = w
@@ -25,8 +35,8 @@ class RfbServer():
         self.handler = handler
         self.sessions = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.settimeout(0)
-        self.s.bind(addr)
+        self.s.setblocking(False) # unix mpy has no .settimeout(0)?
+        self.s.bind( socket.getaddrinfo(addr[0],addr[1])[0][-1] ) # req'd by mpy
         self.s.listen(backlog)
 
     def serve(self, delay=1):
@@ -46,7 +56,7 @@ class RfbServer():
                             self.name
                 )
             )
-        except (BlockingIOError): # TODO: micropython equiv error
+        except (OSError, BlockingIOError):
             pass
 
     def service(self):
