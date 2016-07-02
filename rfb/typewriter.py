@@ -54,7 +54,7 @@ class TypeWriter(rfb.RfbSession):
         
             if self.char.x >= self.w-font.w:
                 self.CarriageReturn()
-                self.char.x = 0
+                self.char.x = -font.w
 
 
     def CarriageReturn(self):
@@ -66,17 +66,24 @@ class TypeWriter(rfb.RfbSession):
                 0, font.h
             )
         )
-        # clear
-        # TODO: this generates a huge blob, write a single <space>
-        # and CopyRect it across the row instead
+        # clear, use CopyRect to minimise mem and traffic
         self.rectangles.append(
             rfb.RawRect(
                 0, self.h-font.h,
-                self.w, font.h,
-                self.bpp, self.depth, self.true, 
+                font.w, font.h,
+                self.bpp, self.depth, self.true,
                 self.colourmap
-            )
+            ) 
         )
+        self.rectangles[-1].fill((0,0,0))
+        for x in range(1, self.w//font.w):
+            self.rectangles.append(
+                rfb.CopyRect(
+                    x*font.w, self.h-font.h,
+                    font.w, font.h,
+                    0, self.h-font.h
+                )
+            )
 
 
 svr = rfb.RfbServer(
