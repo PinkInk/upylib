@@ -92,7 +92,8 @@ class RawRect(Rectangle):
             stop = self.w*self.h*(self.bpp//8)
             step = self.bpp//8
             for i in range(0, stop, step):
-                self.buffer[i : i+(self.depth//8)] = colour
+                # cpython can assign slice to raw tuple
+                self.buffer[i : i+(self.depth//8)] = bytes(colour)
         else:
             for i in self.buffer:
                 self.buffer[i] = colour
