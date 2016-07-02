@@ -64,7 +64,7 @@ class RfbServer():
 
     def service(self):
         for idx,session in enumerate( self.sessions ):
-            alive = session.dispatch_msgs()
+            alive = session.service_msg_queue()
             if not alive:
                 del( self.sessions[idx] )
             else:
