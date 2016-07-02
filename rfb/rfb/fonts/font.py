@@ -1,3 +1,5 @@
+from rfb.utils import *
+
 class Font:
     w = 0
     h = 0
@@ -28,13 +30,3 @@ class Font:
     def getbitmap_str(self, c):
         bits = bin( bytes_to_int(self.getbitmap_bytes(c)) )[2:]
         return (((self.w*self.h)-len(bits))*'0') + bits
-
-
-# mpy to/from_bytes don't support big-endian representations
-# u/struct & u/ctypes are cludgy, and limited for this purpose  
-def bytes_to_int(b): #big-endian
-    i = 0
-    for b8 in b:
-        i <<= 8
-        i += b8
-    return i

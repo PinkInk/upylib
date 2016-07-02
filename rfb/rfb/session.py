@@ -5,6 +5,7 @@ except:
     from time import sleep
     from struct import pack
 from rfb.servermsgs import ServerSetColourMapEntries
+from rfb.utils import *
 
 class RfbSession():
 
@@ -83,16 +84,16 @@ class RfbSession():
 
                 # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
                 if msg[ptr] == 0:
-                    if hasattr(self, 'ClientSetPixelFormat'): 
+                    if hasattr(self, 'ClientSetPixelFormat'):
                         self.ClientSetPixelFormat(
                             msg[ptr+4],
                             msg[ptr+5],
                             msg[ptr+6] == 1,
                             msg[ptr+7] == 1,
                             (
-                                int.from_bytes(msg[ptr+8:ptr+10], 'big'),
-                                int.from_bytes(msg[ptr+10:ptr+12], 'big'),
-                                int.from_bytes(msg[ptr+12:ptr+14], 'big')
+                                bytes_to_int( msg[ptr+8:ptr+10] ),
+                                bytes_to_int( msg[ptr+10:ptr+12] ),
+                                bytes_to_int( msg[ptr+12:ptr+14] ),
                             ),
                             (
                                 msg[ptr+14],
@@ -104,9 +105,9 @@ class RfbSession():
 
                 # ClientSetEncodings(self, encodings)
                 elif msg[ptr] == 2:
-                    count = int.from_bytes(msg[ptr+2:ptr+4], 'big')
+                    count = bytes_to_int( msg[ptr+2:ptr+4] )
                     encodings = [
-                        int.from_bytes(msg[ptr+4+i : ptr+8+i], 'big') 
+                        bytes_to_int( msg[ptr+4+i : ptr+8+i] )
                         for i in range(0, count*4, 4)
                     ]
                     self.encodings = encodings
@@ -116,13 +117,13 @@ class RfbSession():
 
                 # ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)
                 elif msg[ptr] == 3:
-                    if hasattr(self, 'ClientFrameBufferUpdateRequest'): 
+                    if hasattr(self, 'ClientFrameBufferUpdateRequest'):
                         self.ClientFrameBufferUpdateRequest(
                             msg[ptr+1] == 1,
-                            int.from_bytes(msg[ptr+2:ptr+4], 'big'),
-                            int.from_bytes(msg[ptr+4:ptr+6], 'big'),
-                            int.from_bytes(msg[ptr+6:ptr+8], 'big'),
-                            int.from_bytes(msg[ptr+8:ptr+10], 'big'),
+                            bytes_to_int( msg[ptr+2:ptr+4] ),
+                            bytes_to_int( msg[ptr+4:ptr+6] ),
+                            bytes_to_int( msg[ptr+6:ptr+8] ),
+                            bytes_to_int( msg[ptr+8:ptr+10] )
                         )
                     ptr += 10
 
@@ -131,24 +132,24 @@ class RfbSession():
                     if hasattr(self, 'ClientKeyEvent'):
                         self.ClientKeyEvent(
                             msg[ptr+1] == 1,
-                            int.from_bytes(msg[ptr+4:ptr+8], 'big')
+                            bytes_to_int( msg[ptr+4:ptr+8] )
                         )
                     ptr += 8
 
                 # ClientPointerEvent(self, buttons, x, y)
                 elif msg[ptr] == 5:
-                    if hasattr(self, 'ClientPointerEvent'): 
+                    if hasattr(self, 'ClientPointerEvent'):
                         self.ClientPointerEvent(
                             msg[ptr+1],
-                            int.from_bytes(msg[ptr+2:ptr+4], 'big'),
-                            int.from_bytes(msg[ptr+4:ptr+6], 'big')
+                            bytes_to_int( msg[ptr+2:ptr+4] ),
+                            bytes_to_int( msg[ptr+4:ptr+6] )
                         )
                     ptr += 6
 
                 # ClientCutText(self, text)
                 elif msg[ptr] == 6:
+                    l = bytes_to_int( msg[2:6] )
                     if hasattr(self, 'ClientCutText'):
-                        l = int.from_bytes(msg[2:6], 'big')
                         self.ClientCutText(
                             msg[ptr+6 : ptr+l]
                         )
