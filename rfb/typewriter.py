@@ -17,8 +17,8 @@ class TypeWriter(rfb.RfbSession):
 
     def update(self):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
-        # chuck any rectangles already sent to display
-        self.rectangles = []
+        # chuck rectangles sent to display
+        self.rectangles.clear()
 
     def ClientKeyEvent(self, down, key):
 

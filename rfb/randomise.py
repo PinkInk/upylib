@@ -1,13 +1,18 @@
-import rfb, os
+import rfb
+try:
+    import urandom as random
+except:
+    import random
 
-class Tetris(rfb.RfbSession):
+class Randomise(rfb.RfbSession):
 
     def __init__(self, conn, w, h, colourmap, name):
         super().__init__(conn, w, h, colourmap, name)
         self.rectangles = []
 
-        for i in range(os.urandom(1)[0]):
-            x, y = tuple(list(os.urandom(2)))
+        # can use up to 7.6k ...
+        for i in range( random.getrandbits(8) ):
+            x, y = random.getrandbits(8), random.getrandbits(8)
             x = x if x<self.w-10 else x-10
             y = y if y<self.h-10 else y-10
             w = h = 10
@@ -19,16 +24,16 @@ class Tetris(rfb.RfbSession):
                     self.colourmap
                 )
             )
-            self.rectangles[-1].fill(tuple(os.urandom(3)))
-        self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
 
     def update(self):
         for rect in self.rectangles:
-            rect.fill(tuple(os.urandom(3)))
-            for i in range(10):
-                rect.setpixel(i,i,(0,0,0))
+            rect.fill((
+                random.getrandbits(8),
+                random.getrandbits(8),
+                random.getrandbits(8),
+            ))
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         
 
-svr = rfb.RfbServer(255, 255, name=b'random', handler=Tetris)
+svr = rfb.RfbServer(255, 255, name=b'random', handler=Randomise)
 svr.serve()
