@@ -8,8 +8,11 @@ from rfb.encodings import *
 
 try: # mpy/cpython compat in main loop
     raise BlockingIOError
+    raise ConnectionAbortedError
 except:
     class BlockingIOError(Exception):
+        pass
+    class ConnectionAbortedError(Exception):
         pass
 
 
@@ -56,7 +59,7 @@ class RfbServer():
                             self.name
                 )
             )
-        except (OSError, BlockingIOError):
+        except (OSError, BlockingIOError): # mpy, cpython
             pass
 
     def service(self):
@@ -67,5 +70,5 @@ class RfbServer():
             else:
                 try:
                     session.update()
-                except ConnectionAbortedError:
+                except (ConnectionAbortedError): # ???, cpython
                     del( self.sessions[idx] )
