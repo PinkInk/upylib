@@ -36,11 +36,12 @@ class RfbSession():
             raise RfbSessionRejected('no security')
 
         # ServerInit
+        channel_mask = (2**(self.depth//3)-1 if self.true else 0) 
         self.send(
-            pack('>2H4BH3B',
+            pack('>2H4B3H3B',
                  w, h, 
                  self.bpp, self.depth, self.big, self.true,
-                 (2**(self.depth//3)-1 if self.true else 0),
+                 channel_mask, channel_mask, channel_mask,
                  self.shift[0], self.shift[1], self.shift[2]
             ) + bytes(3) + pack('>L', len(name)) + name
         )

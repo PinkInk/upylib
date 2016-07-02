@@ -29,7 +29,7 @@ def ServerSetColourMapEntries(colourmap):
             for ch in clr:
                 b += pack('>H', ch)
         return b'\x01\x00\x00\x00' \
-            pack('>H', len(colourmap)) \
+            + pack('>H', len(colourmap)) \
             + b
 
 

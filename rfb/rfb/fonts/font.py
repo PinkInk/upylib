@@ -21,10 +21,20 @@ class Font:
                     b[len(b)-i] = b[len(b)-i]>>8-stopbit
                     if i < len(b)-1:
                         b[len(b)-i] = b[len(b)-i] | ( b[len(b)-i-1] & (0xff>>stopbit) ) 
-            return b
+            return bytes(b)
         else:
             raise ValueError('bad bitmap code', c)
     
     def getbitmap_str(self, c):
-        bits = bin( int.from_bytes(self.getbitmap_bytes(c), 'big') )[2:]
+        bits = bin( bytes_to_int(self.getbitmap_bytes(c)) )[2:]
         return (((self.w*self.h)-len(bits))*'0') + bits
+
+
+# mpy to/from_bytes don't support big-endian representations
+# u/struct & u/ctypes are cludgy, and limited for this purpose  
+def bytes_to_int(b): #big-endian
+    i = 0
+    for b8 in b:
+        i <<= 8
+        i += b8
+    return i
