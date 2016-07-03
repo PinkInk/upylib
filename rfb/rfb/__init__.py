@@ -53,11 +53,11 @@ class RfbServer():
     def accept(self):
         try:
             self.sessions.append( 
-                self.handler(self.s.accept(),
-                            self.w, 
-                            self.h,
-                            self.colourmap,
-                            self.name
+                self.handler(
+                    self.s.accept(),
+                    self.w, self.h,
+                    self.colourmap,
+                    self.name
                 )
             )
         except (OSError, BlockingIOError): # mpy, cpython

@@ -11,7 +11,15 @@ unix port.
 'nano' implementation for esp8266 micropython port. 
 
 Refer README.md in each sub-directory for implementation specifics.
-Python files in this directory contain examples and functionality tests.
+
+Python files in this directory contain examples and functionality tests;
+
+- **example.py** example built-out in rfb\README.md
+- **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
+- **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
+- **randomrre.py** demonstration/testing of RRERect's
+- **snow.py** !!! needs fixing !!!
+- **tetris.py** W.I.P. RFB Tetris implementation
 
 **Installation**
 
