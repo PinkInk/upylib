@@ -9,7 +9,7 @@ class Test(rfb.RfbSession):
         rectangles = [
             rfb.RRERect(
                 0, 0,
-                100, 100,
+                50, 50,
                 (255,0,0),
                 self.bpp, self.depth, self.true,
                 self.colourmap
@@ -19,7 +19,7 @@ class Test(rfb.RfbSession):
             rfb.RRESubRect(
                 0, 0,
                 20, 20,
-                (0,255,0),
+                (255,255,0),
                 self.bpp, self.depth, self.true,
                 self.colourmap
             )

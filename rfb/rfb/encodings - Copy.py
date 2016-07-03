@@ -22,7 +22,7 @@ def colour_is_true(colour, true, colourmap):
                                    + ' colour', colour)
 
 
-class BasicRectangle:
+class Rectangle:
 
     encoding = None
 
@@ -51,25 +51,9 @@ class BasicRectangle:
                )
 
 
-class CopyRect(BasicRectangle):
+class RawRect(Rectangle):
 
-    encoding = COPYRECT
-
-    def __init__(self,
-                 x, y,
-                 w, h,
-                 src_x, src_y
-                ):
-        super().__init__(x, y, w, h)
-        self.src_x = src_x
-        self.src_y = src_y
-
-    def to_bytes(self):
-        return super().to_bytes() \
-               + pack('>2H', self.src_x, self.src_y) 
-
-
-class ColourRectangle(BasicRectangle):
+    encoding = RAWRECT
 
     def __init__(self, 
                  x, y, 
@@ -82,6 +66,7 @@ class ColourRectangle(BasicRectangle):
         self._depth = depth
         self._true = true
         self._colourmap = colourmap
+        self.buffer = bytearray( (bpp//8)*w*h )
 
     @property 
     def bpp(self): 
@@ -101,20 +86,6 @@ class ColourRectangle(BasicRectangle):
 
     def colour_is_true(self, colour):
         return colour_is_true(colour, self.true, self.colourmap)
-
-
-class RawRect(ColourRectangle):
-
-    encoding = RAWRECT
-
-    def __init__(self, 
-                 x, y, 
-                 w, h, 
-                 bpp, depth, true, 
-                 colourmap=None
-                ):
-        super().__init__(x, y, w, h, bpp, depth, true, colourmap)
-        self.buffer = bytearray( (bpp//8)*w*h )
 
     def fill(self, colour):
         if self.colour_is_true(colour):
@@ -141,7 +112,25 @@ class RawRect(ColourRectangle):
                + self.buffer
 
 
-class RRESubRect(ColourRectangle):
+class CopyRect(Rectangle):
+
+    encoding = COPYRECT
+
+    def __init__(self,
+                 x, y,
+                 w, h,
+                 src_x, src_y
+                ):
+        super().__init__(x, y, w, h)
+        self.src_x = src_x
+        self.src_y = src_y
+
+    def to_bytes(self):
+        return super().to_bytes() \
+               + pack('>2H', self.src_x, self.src_y) 
+
+
+class RRESubRect:
 
     def __init__(self,
                  x, y,
@@ -150,15 +139,40 @@ class RRESubRect(ColourRectangle):
                  bpp, depth, true,
                  colourmap = None
                 ):
-        super().__init__(x, y, w, h, bpp, depth, true, colourmap)
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
         self.colour = colour
+        self._bpp = bpp
+        self._depth = depth
+        self._true = true
+        self._colourmap = colourmap
+    
+    @property 
+    def bpp(self): 
+        return self._bpp
+
+    @property
+    def depth(self): 
+        return self._depth
+
+    @property
+    def true(self): 
+        return self._true
+
+    @property
+    def colourmap(self): 
+        return self._colourmap
+
+    def colour_is_true(self, colour):
+        return colour_is_true(colour, self.true, self.colourmap)
 
     def to_bytes(self):
-        # non-standard encoding, don't call super()
         return (
-                 bytes(self.colour)+b'\x00' \
-                 if self.colour_is_true(self.colour) \
-                 else bytes((self.colour)) \
+                 bytes(self.bgcolour)+b'\x00' \
+                 if self.colour_is_true(self.bgcolour) \
+                 else bytes((self.bgcolour)) \
                ) \
                + pack('>4H', 
                       self.x, self.y,
@@ -166,7 +180,7 @@ class RRESubRect(ColourRectangle):
                )
 
 
-class RRERect(ColourRectangle):
+class RRERect(Rectangle):
 
     encoding = RRERECT
 
@@ -177,9 +191,32 @@ class RRERect(ColourRectangle):
                  bpp, depth, true, 
                  colourmap=None
                 ):
-        super().__init__(x, y, w, h, bpp, depth, true, colourmap)
+        super().__init__(x, y, w, h)
         self.bgcolour = bgcolour
+        self._bpp = bpp
+        self._depth = depth
+        self._true = true
+        self._colourmap = colourmap
         self.subrectangles = []
+
+    @property 
+    def bpp(self): 
+        return self._bpp
+
+    @property
+    def depth(self): 
+        return self._depth
+
+    @property
+    def true(self): 
+        return self._true
+
+    @property
+    def colourmap(self): 
+        return self._colourmap
+
+    def colour_is_true(self, colour):
+        return colour_is_true(colour, self.true, self.colourmap)
 
     def to_bytes(self):
         b = b''
