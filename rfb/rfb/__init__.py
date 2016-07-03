@@ -7,11 +7,14 @@ from rfb.servermsgs import *
 from rfb.encodings import *
 
 try: # mpy/cpython compat in main loop
-    raise BlockingIOError
-    raise ConnectionAbortedError
+    BlockingIOError
 except:
     class BlockingIOError(Exception):
         pass
+
+try:
+    ConnectionAbortedError
+except:
     class ConnectionAbortedError(Exception):
         pass
 

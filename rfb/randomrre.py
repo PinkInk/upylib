@@ -1,4 +1,5 @@
 import rfb
+
 try:
     import urandom as random
 except:
@@ -9,30 +10,35 @@ class Randomise(rfb.RfbSession):
     def __init__(self, conn, w, h, colourmap, name):
         super().__init__(conn, w, h, colourmap, name)
         self.rectangles = []
-
-        # can use up to 7.6k ...
+    
         for i in range( random.getrandbits(8) ):
             x, y = random.getrandbits(8), random.getrandbits(8)
-            x = x if x<self.w-10 else x-10
-            y = y if y<self.h-10 else y-10
-            w = h = 10
+            w = h = random.getrandbits(5)
+            x = x if x<self.w-w else x-w
+            y = y if y<self.h-h else y-h
+            bgcolour = (
+                random.getrandbits(8),
+                random.getrandbits(8),
+                random.getrandbits(8)
+            )
             self.rectangles.append(
-                rfb.RawRect(
+                rfb.RRERect(
                     x, y,
-                    w, h, 
+                    w, h,
+                    bgcolour,
                     self.bpp, self.depth, self.true,
-                    self.colourmap
+                    self.colourmap                    
                 )
             )
 
     def update(self):
-        for rect in self.rectangles:
-            rect.fill((
-                random.getrandbits(8),
-                random.getrandbits(8),
-                random.getrandbits(8),
-            ))
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
+        for rect in self.rectangles:
+            rect.bgcolour = (
+                random.getrandbits(8),
+                random.getrandbits(8),
+                random.getrandbits(8),
+            )
 
 
 svr = rfb.RfbServer(255, 255, name=b'random', handler=Randomise)

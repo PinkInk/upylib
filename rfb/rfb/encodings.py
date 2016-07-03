@@ -5,7 +5,7 @@ except:
 
 RAWRECT = 0
 COPYRECT = 1
-
+RRERECT = 2
 
 def colour_is_true(colour, true, colourmap):
         if true \
@@ -127,6 +127,67 @@ class CopyRect(Rectangle):
     def to_bytes(self):
         return super().to_bytes() \
                + pack('>2H', self.src_x, self.src_y) 
+
+
+class RRESubRect:
+
+    def __init__(self,
+                 x, y,
+                 w, h, 
+                 colour,
+                 bpp, depth, true,
+                 colourmap = None
+                ):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        # TODO: colourmap/true colour, currently assumes true-colour
+        self.colour = colour
+        self.bpp = bpp
+        self.depth = depth
+        self.true = true
+        self.colourmap = colourmap
+    
+    def to_bytes(self):
+        return pack('>8H', 
+                    self.colour[0],
+                    self.colour[1],
+                    self.colour[2],
+                    0, # padding
+                    self.x, self.y,
+                    self.w, self.h
+            )
+
+class RRERect(Rectangle):
+
+    encoding = RRERECT
+
+    def __init__(self,
+                 x, y,
+                 w, h,
+                 bgcolour,
+                 bpp, depth, true, 
+                 colourmap=None
+                ):
+        super().__init__(x, y, w, h)
+        # TODO: colourmap/true colour, currently assumes true-colour
+        self.bgcolour = bgcolour
+        self.subrectangles = []
+
+    def to_bytes(self):
+        buffer = b''
+        for rect in self.subrectangles:
+            buffer += rect.to_bytes()
+        return super().to_bytes() \
+               + pack('>L4H', 
+                      len(self.subrectangles),
+                      self.bgcolour[0], 
+                      self.bgcolour[1], 
+                      self.bgcolour[2], 
+                      0 # padding
+               ) \
+               + buffer
 
 
 class RfbEncodingError(Exception):
