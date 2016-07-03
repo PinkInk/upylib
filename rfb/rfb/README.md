@@ -35,4 +35,5 @@ RfbServer(
 )
 ```
 
-<font colour=red>Note: colourmap is not currently supported</font>
+_Note: RFB colourmap mode (i.e. indexed colour) is not currently supported, and 
+should always be set to `None`._

@@ -43,7 +43,7 @@ class RfbServer():
         self.s.bind( socket.getaddrinfo(addr[0],addr[1])[0][-1] ) # req'd by mpy
         self.s.listen(backlog)
 
-    def serve(self, delay=1):
+    def serve(self):
         while True:
             #accept new connections
             self.accept()
