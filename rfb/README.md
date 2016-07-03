@@ -4,13 +4,14 @@ _Unsecured_ micro Remote Framebuffer Protocol (RFB) implementations, and example
 for [Micropython](www.micropython.org), tested (to-date) only on micropython 
 unix port.
 
-- [**rfb**](/rfb) directory<BR/>
+- [**rfb**](github.com/PinkInk/upylib/tree/master/rfb/rfb) directory<BR/>
 'micro' implementation for unix (hopefully WiPy) micropython ports. 
 
-- [**urfb**](/urfb) directory<BR/>
+- [**urfb**](github.com/PinkInk/upylib/tree/master/rfb/urfb) directory<BR/>
 'nano' implementation for esp8266 micropython port. 
 
 Refer README.md in each sub-directory for implementation specifics.
+Python files in this directory contain examples and functionality tests.
 
 **Installation**
 
