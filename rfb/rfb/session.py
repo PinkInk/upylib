@@ -18,14 +18,14 @@ class RfbSession():
         # TODO: currently colour = (b,g,r) instead (r,g,b)
         # clients read shift in reverse (r=16,g=8,b=0) irrespective
         # of endianess, and supplied shift order?
-        self.big = True
+        self._big = True
         # TODO: colourmap's don't work ...
         self.bpp = 8 if colourmap else 32
         self.depth = 8 if colourmap else 24
         self.true = False if colourmap else True
         self.shift = (0,0,0) if colourmap else (0,8,16)
         self.name = name
-        self.security = 1 # None/No Security
+        self._security = 1 # None/No Security
         self.encodings = []
 
         # HandShake
@@ -52,6 +52,14 @@ class RfbSession():
         # ColourMap (optional)
         if colourmap:
             self.send( ServerSetColourMapEntries( self.colourmap ) )
+
+    @property
+    def big(self):
+        return self._big
+    
+    @property
+    def security(self):
+        return self._security
 
     def recv(self, blocking=False):
         sleep(0.1) #init fails at peer without this delay???

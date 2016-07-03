@@ -18,11 +18,38 @@ Supports;
     - paste buffer text
 - bitmap fonts (6x8 and 4x6)
 
-This following documentation walks through the components of the module 
-building out an example micropython script which demonstrates all of the 
-module features.
+###Example
 
-### RfbServer
+Walk through of the main components of the module and build out an example 
+micropython script which demonstrates all of the module features.
+
+**Set up and serve a simple 'do nothing' RFB server bound to port 5900 (RFB Protocol default);**
+
+```python
+import rfb
+svr = rfb.RfbServer(150, 150, name=b'hello world')
+svr.serve()
+``` 
+
+Multiple RFB Client sessions can be connected to this server, and will display
+a 150x150 pixel main window with title 'hello world'.  
+
+_Note: the RFB protocol does not specify a default colour for pixels in the client buffer, initial state (normally white or black) can vary between RFB Client implementations, and cannot be assumed._
+
+**Start building a custom session handler** which doesn't (yet) do any more than the above example;
+
+```python
+import rfb
+
+class my_session(rfb.RfbSession):
+    pass
+
+svr = rfb.RfbServer(150, 150, handler=my_session, name=b'custom')
+svr.serve()
+```
+
+
+### RfbServer class
 
 ```python
 RfbServer(
@@ -35,8 +62,7 @@ RfbServer(
 )
 ```
 
-_Note: RFB colourmap mode (i.e. indexed colour) is not currently supported, and 
-should always be set to `None`._
+_Note: RFB colourmap mode (i.e. indexed colour) is not currently supported, and should always be set to `None`._
 
 **RfbServer.accept()** (Non-blocking)
 
@@ -50,30 +76,14 @@ calling the handlers **service_msg_queue()** and **update()** methods.
 
 **RfbServer.serve()** (Blocking)
 
-Call **RfbServer.accept()** and **RfbServer.service()** methods in a continous loop i.e.
+Call **RfbServer.accept()** and **RfbServer.service()** methods in a loop i.e.
 accept and setup new sessions and service existing ones.
 
-This is the normal method of starting the RFB server, however it is **blocking** 
+`RfbServer.serve()` is the 'normal' method of starting the RFB server, however it is **blocking** 
 therefore **accept()** and **service()** are exposed in order that they can be called
 at user discretion within a custom main loop.
 
-Example; set up and serve a simple 'do nothing', 150x150 pixel, rfb server 
-bound to default RFB protocol port (5900) and all interfaces, ;
-
-```python
-import rfb
-svr = rfb.RfbServer(150, 150, name='hello world')
-svr.serve()
-``` 
-
-Multiple RFB Client sessions can be connected to this server, and will display
-a 150x150 pixel main window with title 'hello world'.  
-
-Note: the RFB protocol does not specify a default colour for pixels in the
-client buffer, initial state (normally white or black) can vary between
-RFB Client implementations, and cannot be assumed.
-
-### RfbServer
+### RfbServer class
 
 Initialisation of `RfbSession` objects is normally handled by `RfbServer`.
 
@@ -85,6 +95,12 @@ RfbSession(
     name # server framebuffer name (cannot be '')
 )
 ```
+
+**RfbSession.conn** and **RfbSession.addr**
+
+Raw python socket connection and address.
+
+_Note: not expected to be used directly (refer send and recv methods) or overridden in user sub-class implementations._  
 
 **RfbSession.w** 
 
@@ -104,8 +120,59 @@ values e.g. `[(0,0,0), (255,255,255), (255,0,0)]` for white, black, blue.
 Blue, Green, Red (BGR) instead of Red, Green, Blue (RGB) colour representation
 is an 'anomoly' of the current implementation.
 
-**RfbSession.** - 
+**RfbSession.big** = True (read-only)
 
-**RfbSession.** - 
+Endianness of session i.e. big-endian long integers and words are used.
 
-**RfbSession.** - 
+**RfbSession.bpp**
+
+Bits per pixel, either 8, 16 or 32.
+
+Constrained by implementation to;
+- 32 for true-colour
+- 8 for indexed (colourmap) colour
+
+**RfbSession.depth**
+
+Number of bits in Bits Per Pixel that actually contain colour information.
+
+Constrained by implementation to;
+- 24 for true-colour (3 x 8-bit colour channels for Blue, Green & Red)
+- 8 for indexed (colourmap) colour (i.e. max of 255 colour indexes) 
+
+**RfbSession.shift**
+
+3-tuple of bit shift values to rotate each colour channel out of a pixel value.
+
+Constrained by implementation to;
+
+- (0, 8, 16) for true-colour
+- (0, 0, 0) for indexed (colourmap) colour
+
+_Note: irrespective of protocol endianness for true-colour these values are inverted by client (hence BGR instead of RGB)_
+
+**RfbSession.security** = 1 (read-only)
+
+Session security type (1 == None i.e. No Security)
+
+**RfbSessions.encodings**
+
+If the client sends a list of rectangle encodings that it supports (it normally
+will) this list will be populated with them.
+
+_Note: cannot gaurantee that this is populated immediately post session initialisation._
+
+**RfbSession.recv(blocking=False)**
+
+Wait for (if blocking=True, which is required by the internals of the 
+protocol initialisation phase) receive and return any bytes received from the 
+RFB Client.
+
+_Note: not expected to be used directly, or over-ridden by user sub-class implementations._
+
+**RfbSession.send(bytes)**
+
+Send bytes to the RFB Client (a shortcut to RfbSession.conn.send()).
+
+Might be used directly to send data 
+
