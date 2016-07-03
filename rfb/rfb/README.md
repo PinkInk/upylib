@@ -27,12 +27,12 @@ micropython script which demonstrates all of the module features.
 
 ```python
 import rfb
-svr = rfb.RfbServer(150, 150, name=b'hello world')
+svr = rfb.RfbServer(255, 255, name=b'hello world')
 svr.serve()
 ``` 
 
 Multiple RFB Client sessions can be connected to this server, and will display
-a 150x150 pixel main window with title 'hello world'.  
+a 255x255 pixel main window with title 'hello world'.  
 
 _Note: the RFB protocol does not specify a default colour for pixels in the client buffer, initial state (normally white or black) can vary between RFB Client implementations, and cannot be assumed._
 
@@ -44,7 +44,50 @@ import rfb
 class my_session(rfb.RfbSession):
     pass
 
-svr = rfb.RfbServer(150, 150, handler=my_session, name=b'custom')
+svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
+svr.serve()
+```
+
+Each time the main server loop cycles `RfbSession.update()` is called and
+can be used to send rectangles of pixels encoded in various schemes to the
+client.
+
+**Over-ride `RfbSession.update()` and send a random rectangle on each cycle**
+using RRERect encoding (an efficient encoding that tells the client to display
+a rectangle of a single colour, without sending every pixel).;
+
+```python
+import rfb
+# select the correct random lib for micropython/cpython
+try:
+    from urandom import getrandbits
+except:
+    from random import getrandbits
+
+class my_session(rfb.RfbSession):
+    
+    def update(self):
+        x,y = getrandbits(8), getrandbits(8)
+        w = h = getrandbits(5)
+        # co-erce x,y to ensure rectangle doesn't overflow
+        # framebuffer size (client will error out if they do)
+        x = x if x<self.w-w else x-w
+        y = y if y<self.h-h else y-h
+        bgcolour = (getrandbits(8), getrandbits(8), getrandbits(8))
+        rectangles = [
+            rfb.RRERect(
+                x, y, 
+                w, h, 
+                bgcolour,
+                # refer documentation hereunder!
+                self.bpp, self.depth, self.true,
+                self.colourmap                    
+            )
+        ]
+        # send a framebuffer update to the client
+        self.send( rfb.ServerFrameBufferUpdate( rectangles ) )
+
+svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
 svr.serve()
 ```
 
