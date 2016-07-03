@@ -1,8 +1,8 @@
 #Remote Framebuffer Protocol for [Micropython](www.micropython.org)
 
 _Unsecured_ micro Remote Framebuffer Protocol (RFB) implementations, and examples,
-for [Micropython](www.micropython.org), tested (to-date) only on micropython 
-unix port.
+for [Micropython](www.micropython.org) (and cpython), tested (to-date) only on micropython 
+unix port (and cpython).
 
 - [**rfb**](rfb) directory<BR/>
 'micro' implementation for unix (hopefully WiPy) micropython ports. 
