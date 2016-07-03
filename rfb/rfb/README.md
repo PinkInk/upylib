@@ -26,7 +26,7 @@ module features.
 
 ```python
 RfbServer(
-    w, h, # width, height of the remote framebuffer
+    w, h, # width, height (in pixels) of the remote framebuffer
     colourmap = None, # colourmap as (colour1, colour2 ... colourn) or None for true-colour
     name = b'rfb', # name of the remote framebuffer (cannot be '')
     handler = RfbSession, # client session handler
@@ -35,3 +35,4 @@ RfbServer(
 )
 ```
 
+<font colour=red>Note: colourmap is not currently supported</font>
