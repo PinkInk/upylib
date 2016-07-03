@@ -24,7 +24,7 @@ Python files in this directory are examples and functionality tests;
 ###Installation
 
 Copy the desired micro (rfb) or nano (urfb) directory (less README.md) to the 
-library path of your module and;
+library path of your module or cpython distribution;
 
 ```python
 >>> import rfb
