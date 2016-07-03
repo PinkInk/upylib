@@ -11,11 +11,9 @@ try: # mpy/cpython compat in main loop
 except:
     class BlockingIOError(Exception):
         pass
-
-try:
-    ConnectionAbortedError
-except:
     class ConnectionAbortedError(Exception):
+        pass
+    class ConnectionResetError(Exception):
         pass
 
 
@@ -73,5 +71,5 @@ class RfbServer():
             else:
                 try:
                     session.update()
-                except (ConnectionAbortedError): # ???, cpython
+                except (ConnectionAbortedError, ConnectionResetError): # ???, cpython
                     del( self.sessions[idx] )
