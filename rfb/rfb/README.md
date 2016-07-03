@@ -2,8 +2,8 @@
 
 Supports;
 - multiple concurrent RFB Client sessions on micropython and cpython
-- **true** (RGB8) and **indexed** (latter on To-Do list) colour
-- sending commands ('encodings') to the RFB Client;
+- **true** (RGB8) and **indexed** colour (latter not yet working)
+- sending messages ('encodings') to the RFB Client;
     - **FrameBufferUpdate**_s_
         - **RawRect**_angle_ of pixels
         - **CopyRect**_angle_ from another area in the RFB 
@@ -18,10 +18,7 @@ Supports;
     - paste buffer text
 - bitmap fonts (6x8 and 4x6)
 
-###Example
-
-Walk through of the main components of the module and build out an example 
-micropython script which demonstrates all of the module features.
+###Example walk-through
 
 **Set up and serve a simple 'do nothing' RFB server bound to port 5900 (RFB Protocol default);**
 

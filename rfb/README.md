@@ -1,6 +1,7 @@
 #Remote Framebuffer Protocol for [Micropython](www.micropython.org)
 
-_Unsecured_ micro Remote Framebuffer Protocol (RFB) server implementations
+_Unsecured_ micro [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) 
+(RFB) server implementations
 for [Micropython](www.micropython.org) (and cpython), tested (to-date) only on micropython 
 unix port (and cpython);
 
