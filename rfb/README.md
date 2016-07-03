@@ -12,7 +12,14 @@ unix port (and cpython);
 
 Refer README.md in each sub-directory for implementation specifics.
 
-Python files in this directory are examples and functionality tests;
+###Installation
+
+Copy the desired micro (rfb) or nano (urfb) directory (less README.md) to the 
+library path of your module or cpython distribution;
+
+### Examples
+
+In this directory;
 
 - **example.py** example built-out in rfb\README.md
 - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
@@ -21,15 +28,6 @@ Python files in this directory are examples and functionality tests;
 - **snow.py** !!! needs fixing !!!
 - **tetris.py** W.I.P. RFB Tetris implementation
 
-###Installation
-
-Copy the desired micro (rfb) or nano (urfb) directory (less README.md) to the 
-library path of your module or cpython distribution;
-
-```python
->>> import rfb
-```
-
 ###Known-Issues
 
 - true colours reversed i.e. (b,g,r) instead of (r,g,b)
@@ -37,6 +35,6 @@ library path of your module or cpython distribution;
 
 ###TO-DO
 
-- documentation
-- testing on WiPy & Pyboard with cc3000
-- paired-down micro version for esp8266 (/urfb)
+- complete documentation
+- testing on WiPy & Pyboard/cc3000
+- implement nano version for esp8266 (/urfb)
