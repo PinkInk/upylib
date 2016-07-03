@@ -37,3 +37,75 @@ RfbServer(
 
 _Note: RFB colourmap mode (i.e. indexed colour) is not currently supported, and 
 should always be set to `None`._
+
+**RfbServer.accept()** (Non-blocking)
+
+Check for new incoming connections, and add an instance of **handler** to 
+**RfbServer.sessions** (list) for each.
+
+**RfbServer.service()** (Non-blocking)
+
+'Service' each of the instances of **handler** in the **RfbServer.sessions** list, by
+calling the handlers **service_msg_queue()** and **update()** methods. 
+
+**RfbServer.serve()** (Blocking)
+
+Call **RfbServer.accept()** and **RfbServer.service()** methods in a continous loop i.e.
+accept and setup new sessions and service existing ones.
+
+This is the normal method of starting the RFB server, however it is **blocking** 
+therefore **accept()** and **service()** are exposed in order that they can be called
+at user discretion within a custom main loop.
+
+Example; set up and serve a simple 'do nothing', 150x150 pixel, rfb server 
+bound to default RFB protocol port (5900) and all interfaces, ;
+
+```python
+import rfb
+svr = rfb.RfbServer(150, 150, name='hello world')
+svr.serve()
+``` 
+
+Multiple RFB Client sessions can be connected to this server, and will display
+a 150x150 pixel main window with title 'hello world'.  
+
+Note: the RFB protocol does not specify a default colour for pixels in the
+client buffer, initial state (normally white or black) can vary between
+RFB Client implementations, and cannot be assumed.
+
+### RfbServer
+
+Initialisation of `RfbSession` objects is normally handled by `RfbServer`.
+
+```python
+RfbSession(
+    conn, # network connection object (refer python socket.accept)
+    w, h, # server framebuffer width, height in pixels
+    colourmap, # server colourmap as (colour1, colour2 ... colourn) or None for true-colour
+    name # server framebuffer name (cannot be '')
+)
+```
+
+**RfbSession.w** 
+
+RFB width (in pixels) property
+
+**RfbSession.h**
+
+RFB height (in pixels) property
+
+**RfbSession.colourmap** 
+
+RFB colourmap (indexed colour - not currently working) or None for true-colour.
+
+Colourmap is as a list 3-tuple's of 8-bit unisigned integer blue,green,red channel
+values e.g. `[(0,0,0), (255,255,255), (255,0,0)]` for white, black, blue.
+
+Blue, Green, Red (BGR) instead of Red, Green, Blue (RGB) colour representation
+is an 'anomoly' of the current implementation.
+
+**RfbSession.** - 
+
+**RfbSession.** - 
+
+**RfbSession.** - 
