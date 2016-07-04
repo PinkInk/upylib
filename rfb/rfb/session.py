@@ -4,6 +4,8 @@ try:
 except:
     from time import sleep
     from struct import pack
+
+
 from rfb.clientmsgs import dispatch_msgs
 
 class RfbSession():

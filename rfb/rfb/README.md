@@ -89,6 +89,49 @@ svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
 svr.serve()
 ```
 
+Overridding RfbSession.update() is useful for animations, but can be freely
+mixed with sending server messages in response to events (client messages).
+
+Client messages can be responded to by attaching methods to the session
+class for example 'ClientPointerEvent(self, buttons, x, y)' receives the state
+of buttons and pointer co-ordinates of the mouse, whilst the RFB Client window
+is in the foreground.
+
+**Add a mouse event handler to the my_session class;**
+
+```python
+class my_session(rfb.RfbSession):
+    
+    def update(self):
+        # ... same code as above
+
+    # respond to mouse events
+    def ClientPointerEvent(self, buttons, x, y):
+        w = h = 4
+        # paint with the mouse
+        if 0+w < x < self.w-w and 0+h < y < self.h-h:
+            self.send(
+                rfb.ServerFrameBufferUpdate(
+                    [
+                        rfb.RRERect(
+                            x, y,
+                            w, h,
+                            (255,255,255),
+                            self.bpp, self.depth, self.true,
+                        )
+                    ]
+                )
+            )
+        # ring the bell if a button is pressed
+        if buttons > 0:
+            self.send(
+                rfb.ServerBell()
+            ) 
+```
+
+
+
+
 
 ### RfbServer class
 
