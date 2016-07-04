@@ -26,7 +26,7 @@ In this directory;
 - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
 - **randomrre.py** demonstration/testing of RRERect's
 - **bounce.py** demonstration of RRERect/SubRect animation
-- **snow.py** !!! needs fixing !!!
+- **snow.py** demonstration of RRERec's
 - **tetris.py** W.I.P. RFB Tetris
 
 ###Known-Issues
