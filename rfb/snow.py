@@ -1,3 +1,4 @@
+# TODO: debian/ubuntu default 'vncviewer' doesn't like rectangle encoding?
 import rfb
 try:
     from urandom import getrandbits
