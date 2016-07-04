@@ -38,6 +38,9 @@ class Randomise(rfb.RfbSession):
                 getrandbits(8),
                 getrandbits(8),
             )
+    
+    def ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts):
+        print(bpp, depth, big, true, masks, shifts)
 
 
 svr = rfb.RfbServer(255, 255, name=b'random', handler=Randomise)

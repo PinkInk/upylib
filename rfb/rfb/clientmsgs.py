@@ -9,23 +9,29 @@ def dispatch_msgs(self, msg):
         # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
         if msg[ptr] == 0:
             # if ClientSetPixelFormat is received, post init
-            # over-rules ServerSetPixelFormat sent during init 
+            # over-rules ServerSetPixelFormat sent during init
+            self.bpp = msg[ptr+4]
+            self.depth = msg[ptr+5]
+            self.big = msg[ptr+6] == 1
+            self.true = msg[ptr+7] == 1
+            self.masks = (
+                bytes_to_int( msg[ptr+8:ptr+10] ),
+                bytes_to_int( msg[ptr+10:ptr+12] ),
+                bytes_to_int( msg[ptr+12:ptr+14] ),
+            )
+            self.shifts = (
+                msg[ptr+14],
+                msg[ptr+15],
+                msg[ptr+16]
+            ) 
             if hasattr(self, 'ClientSetPixelFormat'):
                 self.ClientSetPixelFormat(
-                    msg[ptr+4],
-                    msg[ptr+5],
-                    msg[ptr+6] == 1,
-                    msg[ptr+7] == 1,
-                    (
-                        bytes_to_int( msg[ptr+8:ptr+10] ),
-                        bytes_to_int( msg[ptr+10:ptr+12] ),
-                        bytes_to_int( msg[ptr+12:ptr+14] ),
-                    ),
-                    (
-                        msg[ptr+14],
-                        msg[ptr+15],
-                        msg[ptr+16]
-                    )
+                    self.bpp,
+                    self.depth,
+                    self.big,
+                    self.true,
+                    self.masks,
+                    self.shifts                    
                 )
             ptr += 20 # includes trailing padding
 
