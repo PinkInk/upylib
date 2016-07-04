@@ -66,10 +66,6 @@ class RfbSession():
         if b: # None and b'' are False
             self.conn.send(b)
 
-    # over-ride to send remote framebuffer updates
-    def update(self):
-        pass
-
     def service_msg_queue(self):
         msg = self.recv()
 

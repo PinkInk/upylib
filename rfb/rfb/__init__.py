@@ -66,5 +66,7 @@ class RfbServer():
             else:
                 try:
                     session.update()
+                except AttributeError: # session has no update() method
+                    pass
                 except (ConnectionAbortedError, ConnectionResetError): # ???, cpython
                     del( self.sessions[idx] )
