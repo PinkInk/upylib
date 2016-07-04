@@ -20,19 +20,6 @@ def ServerFrameBufferUpdate(rectangles):
                 + pack('>H', len(rectangles)) \
                 + buffer
 
-
-# colourmap as ((r,g,b), (r,g,b), (r,g,b), etc.), len<=255
-def ServerSetColourMapEntries(colourmap):
-    if colourmap: # () and [] are  False
-        b = bytes()
-        for clr in colourmap:
-            for ch in clr:
-                b += pack('>H', ch)
-        return b'\x01\x00\x00\x00' \
-            + pack('>H', len(colourmap)) \
-            + b
-
-
 def ServerBell():
     return b'\x02'
 

@@ -26,13 +26,14 @@ In this directory;
 - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
 - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
 - **randomrre.py** demonstration/testing of RRERect's
+- **bounce.py** demonstration of RRERect/SubRect animation
 - **snow.py** !!! needs fixing !!!
-- **tetris.py** W.I.P. RFB Tetris implementation
+- **tetris.py** W.I.P. RFB Tetris
 
 ###Known-Issues
 
 - true colours reversed i.e. (b,g,r) instead of (r,g,b)
-- indexed colour does not work (may be resolved by removing support)
+- ~~indexed (colourmap) colour does not work~~ (resolved by removing support for it)
 
 ###TO-DO
 

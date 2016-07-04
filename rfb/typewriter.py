@@ -4,15 +4,14 @@ from rfb.fonts.mono6x8 import mono6x8 as font
 
 class TypeWriter(rfb.RfbSession):
 
-    def __init__(self, conn, w, h, colourmap, name):
-        super().__init__(conn, w, h, colourmap, name)
+    def __init__(self, conn, w, h, name):
+        super().__init__(conn, w, h, name)
         self.rectangles = []
         self.char = rfb.RawRect(
                         -font.w, # -ve font width, first char will increment   
                         self.h - font.h,
                         font.w, font.h,
                         self.bpp, self.depth, self.true,
-                        self.colourmap
                     )
 
     def update(self):
@@ -46,7 +45,6 @@ class TypeWriter(rfb.RfbSession):
                                 self.char.x, self.h-font.h,
                                 font.w, font.h,
                                 self.bpp, self.depth, self.true,
-                                self.colourmap
                         )
                     )
                     self.rectangles[-1].fill((0,0,0))
@@ -72,7 +70,6 @@ class TypeWriter(rfb.RfbSession):
                 0, self.h-font.h,
                 font.w, font.h,
                 self.bpp, self.depth, self.true,
-                self.colourmap
             ) 
         )
         self.rectangles[-1].fill((0,0,0))

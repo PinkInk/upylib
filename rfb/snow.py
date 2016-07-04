@@ -3,8 +3,8 @@ from os import urandom
 
 class Snow(rfb.RfbSession):
 
-    def __init__(self, conn, w, h, colourmap, name):
-        super().__init__(conn, w, h, colourmap, name)
+    def __init__(self, conn, w, h, name):
+        super().__init__(conn, w, h, name)
         self.snowflakes = []
     
     def update(self):
@@ -33,7 +33,6 @@ class Snow(rfb.RfbSession):
                     x, y,
                     w, h,
                     self.bpp, self.depth, self.true,
-                    self.colourmap
                 )
             )
             self.snowflakes[-1].fill((255,255,255))

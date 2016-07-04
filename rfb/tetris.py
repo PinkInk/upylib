@@ -1,3 +1,5 @@
+# TODO: simplify with recently implemented RRERect encoding
+
 import rfb
 from os import urandom
 
@@ -23,8 +25,8 @@ class Tetris(rfb.RfbSession):
         (4, 1, b'\x01\x01\x01\x01',                 7, True)
     )
 
-    def __init__(self, conn, w, h, colourmap, name):
-        super().__init__(conn, w, h, colourmap, name)
+    def __init__(self, conn, w, h, name):
+        super().__init__(conn, w, h, name)
         self.fbw = fbw
         self.fbh = fbh
         self.fb = bytearray( self.fbw*self.fbh )
@@ -38,7 +40,6 @@ class Tetris(rfb.RfbSession):
                 0, 0,
                 self.fbscale, self.fbscale,
                 self.bpp, self.depth, self.true,
-                self.colourmap
             )          
         ]
         # !!! warning bgr not rgb !!!

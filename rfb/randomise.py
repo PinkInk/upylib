@@ -6,8 +6,8 @@ except:
 
 class Randomise(rfb.RfbSession):
 
-    def __init__(self, conn, w, h, colourmap, name):
-        super().__init__(conn, w, h, colourmap, name)
+    def __init__(self, conn, w, h, name):
+        super().__init__(conn, w, h, name)
         self.rectangles = []
 
         # can use up to 7.6k ...
@@ -21,7 +21,6 @@ class Randomise(rfb.RfbSession):
                     x, y,
                     w, h, 
                     self.bpp, self.depth, self.true,
-                    self.colourmap
                 )
             )
 

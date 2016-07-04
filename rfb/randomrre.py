@@ -7,8 +7,8 @@ except:
 
 class Randomise(rfb.RfbSession):
 
-    def __init__(self, conn, w, h, colourmap, name):
-        super().__init__(conn, w, h, colourmap, name)
+    def __init__(self, conn, w, h, name):
+        super().__init__(conn, w, h, name)
         self.rectangles = []
     
         for i in range( random.getrandbits(8) ):
@@ -27,7 +27,6 @@ class Randomise(rfb.RfbSession):
                     w, h,
                     bgcolour,
                     self.bpp, self.depth, self.true,
-                    self.colourmap                    
                 )
             )
 

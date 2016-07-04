@@ -2,7 +2,7 @@
 
 Supports;
 - multiple concurrent RFB Client sessions on micropython and cpython
-- **true** (RGB8) and **indexed** colour (latter not yet working)
+- **true** (RGB8) ~~and indexed~~ colour
 - sending messages ('encodings') to the RFB Client;
     - **FrameBufferUpdate**_s_
         - **RawRect**_angle_ of pixels
@@ -78,7 +78,6 @@ class my_session(rfb.RfbSession):
                 bgcolour,
                 # refer documentation hereunder!
                 self.bpp, self.depth, self.true,
-                self.colourmap                    
             )
         ]
         # send a framebuffer update to the client
@@ -94,15 +93,12 @@ svr.serve()
 ```python
 RfbServer(
     w, h, # width, height (in pixels) of the remote framebuffer
-    colourmap = None, # colourmap as (colour1, colour2 ... colourn) or None for true-colour
     name = b'rfb', # name of the remote framebuffer (cannot be '')
     handler = RfbSession, # client session handler
     addr = ('0.0.0.0', 5900), # address and port to bind the server to (refer python socket.bind)
     backlog = 3 # number of queued connections allowed (refer python socket.listen)
 )
 ```
-
-_Note: RFB colourmap mode (i.e. indexed colour) is not currently supported, and should always be set to `None`._
 
 **RfbServer.accept()** (Non-blocking)
 
@@ -131,7 +127,6 @@ Initialisation of `RfbSession` objects is normally handled by `RfbServer`.
 RfbSession(
     conn, # network connection object (refer python socket.accept)
     w, h, # server framebuffer width, height in pixels
-    colourmap, # server colourmap as (colour1, colour2 ... colourn) or None for true-colour
     name # server framebuffer name (cannot be '')
 )
 ```
@@ -150,16 +145,6 @@ RFB width (in pixels) property
 
 RFB height (in pixels) property
 
-**RfbSession.colourmap** 
-
-RFB colourmap (indexed colour - not currently working) or None for true-colour.
-
-Colourmap is as a list 3-tuple's of 8-bit unisigned integer blue,green,red channel
-values e.g. `[(0,0,0), (255,255,255), (255,0,0)]` for white, black, blue.
-
-Blue, Green, Red (BGR) instead of Red, Green, Blue (RGB) colour representation
-is an 'anomoly' of the current implementation.
-
 **RfbSession.big** = True (read-only)
 
 Endianness of session i.e. big-endian long integers and words are used.
@@ -168,26 +153,19 @@ Endianness of session i.e. big-endian long integers and words are used.
 
 Bits per pixel, either 8, 16 or 32.
 
-Constrained by implementation to;
-- 32 for true-colour
-- 8 for indexed (colourmap) colour
+Constrained by implementation to 32 bits.
 
 **RfbSession.depth**
 
 Number of bits in Bits Per Pixel that actually contain colour information.
 
-Constrained by implementation to;
-- 24 for true-colour (3 x 8-bit colour channels for Blue, Green & Red)
-- 8 for indexed (colourmap) colour (i.e. max of 255 colour indexes) 
+Constrained by implementation 24 (as 3 x 8-bit colour channels for Blue, Green & Red)
 
 **RfbSession.shift**
 
 3-tuple of bit shift values to rotate each colour channel out of a pixel value.
 
-Constrained by implementation to;
-
-- (0, 8, 16) for true-colour
-- (0, 0, 0) for indexed (colourmap) colour
+Constrained by implementation to (0, 8, 16).
 
 _Note: irrespective of protocol endianness for true-colour these values are inverted by client (hence BGR instead of RGB)_
 

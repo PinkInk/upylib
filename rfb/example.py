@@ -22,7 +22,6 @@ class my_session(rfb.RfbSession):
                 bgcolour,
                 # refer documentation hereunder!
                 self.bpp, self.depth, self.true,
-                self.colourmap                    
             )
         ]
         # send a framebuffer update to the client

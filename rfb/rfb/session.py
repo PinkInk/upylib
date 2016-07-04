@@ -4,26 +4,20 @@ try:
 except:
     from time import sleep
     from struct import pack
-from rfb.servermsgs import ServerSetColourMapEntries
 from rfb.clientmsgs import dispatch_msgs
 
 class RfbSession():
 
     # on fail raise; to prevent invalid session at parent
-    def __init__(self, conn, w, h, colourmap, name):
+    def __init__(self, conn, w, h, name):
         self.conn, self.addr = conn
         self.w = w
         self.h = h
-        self.colourmap = colourmap
-        # TODO: currently colour = (b,g,r) instead (r,g,b)
-        # clients read shift in reverse (r=16,g=8,b=0) irrespective
-        # of endianess, and supplied shift order?
         self._big = True
-        # TODO: colourmap's don't work ...
-        self.bpp = 8 if colourmap else 32
-        self.depth = 8 if colourmap else 24
-        self.true = False if colourmap else True
-        self.shift = (0,0,0) if colourmap else (0,8,16)
+        self.bpp = 32
+        self.depth = 24
+        self.true = True
+        self.shift = (0,8,16)
         self.name = name
         self._security = 1 # None/No Security
         self.encodings = []
@@ -48,10 +42,6 @@ class RfbSession():
                  self.shift[0], self.shift[1], self.shift[2]
             ) + bytes(3) + pack('>L', len(name)) + name
         )
-
-        # ColourMap (optional)
-        if colourmap:
-            self.send( ServerSetColourMapEntries( self.colourmap ) )
 
     @property
     def big(self):

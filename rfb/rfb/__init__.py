@@ -21,7 +21,6 @@ class RfbServer():
 
     def __init__(self, 
                  w, h, 
-                 colourmap = None,
                  name = b'rfb', 
                  handler = RfbSession,
                  addr = ('0.0.0.0', 5900), #mpy doesn't like b'' 
@@ -29,9 +28,6 @@ class RfbServer():
                 ):
         self.w = w
         self.h = h
-        if colourmap and len(colourmap) > 0xff:
-            raise ValueError('>255 colours in colourmap')
-        self.colourmap = colourmap
         # rfb session init fails with 0 length name
         if len(name) < 1:
             raise ValueError('name cannot be empty')
@@ -56,7 +52,6 @@ class RfbServer():
                 self.handler(
                     self.s.accept(),
                     self.w, self.h,
-                    self.colourmap,
                     self.name
                 )
             )
