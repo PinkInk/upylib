@@ -22,7 +22,6 @@ library path of your module or cpython distribution;
 
 In this directory;
 
-- **example.py** example built-out in rfb\README.md
 - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
 - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
 - **randomrre.py** demonstration/testing of RRERect's

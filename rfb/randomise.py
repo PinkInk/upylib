@@ -34,7 +34,14 @@ class Randomise(rfb.RfbSession):
             for x in range(rect.w):
                 for y in range(rect.h):
                     if random.getrandbits(1):
-                        rect.setpixel(x, y, (0,0,0))
+                        rect.setpixel(
+                            x, y, 
+                            (
+                                random.getrandbits(8),
+                                random.getrandbits(8),
+                                random.getrandbits(8)
+                            )
+                        )
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
 
 
