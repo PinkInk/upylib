@@ -54,11 +54,11 @@ class Bounce(rfb.RfbSession):
         self.large.subrectangles.append( self.small )
         self.rectangles.append( self.large )
 
-
     def update(self):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         self.small.update(self.small, self.large.w, self.large.h)
         self.large.update(self.large, w, h)
+
 
 svr = rfb.RfbServer(w, h, name=b'bounce', handler=Bounce)
 svr.serve()
