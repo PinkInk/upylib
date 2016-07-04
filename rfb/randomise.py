@@ -1,4 +1,5 @@
 import rfb
+
 try:
     import urandom as random
 except:

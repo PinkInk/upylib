@@ -1,4 +1,4 @@
-from rfb.utils import *
+from rfb.utils import bytes_to_int
 
 def dispatch_msgs(self, msg):
 
@@ -42,7 +42,7 @@ def dispatch_msgs(self, msg):
                 bytes_to_int( msg[ptr+4+i : ptr+8+i] )
                 for i in range(0, count*4, 4)
             ]
-            # session encodings are set by client post init
+            # session encodings are sent/set by client post init
             self.encodings = encodings
             if hasattr(self, 'ClientSetEncodings'):
                 self.ClientSetEncodings(encodings)

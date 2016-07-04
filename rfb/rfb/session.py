@@ -1,8 +1,11 @@
 try:
     from utime import sleep
-    from ustruct import pack
 except:
     from time import sleep
+
+try:
+    from ustruct import pack
+except:
     from struct import pack
 
 from rfb.clientmsgs import dispatch_msgs
@@ -24,7 +27,7 @@ class RfbSession():
         self.masks = (channel_mask, channel_mask, channel_mask)
         self.name = name
         self._security = 1 # None/No Security
-        self.encodings = []
+        self.encodings = [] # sent post init by client
 
         # HandShake
         self.send( b'RFB 003.003\n' )
@@ -33,6 +36,7 @@ class RfbSession():
 
         # Security
         self.send( pack('>L', self.security) )
+        # ignore instruction to disconnect other clients
         if self.recv(True)[0] not in (0,1):
             raise RfbSessionRejected('no security')
 

@@ -1,6 +1,8 @@
 import rfb
+
 # from rfb.fonts.mono4x6 import mono4x6 as font
 from rfb.fonts.mono6x8 import mono6x8 as font
+
 
 class TypeWriter(rfb.RfbSession):
 
@@ -53,7 +55,6 @@ class TypeWriter(rfb.RfbSession):
             if self.char.x >= self.w-font.w:
                 self.CarriageReturn()
                 self.char.x = -font.w
-
 
     def CarriageReturn(self):
         # scroll

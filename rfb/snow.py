@@ -1,9 +1,11 @@
 # TODO: debian/ubuntu default 'vncviewer' doesn't like rectangle encoding?
 import rfb
+
 try:
     from urandom import getrandbits
 except:
     from random import getrandbits
+
 
 class Snow(rfb.RfbSession):
 
@@ -16,7 +18,7 @@ class Snow(rfb.RfbSession):
         # update existing flakes
         for idx, flake in enumerate(self.snowflakes):
             if flake.y + flake.h + flake.vector >= 255:
-                # delete flakes that have landed on the ground
+                # delete flakes that have settled
                 del( self.snowflakes[idx] )
             else:
                 flake.y += flake.vector
