@@ -5,8 +5,8 @@ except:
     from time import sleep
     from struct import pack
 
-
 from rfb.clientmsgs import dispatch_msgs
+from rfb.servermsgs import ServerSetPixelFormat
 
 class RfbSession():
 
@@ -15,11 +15,13 @@ class RfbSession():
         self.conn, self.addr = conn
         self.w = w
         self.h = h
-        self._big = True
+        self.big = True
         self.bpp = 32
         self.depth = 24
         self.true = True
-        self.shift = (0,8,16)
+        self.shifts = (16,8,0)
+        channel_mask = 2**(self.depth//3)-1
+        self.masks = (channel_mask, channel_mask, channel_mask)
         self.name = name
         self._security = 1 # None/No Security
         self.encodings = []
@@ -35,19 +37,15 @@ class RfbSession():
             raise RfbSessionRejected('no security')
 
         # ServerInit
-        channel_mask = (2**(self.depth//3)-1 if self.true else 0) 
         self.send(
-            pack('>2H4B3H3B',
-                 w, h, 
-                 self.bpp, self.depth, self.big, self.true,
-                 channel_mask, channel_mask, channel_mask,
-                 self.shift[0], self.shift[1], self.shift[2]
-            ) + bytes(3) + pack('>L', len(name)) + name
+            pack('>2H', w, h) \
+            + ServerSetPixelFormat(
+                self.bpp, self.depth, self.big, self.true,
+                self.masks, self.shifts
+            ) \
+            + pack('>L', len(name)) \
+            + name
         )
-
-    @property
-    def big(self):
-        return self._big
     
     @property
     def security(self):

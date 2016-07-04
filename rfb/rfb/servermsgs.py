@@ -5,6 +5,13 @@ try:
 except:
     from struct import pack
 
+def ServerSetPixelFormat(bpp, depth, big, true, masks, shifts):
+    return pack('>4B3H3B',
+                 bpp, depth, big, true,
+                 masks[0], masks[0], masks[0],
+                 shifts[0], shifts[1], shifts[2]
+           ) + bytes(3) # pad to 16 bytes
+
 def ServerFrameBufferUpdate(rectangles):
     if rectangles: # empty list is False
         buffer = bytes()

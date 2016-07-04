@@ -8,6 +8,8 @@ def dispatch_msgs(self, msg):
 
         # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
         if msg[ptr] == 0:
+            # if ClientSetPixelFormat is received, post init
+            # over-rules ServerSetPixelFormat sent during init 
             if hasattr(self, 'ClientSetPixelFormat'):
                 self.ClientSetPixelFormat(
                     msg[ptr+4],
@@ -34,6 +36,7 @@ def dispatch_msgs(self, msg):
                 bytes_to_int( msg[ptr+4+i : ptr+8+i] )
                 for i in range(0, count*4, 4)
             ]
+            # session encodings are set by client post init
             self.encodings = encodings
             if hasattr(self, 'ClientSetEncodings'):
                 self.ClientSetEncodings(encodings)
