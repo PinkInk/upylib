@@ -9,7 +9,7 @@ def dispatch_msgs(self, msg):
         # ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)
         if msg[ptr] == 0:
             # if ClientSetPixelFormat is received, post init
-            # over-rules ServerSetPixelFormat sent during init
+            # over-rules ServerSetPixelFormat sent, during init
             self.bpp = msg[ptr+4]
             self.depth = msg[ptr+5]
             self.big = msg[ptr+6] == 1
@@ -88,7 +88,11 @@ def dispatch_msgs(self, msg):
                 )
             ptr += 6 + len
 
-        elif msg[ptr] > 6 and hasattr(self, 'ClientOtherMsg'):
-            # skip all messages
-            # ... no way to tell how long the msg is ... 
-            ptr = len(msg)
+        elif msg[ptr] > 6:
+            if hasattr(self, 'ClientOtherMsg'):
+                # ClientOtherMsg must return len of 1st msg
+                ptr += ClientOtherMsg(msg)
+            else:
+                # skip all messages
+                # ... no way to tell how long the msg is ... 
+                ptr = len(msg)
