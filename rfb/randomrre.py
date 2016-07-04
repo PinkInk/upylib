@@ -1,9 +1,9 @@
 import rfb
 
 try:
-    import urandom as random
+    from urandom import getrandbits
 except:
-    import random
+    from random import getrandbits
 
 class Randomise(rfb.RfbSession):
 
@@ -11,15 +11,15 @@ class Randomise(rfb.RfbSession):
         super().__init__(conn, w, h, name)
         self.rectangles = []
     
-        for i in range( random.getrandbits(8) ):
-            x, y = random.getrandbits(8), random.getrandbits(8)
-            w = h = random.getrandbits(5)
+        for i in range( getrandbits(8) ):
+            x, y = getrandbits(8), getrandbits(8)
+            w = h = getrandbits(5)
             x = x if x<self.w-w else x-w
             y = y if y<self.h-h else y-h
             bgcolour = (
-                random.getrandbits(8),
-                random.getrandbits(8),
-                random.getrandbits(8)
+                getrandbits(8),
+                getrandbits(8),
+                getrandbits(8)
             )
             self.rectangles.append(
                 rfb.RRERect(
@@ -34,9 +34,9 @@ class Randomise(rfb.RfbSession):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         for rect in self.rectangles:
             rect.bgcolour = (
-                random.getrandbits(8),
-                random.getrandbits(8),
-                random.getrandbits(8),
+                getrandbits(8),
+                getrandbits(8),
+                getrandbits(8),
             )
 
 

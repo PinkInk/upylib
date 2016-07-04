@@ -12,13 +12,15 @@ class Snow(rfb.RfbSession):
     
     def update(self):
 
+        # update existing flakes
         for idx, flake in enumerate(self.snowflakes):
             if flake.y + flake.h + flake.vector >= 255:
+                # delete flakes that have landed on the ground
                 del( self.snowflakes[idx] )
             else:
                 flake.y += flake.vector
 
-        # create new snowflakes
+        # create new flakes
         for i in range( getrandbits(5) ):
             x = getrandbits(8)
             size = getrandbits(2)
