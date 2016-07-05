@@ -3,11 +3,22 @@ try:
 except:
     from struct import pack
 
-from rfb.utils import colour_to_pixel
-
 RAWRECT = 0
 COPYRECT = 1
 RRERECT = 2
+
+
+def colour_to_pixel(colour, bpp, depth, big, true, masks, shifts):
+    if true:
+        v = 0
+        for channel, mask, shift in zip(colour, masks, shifts):
+            v += (channel & mask)<<shift
+        return pack(
+                    ('>' if big else '<') + \
+                    ('L' if bpp==32 else ('H' if bpp==16 else 'B')),
+                    v<<(bpp-depth) if big else v
+            )
+    # else: colourmap not implemented
 
 
 class BasicRectangle:
