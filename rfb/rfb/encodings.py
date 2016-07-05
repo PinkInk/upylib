@@ -8,19 +8,6 @@ COPYRECT = 1
 RRERECT = 2
 
 
-def colour_to_pixel(colour, bpp, depth, big, true, masks, shifts):
-    if true:
-        v = 0
-        for channel, mask, shift in zip(colour, masks, shifts):
-            v += (channel & mask)<<shift
-        return pack(
-                    ('>' if big else '<') + \
-                    ('L' if bpp==32 else ('H' if bpp==16 else 'B')),
-                    v<<(bpp-depth) if big else v
-            )
-    # else: colourmap not implemented
-
-
 class BasicRectangle:
 
     encoding = None
@@ -66,6 +53,19 @@ class CopyRect(BasicRectangle):
     def to_bytes(self):
         return super().to_bytes() \
                + pack('>2H', self.src_x, self.src_y) 
+
+
+def colour_to_pixel(colour, bpp, depth, big, true, masks, shifts):
+    if true:
+        v = 0
+        for channel, mask, shift in zip(colour, masks, shifts):
+            v += (channel & mask)<<shift
+        return pack(
+                    ('>' if big else '<') + \
+                    ('L' if bpp==32 else ('H' if bpp==16 else 'B')),
+                    v<<(bpp-depth) if big else v
+            )
+    # else: colourmap not implemented
 
 
 class ColourRectangle(BasicRectangle):
@@ -125,25 +125,25 @@ class RawRect(ColourRectangle):
         self.buffer = bytearray( (bpp//8)*w*h )
 
     def fill(self, colour):
-        stop = self.w*self.h*(self.bpp//8)
-        step = self.bpp//8
-        for i in range(0, stop, step):
-            self.buffer[i : i+step] = colour_to_pixel(
-                                                colour, 
-                                                self.bpp, self.depth, 
-                                                self.big, self.true, 
-                                                self.masks, self.shifts
-                                      )
+        bytespp = self.bpp//8
+        stop = self.w*self.h*bytespp
+        b = colour_to_pixel(colour, 
+                            self.bpp, self.depth, 
+                            self.big, self.true, 
+                            self.masks, self.shifts
+                           )
+        for i in range(0, stop, bytespp):
+            self.buffer[i : i+bytespp] = b 
 
     def setpixel(self, x, y, colour):
-        start = (y * self.w * (self.bpp//8)) + (x * (self.bpp//8))
-        step = self.bpp//8
-        self.buffer[start : start+step] = colour_to_pixel(
-                                                colour, 
-                                                self.bpp, self.depth, 
-                                                self.big, self.true, 
-                                                self.masks, self.shifts
-                                          )
+        bytespp = self.bpp//8
+        start = (y*self.w*bytespp) + (x * bytespp)
+        b = colour_to_pixel(colour, 
+                            self.bpp, self.depth, 
+                            self.big, self.true, 
+                            self.masks, self.shifts
+                           )
+        self.buffer[start : start+bytespp] = b
     
     def to_bytes(self):
         return super().to_bytes() \

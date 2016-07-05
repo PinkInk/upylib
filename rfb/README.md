@@ -31,7 +31,7 @@ In this directory;
 
 ###Known-Issues
 
-- true colours reversed i.e. (b,g,r) instead of (r,g,b)
+- ~~true colours reversed i.e. (b,g,r) instead of (r,g,b)~~ (resolved)
 - ~~indexed (colourmap) colour does not work~~ (resolved by removing support for it)
 
 ###TO-DO

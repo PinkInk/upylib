@@ -32,6 +32,8 @@ class TypeWriter(rfb.RfbSession):
                 for idx, bit in enumerate(bits):
                     colour = bytes((255,255,255) if int(bit) else (0,0,0))
                     start = idx*(self.bpp//8)
+                    # TODO: fix this to use setpixel ...
+                    # refer current documentation method
                     self.char.buffer[start : start+3] = colour 
                 self.rectangles.append( self.char )
                 self.char.x += font.w
