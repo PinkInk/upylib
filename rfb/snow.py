@@ -34,7 +34,9 @@ class Snow(rfb.RfbSession):
                     x, 0, 
                     size, size+vector,
                     (0,0,0),
-                    self.bpp, self.depth, self.true,
+                    self.bpp, self.depth, 
+                    self.big, self.true,
+                    self.masks, self.shifts
                 )
             )
             self.snowflakes[-1].vector = vector
@@ -43,7 +45,9 @@ class Snow(rfb.RfbSession):
                     0, vector,
                     size, size,
                     (255,255,255),
-                    self.bpp, self.depth, self.true,
+                    self.bpp, self.depth, 
+                    self.big, self.true,
+                    self.masks, self.shifts
                 )
             )
         

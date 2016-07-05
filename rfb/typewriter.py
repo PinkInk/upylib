@@ -13,7 +13,9 @@ class TypeWriter(rfb.RfbSession):
                         -font.w, # -ve font width, first char will increment   
                         self.h - font.h,
                         font.w, font.h,
-                        self.bpp, self.depth, self.true,
+                        self.bpp, self.depth, 
+                        self.big, self.true,
+                        self.masks, self.shifts
                     )
 
     def update(self):
@@ -46,7 +48,9 @@ class TypeWriter(rfb.RfbSession):
                         rfb.RawRect(
                                 self.char.x, self.h-font.h,
                                 font.w, font.h,
-                                self.bpp, self.depth, self.true,
+                                self.bpp, self.depth, 
+                                self.big, self.true,
+                                self.masks, self.shifts
                         )
                     )
                     self.rectangles[-1].fill((0,0,0))
@@ -70,7 +74,9 @@ class TypeWriter(rfb.RfbSession):
             rfb.RawRect(
                 0, self.h-font.h,
                 font.w, font.h,
-                self.bpp, self.depth, self.true,
+                self.bpp, self.depth, 
+                self.big, self.true,
+                self.masks, self.shifts
             ) 
         )
         self.rectangles[-1].fill((0,0,0))

@@ -3,6 +3,7 @@ try:
 except:
     from struct import pack
 
+# used only during init(?)
 def ServerSetPixelFormat(bpp, depth, big, true, masks, shifts):
     return pack('>4B3H3B',
                  bpp, depth, big, true,
@@ -13,7 +14,7 @@ def ServerSetPixelFormat(bpp, depth, big, true, masks, shifts):
 def ServerBell():
     return b'\x02'
 
-# generically: return None on empty args
+# generically: return None on empty args -->
 
 def ServerFrameBufferUpdate(rectangles):
     if rectangles: # empty list is False

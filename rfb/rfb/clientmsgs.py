@@ -33,6 +33,10 @@ def dispatch_msgs(self, msg):
                     self.masks,
                     self.shifts                    
                 )
+            # Colourmap (not currently implemented):
+            #   If this msg is recv'd from client svr colourmap sent during 
+            #   init is cleared, therefore svr must send again before sending
+            #   any framebuffer updates
             ptr += 20 # includes trailing padding
 
         # ClientSetEncodings(self, encodings)

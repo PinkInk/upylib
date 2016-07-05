@@ -26,7 +26,9 @@ class Randomise(rfb.RfbSession):
                     x, y,
                     w, h,
                     bgcolour,
-                    self.bpp, self.depth, self.true,
+                    self.bpp, self.depth, 
+                    self.big, self.true,
+                    self.masks, self.shifts
                 )
             )
 

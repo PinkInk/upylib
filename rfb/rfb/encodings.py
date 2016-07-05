@@ -3,6 +3,8 @@ try:
 except:
     from struct import pack
 
+from rfb.utils import colour_to_pixel
+
 RAWRECT = 0
 COPYRECT = 1
 RRERECT = 2
@@ -60,12 +62,17 @@ class ColourRectangle(BasicRectangle):
     def __init__(self, 
                  x, y, 
                  w, h, 
-                 bpp, depth, true, 
+                 bpp, depth, 
+                 big, true,
+                 masks, shifts 
                 ):
         super().__init__(x, y, w, h)
         self._bpp = bpp
         self._depth = depth
+        self._big = big
         self._true = true
+        self._masks = masks
+        self._shifts = shifts
 
     @property 
     def bpp(self): 
@@ -76,8 +83,20 @@ class ColourRectangle(BasicRectangle):
         return self._depth
 
     @property
+    def big(self):
+        return self._big    
+
+    @property
     def true(self): 
         return self._true
+    
+    @property
+    def masks(self):
+        return self._masks
+    
+    @property
+    def shifts(self):
+        return self._shifts
 
 
 class RawRect(ColourRectangle):
@@ -87,23 +106,33 @@ class RawRect(ColourRectangle):
     def __init__(self, 
                  x, y, 
                  w, h, 
-                 bpp, depth, true, 
+                 bpp, depth, 
+                 big, true,
+                 masks, shifts 
                 ):
-        super().__init__(x, y, w, h, bpp, depth, true)
+        super().__init__(x, y, w, h, bpp, depth, big, true, masks, shifts)
         self.buffer = bytearray( (bpp//8)*w*h )
 
     def fill(self, colour):
         stop = self.w*self.h*(self.bpp//8)
         step = self.bpp//8
         for i in range(0, stop, step):
-            # cpython can assign slice to raw tuple
-            self.buffer[i : i+(self.depth//8)] = bytes(colour)
+            self.buffer[i : i+step] = colour_to_pixel(
+                                                colour, 
+                                                self.bpp, self.depth, 
+                                                self.big, self.true, 
+                                                self.masks, self.shifts
+                                      )
 
     def setpixel(self, x, y, colour):
         start = (y * self.w * (self.bpp//8)) + (x * (self.bpp//8))
-        step = self.depth//8
-        # cpython can assign slice to raw tuple
-        self.buffer[start : start+step] = bytes(colour)
+        step = self.bpp//8
+        self.buffer[start : start+step] = colour_to_pixel(
+                                                colour, 
+                                                self.bpp, self.depth, 
+                                                self.big, self.true, 
+                                                self.masks, self.shifts
+                                          )
     
     def to_bytes(self):
         return super().to_bytes() \
@@ -116,14 +145,20 @@ class RRESubRect(ColourRectangle):
                  x, y,
                  w, h, 
                  colour,
-                 bpp, depth, true,
+                 bpp, depth, big, true,
+                 masks, shifts 
                 ):
-        super().__init__(x, y, w, h, bpp, depth, true)
+        super().__init__(x, y, w, h, bpp, depth, big, true, masks, shifts)
         self.colour = colour
 
     def to_bytes(self):
-        # non-standard encoding, don't call super()
-        return bytes(self.colour)+b'\x00' \
+        # non-standard encoding ... don't call super()
+        return colour_to_pixel(
+                    self.colour, 
+                    self.bpp, self.depth, 
+                    self.big, self.true, 
+                    self.masks, self.shifts
+               ) \
                + pack('>4H', 
                       self.x, self.y,
                       self.w, self.h
@@ -138,9 +173,11 @@ class RRERect(ColourRectangle):
                  x, y,
                  w, h,
                  bgcolour,
-                 bpp, depth, true, 
+                 bpp, depth, 
+                 big, true,
+                 masks, shifts 
                 ):
-        super().__init__(x, y, w, h, bpp, depth, true)
+        super().__init__(x, y, w, h, bpp, depth, big, true, masks, shifts)
         self.bgcolour = bgcolour
         self.subrectangles = []
 
@@ -150,5 +187,9 @@ class RRERect(ColourRectangle):
             b += rect.to_bytes()
         return super().to_bytes() \
                + pack('>L',len(self.subrectangles)) \
-               + bytes(self.bgcolour)+b'\x00' \
-               + b
+               + colour_to_pixel(
+                    self.bgcolour, 
+                    self.bpp, self.depth, 
+                    self.big, self.true, 
+                    self.masks, self.shifts
+               ) + b

@@ -50,6 +50,17 @@ class RfbSession():
             + pack('>L', len(name)) \
             + name
         )
+
+        # we *may* be sent encodings and pixel format
+        # we *must* process these messages before
+        # sending any rectangles, otherwise we don't
+        # know what encodings or pixel format client
+        # accepts
+        self.service_msg_queue()
+
+        # send colourmap (not currently supported)
+        # must be sent after receiving pixel format
+        # if sent earlier, reseet by client
     
     @property
     def security(self):

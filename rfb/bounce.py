@@ -27,7 +27,9 @@ class Bounce(rfb.RfbSession):
                 0, 0,
                 w, h,
                 (0,0,0),
-                self.bpp, self.depth, self.true,
+                self.bpp, self.depth, 
+                self.big, self.true,
+                self.masks, self.shifts
                 )
         ]
         
@@ -35,7 +37,9 @@ class Bounce(rfb.RfbSession):
                                  w//2-25, h//2-25,
                                  50, 50,
                                  (255, 255, 255),
-                                 self.bpp, self.depth, self.true,
+                                 self.bpp, self.depth, 
+                                 self.big, self.true,
+                                 self.masks, self.shifts
                                 )
         # vector must be mutable
         self.large.vector = [getrandbits(rvect), getrandbits(rvect)]
@@ -45,7 +49,9 @@ class Bounce(rfb.RfbSession):
                                     self.large.w//2, self.large.h//2,
                                     20, 20,
                                     (0,0,0),
-                                    self.bpp, self.depth, self.true,
+                                    self.bpp, self.depth, 
+                                    self.big, self.true,
+                                    self.masks, self.shifts
                                    )
         # vector must be mutable
         self.small.vector = [getrandbits(rvect), getrandbits(rvect)]
