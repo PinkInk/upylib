@@ -44,7 +44,8 @@ class RfbSession():
         self.send(
             pack('>2H', w, h) \
             + ServerSetPixelFormat(
-                self.bpp, self.depth, self.big, self.true,
+                self.bpp, self.depth, 
+                self.big, self.true,
                 self.masks, self.shifts
             ) \
             + pack('>L', len(name)) \
@@ -60,7 +61,7 @@ class RfbSession():
 
         # send colourmap (not currently supported)
         # must be sent after receiving pixel format
-        # if sent earlier, reseet by client
+        # any sent earlier ignorred by client
     
     @property
     def security(self):

@@ -3,7 +3,8 @@ try:
 except:
     from struct import pack
 
-# used only during init(?)
+
+# used only during session init
 def ServerSetPixelFormat(bpp, depth, big, true, masks, shifts):
     return pack('>4B3H3B',
                  bpp, depth, big, true,
@@ -11,10 +12,6 @@ def ServerSetPixelFormat(bpp, depth, big, true, masks, shifts):
                  shifts[0], shifts[1], shifts[2]
            ) + bytes(3) # pad to 16 bytes
 
-def ServerBell():
-    return b'\x02'
-
-# generically: return None on empty args -->
 
 def ServerFrameBufferUpdate(rectangles):
     if rectangles: # empty list is False
@@ -30,6 +27,21 @@ def ServerFrameBufferUpdate(rectangles):
         return b'\x00\x00' \
                 + pack('>H', len(rectangles)) \
                 + buffer
+
+
+# # colourmap not implemented
+# def ServerSetColourMapEntries(colourmap):
+#     b = b''
+#     for colour in colourmap:
+#         b += pack('>3H', colour[0], colour[1], colour[2])
+#     return v'\x01\x00' \
+#            + pack('>2H', 0, len(colourmap)) \
+#            + b
+
+
+def ServerBell():
+    return b'\x02'
+
 
 def ServerCutText(text):
     if text: # '' and b'' are False

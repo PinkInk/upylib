@@ -8,7 +8,7 @@ COPYRECT = 1
 RRERECT = 2
 
 
-class BasicRectangle:
+class BasicRectangleBaseClass:
 
     encoding = None
 
@@ -37,7 +37,7 @@ class BasicRectangle:
                )
 
 
-class CopyRect(BasicRectangle):
+class CopyRect(BasicRectangleBaseClass):
 
     encoding = COPYRECT
 
@@ -68,7 +68,7 @@ def colour_to_pixel(colour, bpp, depth, big, true, masks, shifts):
     # else: colourmap not implemented
 
 
-class ColourRectangle(BasicRectangle):
+class ColourRectangleBaseClass(BasicRectangleBaseClass):
 
     def __init__(self, 
                  x, y, 
@@ -110,7 +110,7 @@ class ColourRectangle(BasicRectangle):
         return self._shifts
 
 
-class RawRect(ColourRectangle):
+class RawRect(ColourRectangleBaseClass):
 
     encoding = RAWRECT
 
@@ -150,7 +150,7 @@ class RawRect(ColourRectangle):
                + self.buffer
 
 
-class RRESubRect(ColourRectangle):
+class RRESubRect(ColourRectangleBaseClass):
 
     def __init__(self,
                  x, y,
@@ -176,7 +176,7 @@ class RRESubRect(ColourRectangle):
                )
 
 
-class RRERect(ColourRectangle):
+class RRERect(ColourRectangleBaseClass):
 
     encoding = RRERECT
 
