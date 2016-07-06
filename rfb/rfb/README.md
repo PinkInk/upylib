@@ -252,65 +252,65 @@ RfbSession(
 
 **RfbSession.conn** and **RfbSession.addr**
 
-    Raw python socket connection and address.
+Raw python socket connection and address.
 
-    _Note: not expected to be used directly (refer send and recv methods) or overridden in user sub-class implementations._  
+_Note: not expected to be used directly (refer send and recv methods) or overridden in user sub-class implementations._  
 
 **RfbSession.w** 
 
-    RFB width (in pixels) property
+RFB width (in pixels) property
 
 **RfbSession.h**
 
-    RFB height (in pixels) property
+RFB height (in pixels) property
 
 **RfbSession.bpp**
 
-    Bits per pixel, may be either 8, 16 or 32 but is constrained by implementation to 32.
+Bits per pixel, may be either 8, 16 or 32 but is constrained by implementation to 32.
 
 **RfbSession.depth**
 
-    Number of significant (used) bits in Bits Per Pixel.
+Number of significant (used) bits in Bits Per Pixel.
 
-    Constrained by implementation 24 (as 3 x 8-bit colour channels for Red, Green, Blue).
+Constrained by implementation 24 (as 3 x 8-bit colour channels for Red, Green, Blue).
 
 **RfbSession.big**
 
-    Endianness of session.
+Endianness of session.
 
-    This is negotiated between server and client during session init.  
+This is negotiated between server and client during session init.  
 
 **RfbSession.true** == True
 
-    Session is true-colour? (alternative; indexed (colourmap) is not implemented).  
+Session is true-colour? (alternative; indexed (colourmap) is not implemented).  
 
 **RfbSession.masks**
 
-    3-tuple of bitmasks to extract each colour channel from a true-colour pixel.
+3-tuple of bitmasks to extract each colour channel from a true-colour pixel.
 
-    Constrained by implementation to (255, 255, 255) 
+Constrained by implementation to (255, 255, 255) 
 
 **RfbSession.shifts**
 
-    3-tuple of bit shift values to rotate each colour channel out of a pixel value.
+3-tuple of bit shift values to rotate each colour channel out of a pixel value.
 
-    Constrained by implementation to (16, 8, 0).
+Constrained by implementation to (16, 8, 0).
 
 **RfbSession.security** == 1 (read-only)
 
-    Session security type (1 == None i.e. No Security)
+Session security type (1 == None i.e. No Security)
 
 **RfbSessions.encodings**
 
-    If the client sends a list of rectangle encodings that it supports (it normally
-    will) this list will be populated with them.
+If the client sends a list of rectangle encodings that it supports (it normally
+will) this list will be populated with them.
 
-    This list can be checked for the constants `rfb.RAWRECT`, `rfb.COPYRECT` and `rfb.RRERECT`
-    (corresponding to the rectangle encodings `rfb.RawRect`, `rfb.CopyRect and `rfb.RRERect`)
-    in order to ensure that the Client supports any given encoding.
+This list can be checked for the constants `rfb.RAWRECT`, `rfb.COPYRECT` and `rfb.RRERECT`
+(corresponding to the rectangle encodings `rfb.RawRect`, `rfb.CopyRect and `rfb.RRERect`)
+in order to ensure that the Client supports any given encoding.
 
-    However; VNC/RFB Clients are **required** to implement all three encodings included
-    in this library, hence checking is superfluous (until proven otherwise).
+However; VNC/RFB Clients are **required** to implement all three encodings included
+in this library, hence checking is superfluous (until proven otherwise).
 
 **RfbSession.recv(blocking=False)**
 
@@ -324,5 +324,24 @@ _Note: not expected to be used directly, or over-ridden by user sub-class implem
 
 Send bytes to the RFB Client (a shortcut to RfbSession.conn.send()).
 
-Might be used directly to send data 
+**RfbSession.service_msg_queue()**
+
+Dispatch queue of messages from RFB Client to user-implemented handler methods;
+
+- ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)<BR/>
+  _CAlled when Client asks to set pixel format - nlikely to be overridden by user implementation, used during session init to signal client pixel properties_
+- ClientSetEncodings(self, encodings)<BR/>
+  _Called when Client asks to set encodings - Unlikely to be overridden by user implementation, used during session init to signal client supported encodings_
+- ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)<BR/>
+  _Called when the client requests a frame-buffer update, normally ignorred as updates can be sent whether a request is pending service or not_
+- ClientKeyEvent(self, down, key)<BR/>
+  _Called on RFB Client keyboard event, when client window has focus_
+- ClientPointerEvent(self, buttons, x, y)
+  _Called on RFB Client mouse event, when client window has focus_
+- ClientCutText(self, text)
+  _Called when text is pasted into the Client window_
+- ClientOtherMsg(self, msg)
+  _Called when the session receives a message it doesn't know how to handle - if implemented must return the length of the message encoding_
+
+
 
