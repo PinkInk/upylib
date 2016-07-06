@@ -328,19 +328,19 @@ Send bytes to the RFB Client (a shortcut to RfbSession.conn.send()).
 
 Dispatch queue of messages from RFB Client to user-implemented handler methods;
 
-- ClientSetPixelFormat(self, bpp, depth, big, true, masks, shifts)<BR/>
-  _CAlled when Client asks to set pixel format - nlikely to be overridden by user implementation, used during session init to signal client pixel properties_
-- ClientSetEncodings(self, encodings)<BR/>
+- **ClientSetPixelFormat**(self, bpp, depth, big, true, masks, shifts)<BR/>
+  _Called when Client asks to set pixel format - nlikely to be overridden by user implementation, used during session init to signal client pixel properties_
+- **ClientSetEncodings**(self, encodings)<BR/>
   _Called when Client asks to set encodings - Unlikely to be overridden by user implementation, used during session init to signal client supported encodings_
-- ClientFrameBufferUpdateRequest(self, incr, x, y, w, h)<BR/>
+- **ClientFrameBufferUpdateRequest**(self, incr, x, y, w, h)<BR/>
   _Called when the client requests a frame-buffer update, normally ignorred as updates can be sent whether a request is pending service or not_
-- ClientKeyEvent(self, down, key)<BR/>
+- **ClientKeyEvent**(self, down, key)<BR/>
   _Called on RFB Client keyboard event, when client window has focus_
-- ClientPointerEvent(self, buttons, x, y)
+- **ClientPointerEvent**(self, buttons, x, y)
   _Called on RFB Client mouse event, when client window has focus_
-- ClientCutText(self, text)
+- **ClientCutText**(self, text)
   _Called when text is pasted into the Client window_
-- ClientOtherMsg(self, msg)
+- **ClientOtherMsg**(self, msg)
   _Called when the session receives a message it doesn't know how to handle - if implemented must return the length of the message encoding_
 
 
