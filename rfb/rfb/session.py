@@ -18,13 +18,13 @@ class RfbSession():
         self.conn, self.addr = conn
         self.w = w
         self.h = h
-        self.big = True
         self.bpp = 32
         self.depth = 24
+        self.big = True
         self.true = True
-        self.shifts = (16,8,0)
         channel_mask = 2**(self.depth//3)-1
         self.masks = (channel_mask, channel_mask, channel_mask)
+        self.shifts = (16,8,0)
         self.name = name
         self._security = 1 # None/No Security
         self.encodings = [] # sent post init by client

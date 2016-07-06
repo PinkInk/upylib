@@ -11,7 +11,7 @@ unix port (and cpython);
 - [**urfb**](urfb)<BR/>
 'nano' implementation for esp8266 micropython port. 
 
-Refer README.md in each sub-directory for implementation specifics.
+Refer README.md in each sub-directory for useage example walk-through and implementation specifics.
 
 ###Installation
 
@@ -22,12 +22,13 @@ library path of your module or cpython distribution;
 
 In this directory;
 
-- **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
-- **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
-- **randomrre.py** demonstration/testing of RRERect's
-- **bounce.py** demonstration of RRERect/SubRect animation
-- **snow.py** demonstration of RRERec's
-- **tetris.py** W.I.P. RFB Tetris
+- rfb:
+    - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
+    - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
+    - **randomrre.py** demonstration/testing of RRERect's
+    - **bounce.py** demonstration of RRERect/SubRect animation
+    - **snow.py** demonstration of RRERec's
+    - **tetris.py** W.I.P. RFB Tetris
 
 ###Known-Issues
 
