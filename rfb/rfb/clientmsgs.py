@@ -1,3 +1,4 @@
+# TODO: consider using u/struct
 from rfb.utils import bytes_to_int
 
 def dispatch_msgs(self, msg):
