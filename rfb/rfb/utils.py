@@ -6,4 +6,3 @@ def bytes_to_int(b): #big-endian
         i <<= 8
         i += b8
     return i
-
