@@ -25,10 +25,12 @@ In this directory;
 |               |                                                                                     | target lib | cpython | mpy unix | mpy wipy | mpy esp8266 |
 |---------------|-------------------------------------------------------------------------------------|------------|---------|----------|----------|-------------|
 | typewriter.py | a simple typewriter, demonstrating/testing bitmap fonts, RawRect, CopyRect, RRERect | rfb        | yes     | yes      | yes      | no          |
-| randomise.py  | demonstration/testing of RawRect fill() and setpixel() methods                      | rfb        | yes     | yes      | yes      | no          |
-| randomrre.py  | demonstration/testing of RRERect's                                                  | rfb        | yes     | yes      | yes      | no          |
-| snow.py       | demonstration of RRERect/RRESubRect animation                                       | rfb        | yes     | yes      | mem      | no          |
+| randomise.py  | demonstration/testing of RawRect fill() and setpixel() methods                      | rfb        | yes     | yes      | yes*     | no          |
+| randomrre.py  | demonstration/testing of RRERect's                                                  | rfb        | yes     | yes      | yes*     | no          |
+| snow.py       | demonstration of RRERect/RRESubRect animation                                       | rfb        | yes     | yes      | mem*     | no          |
 | bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
+
+*demo's purposefully constrained to work within limited RAM available on WiPy
 
 ###Known-Issues
 
