@@ -1,14 +1,12 @@
-#Remote Framebuffer Protocol for [Micropython](www.micropython.org)
+#Remote Framebuffer Protocol for [MicroPython](www.micropython.org)
 
-_Unsecured_ micro [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) 
-(RFB) server implementations (the protocol used by VNC)
-for [Micropython](www.micropython.org) (and cpython).
+_Unsecured_ [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) (RFB) server implementations (the protocol used by VNC) for [MicroPython](www.micropython.org) (and [cpython](http://www.python.org)).
 
 - [**rfb**](rfb)<BR/>
-for micropython ports with networking and reasonable RAM reserves (tested on unix and WiPy), and cpython.
+for micropython ports with reasonable RAM reserves (tested on unix and WiPy), and cpython.
 
 - [**urfb**](urfb)<BR/>
-for esp8266 micropython port. 
+for the esp8266 micropython port. 
 
 ###Installation
 
@@ -23,9 +21,7 @@ Copy the directory (less README.md) to the library path of your module, or cpyth
 | randomrre.py  | demonstration/testing of RRERect's                                                  | rfb        | yes     | yes      | yes*     | no          |
 | snow.py       | demonstration of RRERect/RRESubRect animation                                       | rfb        | yes     | yes      | mem*     | no          |
 | bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
-! esp_bounce.py ! demo of urfb (still WIP) for esp8266 micropython port                               ! urfb       ! no      ! no       ! no       ! yes         !
-
-*demo's purposefully constrained to work within limited RAM available on WiPy
+| esp_bounce.py | demo of urfb (still WIP) for esp8266 micropython port                               | urfb       | no      | no       | no       | yes         |
 
 ###Known-Issues
 
