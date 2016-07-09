@@ -1,4 +1,4 @@
-#My Micropython experiments.
+#My MicroPython experiments.
 
 My MicroPython meanderings, this way lies madness.
 
