@@ -37,6 +37,10 @@ def tlv_v_to_int(b):
 class Asn1DerInt(Asn1DerBaseClass, int):
     typecode = typecode_for_type('Int')
 
+    def __init__(self, v=None):
+        if self < 0:
+            raise ValueError('-ve Asn1DerInt not supported')
+
     @staticmethod
     def from_bytes(b, t=typecode_for_type('Int')):
         check_typecode(b[0], t)
