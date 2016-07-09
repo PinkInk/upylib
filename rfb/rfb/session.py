@@ -71,8 +71,8 @@ class RfbSession():
         return self._security
 
     def recv(self, blocking=False):
-        sleep_ms(100) #init fails at peer without this delay???
         while blocking:
+            sleep_ms(100) #init fails at peer without this delay
             r = self.conn.recv(1024)
             if r is not None:
                 return r
