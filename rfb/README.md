@@ -33,6 +33,8 @@ Copy the directory (less README.md) to the library path of your module, or cpyth
 - complete documentation
 - testing on ~~WiPy &~~ Pyboard/cc3000
 - ~~implement nano version for esp8266 (/urfb)~~ (still being refined)
+- replace font.getbitmap_str with a generator function that returns booleans
+- re-implement indexed (colourmap) colour
 
 ### rfb/urfb features
 
@@ -69,7 +71,7 @@ It is recommended to;
 - conserve RAM in user RfbSession sub-classes
 - increase clock frequency to 160MHz (`machine.freq(160000000)`)
 
-###Example walk-through
+###Example use
 
 **Set up and serve a simple 'do nothing' RFB server bound to port 5900 (RFB Protocol default);**
 
@@ -153,11 +155,11 @@ svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
 svr.serve()
 ```
 
-Overridding RfbSession.update() is useful for animations, but can be freely
+Overridding `RfbSession.update()` is useful for animations, but can be freely
 mixed with sending server messages in response to events (client messages).
 
 Client messages can be responded to by attaching methods to the session
-class for example 'ClientPointerEvent(self, buttons, x, y)' will receive the state
+class for example `ClientPointerEvent(self, buttons, x, y)` will receive the state
 of buttons, and pointer co-ordinates, of the mouse whilst the RFB Client window
 is in focus.
 
