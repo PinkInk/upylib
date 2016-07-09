@@ -329,17 +329,19 @@ Send bytes to the RFB Client (shortcut to RfbSession.conn.send()).
 Dispatch queue of messages from RFB Client to optional user-implemented handler methods;
 
 - **ClientSetPixelFormat**(self, bpp, depth, big, true, masks, shifts)<BR/>
-  _Called when Client asks to set pixel format - nlikely to be overridden by user implementation, used during session init to signal client pixel properties_
-  ```python
-  rfb.RfbSession.ClientSetPixelFormat(self,
-        bpp, # bits-per-pixel (8, 16 or 32)
-        depth, # number of bits in bpp that actually contain colour data (i.e. 24 or RGB8)
-        big, # big-endian True/False
-        true, # true-colour True/False
-        masks, # bitmasks for each colour value in colour (i.e. (255,255,255) for RGB8)
-        shifts # bits to rotate pixel data in order to get each channel to LSB (i.e. (16,8,0) for RGB8) 
-  )
-  ```
+  _Called when Client asks to set pixel format, unlikely to be overridden by user implementation, used during session init to signal client pixel properties_
+
+```python
+rfb.RfbSession.ClientSetPixelFormat(self,
+    bpp, # bits-per-pixel (8, 16 or 32)
+    depth, # number of bits in bpp that actually contain colour data (i.e. 24 or RGB8)
+    big, # big-endian True/False
+    true, # true-colour True/False
+    masks, # bitmasks for each colour value in colour (i.e. (255,255,255) for RGB8)
+    shifts # bits to rotate pixel data in order to get each channel to LSB (i.e. (16,8,0) for RGB8) 
+)
+```
+
 - **ClientSetEncodings**(self, encodings)<BR/>
   _Called when Client asks to set encodings - Unlikely to be overridden by user implementation, used during session init to signal client supported encodings_
 - **ClientFrameBufferUpdateRequest**(self, incr, x, y, w, h)<BR/>
