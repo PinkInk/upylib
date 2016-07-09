@@ -30,7 +30,7 @@ Copy the directory (less README.md) to the library path of your module, or cpyth
 
 ###TO-DO
 
-- complete documentation
+- complete and cleanup documentation
 - testing on ~~WiPy &~~ Pyboard/cc3000
 - ~~implement nano version for esp8266 (/urfb)~~ (still being refined)
 - replace font.getbitmap_str with a generator function that returns booleans
@@ -71,7 +71,7 @@ It is recommended to;
 - conserve RAM in user RfbSession sub-classes
 - increase clock frequency to 160MHz (`machine.freq(160000000)`)
 
-###Example use
+###Usage
 
 **Set up and serve a simple 'do nothing' RFB server bound to port 5900 (RFB Protocol default);**
 
