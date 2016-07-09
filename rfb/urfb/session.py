@@ -1,6 +1,10 @@
 from utime import sleep_ms
+# from time import sleep
+# def sleep_ms(t):
+#     sleep(t/1000)
 from ustruct import pack
-from clientmsgs import *
+# from struct import pack
+from urfb.clientmsgs import *
 
 class RfbSession():
 
@@ -20,22 +24,24 @@ class RfbSession():
         self.send( b'RFB 003.003\n' )
         if self.recv(True) != b'RFB 003.003\n':
             raise Exception('RFB rejected version proposal')
-
+        
         # Security
-        self.send( b'\x00\x00\x00\x01' )
+        self.send( b'\x00\x00\x00\x01'  )
+
         # ignore instruction to disconnect other clients
         if self.recv(True)[0] not in (0,1):
+            print('2b')
             raise Exception('RFB rejected security none')
 
         # ServerInit
         self.send(
-            + pack('>2H4B3H3B',
+            pack('>2H4B3H3B',
                 w, h, 
                 self.bpp, self.depth, self.big, self.true,
-                masks[0], masks[0], masks[0],
-                shifts[0], shifts[1], shifts[2]
+                self.masks[0], self.masks[0], self.masks[0],
+                self.shifts[0], self.shifts[1], self.shifts[2]
             ) \
-            + bytes(3) \ 
+            + bytes(3) \
             + pack('>L', len(name)) \
             + name
         )
@@ -45,12 +51,12 @@ class RfbSession():
 
     def recv(self, blocking=False):
         while blocking:
-            sleep_ms(100)
+            sleep_ms(200)
             r = self.conn.recv(1024)
             if r is not None:
                 return r
         try:
-            sleep(1)
+            sleep_ms(35)
             return self.conn.recv(1024)
         except:
             pass
