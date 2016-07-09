@@ -1,7 +1,7 @@
 import usocket as socket
-# from rfb.session import *
-# from rfb.servermsgs import *
-# from rfb.encodings import *
+# import socket
+from urfb.session import *
+from urfb.encodings import *
 
 class RfbServer():
 
@@ -38,7 +38,7 @@ class RfbServer():
                     self.name
                 )
             )
-        except OSError
+        except OSError:
             pass
 
     def service(self):
