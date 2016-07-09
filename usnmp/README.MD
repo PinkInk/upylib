@@ -1,6 +1,6 @@
 #Simple Network Management Protocol v1 packet codec, for [Micropython](www.micropython.org)
 
-Codes and encodes SNMP v1 packets received from, or to send on, the network.
+Codes and decodes SNMP v1 packets received from, or to send on, the network.
 
 _Only_ SNMPv1 is supported.  SNMPv1 is not encrypted; data is sent
 to the network, including the internet if you so choose, 'in the clear'.
