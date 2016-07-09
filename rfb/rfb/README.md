@@ -419,4 +419,42 @@ Normally called by `ServerFrameBufferUpdate(rectangles)` for each member of `rec
 
 #### CopyRect class
 
-An efficient Encoding which instructs the client to copy pixels 
+An efficient Encoding which instructs the client to copy a rectangle existing pixels from one point in the remote framebuffer to another.
+
+```python
+rfb.CopyRect(
+    x, y, # x,y of top-left of target pixel rectangle
+    w, h, # w,h of rectangle
+    src_x, src_y, # x,y of source pixel rectangle 
+)
+``` 
+
+#### RRERect class, and RRESubRect class
+
+An efficient Encoding which instructs the client to paint an arbitary rectangle
+of coloured pixels, optionally overlaid with RRESubRect's of different colours.
+
+```python
+rfb.RRERect(
+    x, y, # x,y coordinates of top-left of rectangle, relative to framebuffer
+    w, h, # rectangle width, height
+    bgcolour, # rectangle colour (r,g,b) 
+    bpp, depth, # session bits-per-pixel and depth
+    big, true, # session endianess and true-colour flag values
+    masks, shifts # session masks and shifts 3-tuples 
+)
+```
+
+**RRERect.subrectangles** is a list of subrectangles of different colours which _must_ be
+of type `rfb.RRESubRect`
+
+```python
+rfb.RRESubRect(
+    x, y, # x,y coordinates of top-left of rectangle, relative to parent RRERect
+    w, h, # rectangle width, height (x+w and y+h must be less than width and height of parent RRERect) 
+    colour, # rectangle colour (r,g,b) 
+    bpp, depth, # session bits-per-pixel and depth
+    big, true, # session endianess and true-colour flag values
+    masks, shifts # session masks and shifts 3-tuples 
+)
+```
