@@ -1,26 +1,22 @@
 #Remote Framebuffer Protocol for [Micropython](www.micropython.org)
 
 _Unsecured_ micro [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) 
-(RFB) server implementations (the protocol use by VNC)
-for [Micropython](www.micropython.org) (and cpython), tested (to-date) only on micropython 
-unix port (and cpython);
+(RFB) server implementations (the protocol used by VNC)
+for [Micropython](www.micropython.org) (and cpython).
 
 - [**rfb**](rfb)<BR/>
-'micro' implementation for unix (hopefully WiPy) micropython ports, and cpython.
+for micropython ports with networking and reasonable RAM reserves (tested on unix and WiPy), and cpython.
 
 - [**urfb**](urfb)<BR/>
-'nano' implementation for esp8266 micropython port. 
+for esp8266 micropython port. 
 
-Refer README.md in each sub-directory for useage example walk-through and implementation specifics.
+Refer README.md in each sub-directory for useage example walk-through and library details.
 
 ###Installation
 
-Copy the desired micro (rfb) or nano (urfb) directory (less README.md) to the 
-library path of your module or cpython distribution;
+Copy the directory (less README.md) to the library path of your module, or cpython, distribution.
 
 ### Examples
-
-In this directory;
 
 |               |                                                                                     | target lib | cpython | mpy unix | mpy wipy | mpy esp8266 |
 |---------------|-------------------------------------------------------------------------------------|------------|---------|----------|----------|-------------|
@@ -29,6 +25,7 @@ In this directory;
 | randomrre.py  | demonstration/testing of RRERect's                                                  | rfb        | yes     | yes      | yes*     | no          |
 | snow.py       | demonstration of RRERect/RRESubRect animation                                       | rfb        | yes     | yes      | mem*     | no          |
 | bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
+! esp_bounce.py ! demo of urfb (still WIP) for esp8266 micropython port                               ! urfb       ! no      ! no       ! no       ! yes         !
 
 *demo's purposefully constrained to work within limited RAM available on WiPy
 
@@ -41,4 +38,4 @@ In this directory;
 
 - complete documentation
 - testing on ~~WiPy &~~ Pyboard/cc3000
-- implement nano version for esp8266 (/urfb)
+- ~~implement nano version for esp8266 (/urfb)~~ (still being refined)
