@@ -72,7 +72,7 @@ class RfbSession():
 
     def recv(self, blocking=False):
         while blocking:
-            #init fails at peer without this blocking delay
+            # init fails at peer without this blocking delay
             sleep_ms(100)
             r = self.conn.recv(1024)
             if r is not None:
