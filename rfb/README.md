@@ -22,13 +22,13 @@ library path of your module or cpython distribution;
 
 In this directory;
 
-- rfb:
-    - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
-    - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods<BR/>
-    - **randomrre.py** demonstration/testing of RRERect's<BR/>
-    - **bounce.py** demonstration of RRERect/SubRect animation
-    - **snow.py** demonstration of RRERec's
-    - **tetris.py** W.I.P. RFB Tetris
+|               |                                                                                     | target lib | cpython | mpy unix | mpy wipy | mpy esp8266 |
+|---------------|-------------------------------------------------------------------------------------|------------|---------|----------|----------|-------------|
+| typewriter.py | a simple typewriter, demonstrating/testing bitmap fonts, RawRect, CopyRect, RRERect | rfb        | yes     | yes      | yes      | no          |
+| randomise.py  | demonstration/testing of RawRect fill() and setpixel() methods                      | rfb        | yes     | yes      | yes      | no          |
+| randomrre.py  | demonstration/testing of RRERect's                                                  | rfb        | yes     | yes      | yes      | no          |
+| snow.py       | demonstration of RRERect/RRESubRect animation                                       | rfb        | yes     | yes      | mem      | no          |
+| bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
 
 ###Known-Issues
 

@@ -3,11 +3,12 @@ import rfb
 try:
     # wipy port
     from os import urandom
+    # consider machine.rng()?
     def rand():
         return urandom(1)[0] 
 except:
     try:
-        # unix port
+        # unix, esp8266 ports
         from urandom import getrandbits
         def rand():
             return getrandbits(8)
