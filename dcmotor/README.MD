@@ -3,7 +3,8 @@ Driver for a pyboard v1.1 pyskin dc motor driver utilising a TI 754410 quad h-br
 
 Has proved useful for driving multiple dc motor's, steppers and as a simple audio amplifier.
 
-(c) Tim Pelling 2016, released under MIT License.
+Long superceded, retained in-case I want to reawaken it at some point.
+
 ```
 Skin in Y position:
                      -----------------------
