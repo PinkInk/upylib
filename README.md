@@ -1,9 +1,6 @@
 #My Micropyhthon experiments.
 
-Largely expected to be incomplete, broken, or W.I.P. at any given point-in-time.
+My MicroPython meanderings, this way lies madness.
 
-That which works one day, may not the next.
-
-
-Regards, Tim
+Regards, Tim ;o)
 
