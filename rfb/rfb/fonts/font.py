@@ -1,4 +1,4 @@
-from rfb.utils import *
+from rfb.utils import bytes_to_int
 
 class Font:
     w = 0
