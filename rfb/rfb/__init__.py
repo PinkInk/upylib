@@ -24,7 +24,7 @@ class RfbServer():
                  name = b'rfb', 
                  handler = RfbSession,
                  addr = ('0.0.0.0', 5900), #mpy doesn't like b'' 
-                 backlog = 3,
+                 backlog = 3, # no. concurrent connections serviced
                 ):
         self.w = w
         self.h = h
