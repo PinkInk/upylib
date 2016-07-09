@@ -1,6 +1,6 @@
 from utime import sleep_ms
 from ustruct import pack
-from messages import *
+from clientmsgs import *
 
 class RfbSession():
 
@@ -66,3 +66,18 @@ class RfbSession():
         elif msg is not None:
             dispatch_msgs(self, msg)
         return True
+
+def ServerFrameBufferUpdate(rectangles):
+    if rectangles: # empty list is False
+        buffer = bytes()
+        for idx,rect in enumerate( rectangles ):
+            b = rect.to_bytes()
+            if b is None: # done with this rectangle
+                del( rectangles[idx] ) 
+            elif b is False:
+                pass # no update required
+            else:
+                buffer += b
+        return b'\x00\x00' \
+                + pack('>H', len(rectangles)) \
+                + buffer
