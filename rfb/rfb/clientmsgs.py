@@ -90,7 +90,7 @@ def dispatch_msgs(self, msg):
                 self.ClientCutText(
                     msg[ptr+6 : ptr+l]
                 )
-            ptr += 6 + len
+            ptr += 6 + l
 
         elif msg[ptr] > 6:
             if hasattr(self, 'ClientOtherMsg'):
