@@ -2,9 +2,21 @@
 import rfb
 
 try:
-    from urandom import getrandbits
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    from random import getrandbits
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
 
 
 class Snow(rfb.RfbSession):
@@ -24,9 +36,9 @@ class Snow(rfb.RfbSession):
                 flake.y += flake.vector
 
         # create new flakes
-        for i in range( getrandbits(5) ):
-            x = getrandbits(8)
-            size = getrandbits(2)
+        for i in range( rand()>>2 ):
+            x = rand()
+            size = rand()>>6
             x = x if x<self.w-size else x-size
             vector = 3-size
             self.snowflakes.append(

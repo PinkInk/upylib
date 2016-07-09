@@ -1,9 +1,21 @@
 import rfb
 
 try:
-    from urandom import getrandbits
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    from random import getrandbits
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
 
 class Randomise(rfb.RfbSession):
 
@@ -11,16 +23,13 @@ class Randomise(rfb.RfbSession):
         super().__init__(conn, w, h, name)
         self.rectangles = []
     
-        for i in range( getrandbits(8) ):
-            x, y = getrandbits(8), getrandbits(8)
-            w = h = getrandbits(5)
+        # constrained for wipy
+        for i in range( 30 ):
+            x, y = rand(), rand()
+            w = h = rand()>>2
             x = x if x<self.w-w else x-w
             y = y if y<self.h-h else y-h
-            bgcolour = (
-                getrandbits(8),
-                getrandbits(8),
-                getrandbits(8)
-            )
+            bgcolour = ( rand(), rand(), rand() )
             self.rectangles.append(
                 rfb.RRERect(
                     x, y,
@@ -35,11 +44,7 @@ class Randomise(rfb.RfbSession):
     def update(self):
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
         for rect in self.rectangles:
-            rect.bgcolour = (
-                getrandbits(8),
-                getrandbits(8),
-                getrandbits(8),
-            )
+            rect.bgcolour = ( rand(), rand(), rand() )
 
 
 svr = rfb.RfbServer(255, 255, name=b'random', handler=Randomise)

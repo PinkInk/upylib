@@ -322,14 +322,24 @@ _Note: not expected to be used directly, or over-ridden by user sub-class implem
 
 **RfbSession.send(bytes)**
 
-Send bytes to the RFB Client (a shortcut to RfbSession.conn.send()).
+Send bytes to the RFB Client (shortcut to RfbSession.conn.send()).
 
 **RfbSession.service_msg_queue()**
 
-Dispatch queue of messages from RFB Client to user-implemented handler methods;
+Dispatch queue of messages from RFB Client to optional user-implemented handler methods;
 
 - **ClientSetPixelFormat**(self, bpp, depth, big, true, masks, shifts)<BR/>
   _Called when Client asks to set pixel format - nlikely to be overridden by user implementation, used during session init to signal client pixel properties_
+  ```python
+  rfb.RfbSession.ClientSetPixelFormat(self,
+        bpp, # bits-per-pixel (8, 16 or 32)
+        depth, # number of bits in bpp that actually contain colour data (i.e. 24 or RGB8)
+        big, # big-endian True/False
+        true, # true-colour True/False
+        masks, # bitmasks for each colour value in colour (i.e. (255,255,255) for RGB8)
+        shifts # bits to rotate pixel data in order to get each channel to LSB (i.e. (16,8,0) for RGB8) 
+  )
+  ```
 - **ClientSetEncodings**(self, encodings)<BR/>
   _Called when Client asks to set encodings - Unlikely to be overridden by user implementation, used during session init to signal client supported encodings_
 - **ClientFrameBufferUpdateRequest**(self, incr, x, y, w, h)<BR/>
@@ -339,9 +349,72 @@ Dispatch queue of messages from RFB Client to user-implemented handler methods;
 - **ClientPointerEvent**(self, buttons, x, y)
   _Called on RFB Client mouse event, when client window has focus_
 - **ClientCutText**(self, text)
-  _Called when text is pasted into the Client window_
+  _Called when copy-buffer text is pasted into the Client window_
 - **ClientOtherMsg**(self, msg)
   _Called when the session receives a message it doesn't know how to handle - if implemented must return the length of the message encoding_
 
+### Server Messages
 
+Server messages take relevant arguments and return bytes representation encoded as
+required by the RFB Protocol, to be sent to the VNC/RFB Client by **RfbSession.send()**.
 
+**ServerSetPixelFormat(bpp, depth, big, true, masks, shifts)**
+
+Only used during session init, to communicate servers preference for pixel fomat,
+often overruled by corresponding ClientSetPixelFormat message from client.
+
+**ServerFrameBufferUpdate(rectangles)**
+
+Return the members of list **rectangles** encoded as bytes, each member of the list
+must be an instance of one of the classes described under **Encodings** hereunder.
+
+**ServerBell()**
+
+Return message bytes required to cause client to ring bell/beep.
+
+**ServerCutText(text)**
+
+Send text to the VNC/RFB Clients copy buffer.
+
+### Encodings
+
+The RFB protocol allows for sending arbitary rectangles of updated pixels to the 
+Remote Framebuffer, with a number of differenet encodings with different purposes.
+
+Only a small subset of simple/efficient Encoding specified in the RFB Protocol are implemented.
+
+#### RawRect class
+
+A rectangle of specific pixel colours, each of which can be individually set or flood filled, before sending to the VNC/RFB Client.
+
+_Note: this class maintains, and sends on the wire, a mutable buffer of pixel values, and is therefore expensive in terms of memory consumption and network bandwiddth.  For e.g. a RawRect of width/height 20/20 consumes 1.5Kb Ram._
+
+_Therefore RawRect should be used sparingly and only as an option of last resort when one of the other encodings won't suffice._
+
+```python
+rfb.RawRect(
+    x, y, # x,y co-ordinates, in pixels, of the top-left corner of the rectangle, in relation to the clients framebuffer
+    w, h, # width and height of the rectangle, in pixels
+    bpp, depth, # session bits-per-pixel and depth
+    big, true, # session endianess and true-colour flag values
+    masks, shifts # session masks and shifts 3-tuples 
+)
+```
+
+**RawRect.fill(colour)**
+
+Fill the rectangle with pixels of colour (r,g,b).
+
+**RawRect.setpixel(x, y, colour)**
+
+Set pixel at x,y co-ordinate to colour (r,g,b).
+
+**RawRect.to_bytes()**
+
+Return bytes encoding of the rectangle.  
+
+Normally called by `ServerFrameBufferUpdate(rectangles)` for each member of `rectangles` list.
+
+#### CopyRect class
+
+An efficient Encoding which instructs the client to copy pixels 

@@ -1,9 +1,22 @@
 import rfb
 
 try:
-    import urandom as random
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    import random
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
+
 
 class Randomise(rfb.RfbSession):
 
@@ -11,9 +24,9 @@ class Randomise(rfb.RfbSession):
         super().__init__(conn, w, h, name)
         self.rectangles = []
 
-        # can use up to 7.6k ...
-        for i in range( random.getrandbits(8) ):
-            x, y = random.getrandbits(8), random.getrandbits(8)
+        # constrained for wipy
+        for i in range( 10 ):
+            x, y = rand(), rand()
             x = x if x<self.w-10 else x-10
             y = y if y<self.h-10 else y-10
             w = h = 10
@@ -30,20 +43,16 @@ class Randomise(rfb.RfbSession):
     def update(self):
         for rect in self.rectangles:
             rect.fill((
-                random.getrandbits(8),
-                random.getrandbits(8),
-                random.getrandbits(8),
+                rand(),
+                rand(),
+                rand(),
             ))
             for x in range(rect.w):
                 for y in range(rect.h):
-                    if random.getrandbits(1):
+                    if rand()>>7:
                         rect.setpixel(
                             x, y, 
-                            (
-                                random.getrandbits(8),
-                                random.getrandbits(8),
-                                random.getrandbits(8)
-                            )
+                            (rand(), rand(), rand())
                         )
         self.send( rfb.ServerFrameBufferUpdate( self.rectangles ) )
 

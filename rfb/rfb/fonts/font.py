@@ -6,7 +6,12 @@ class Font:
     bitmaps = b''
 
     def count(self):
-        return int(len(self.bitmaps) // ((self.w*self.h)/8))
+        # required by WiPy, which doesn't support floats, but
+        # will return erroneous result on fonts whose bitmap
+        # is not a multiple of 8 bits
+        # TODO: fix ... 
+        # return int(len(self.bitmaps) // ((self.w*self.h)/8))
+        return int(len(self.bitmaps) // ((self.w*self.h)//8))
 
     def getbitmap_bytes(self, c):
         c -= 32 # start at ascii 32(' ')

@@ -1,7 +1,10 @@
 try:
-    from utime import sleep
+    # micropython
+    from utime import sleep_ms
 except:
     from time import sleep
+    def sleep_ms(t):
+        sleep(t//1000)
 
 try:
     from ustruct import pack
@@ -68,7 +71,7 @@ class RfbSession():
         return self._security
 
     def recv(self, blocking=False):
-        sleep(0.1) #init fails at peer without this delay???
+        sleep_ms(100) #init fails at peer without this delay???
         while blocking:
             r = self.conn.recv(1024)
             if r is not None:

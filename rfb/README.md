@@ -24,8 +24,8 @@ In this directory;
 
 - rfb:
     - **typewriter.py** a simple typewriter, demonstrating/testing bitmap fonts
-    - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods
-    - **randomrre.py** demonstration/testing of RRERect's
+    - **randomise.py** demonstration/testing of RawRect fill() and setpixel() methods<BR/>
+    - **randomrre.py** demonstration/testing of RRERect's<BR/>
     - **bounce.py** demonstration of RRERect/SubRect animation
     - **snow.py** demonstration of RRERec's
     - **tetris.py** W.I.P. RFB Tetris
@@ -38,5 +38,5 @@ In this directory;
 ###TO-DO
 
 - complete documentation
-- testing on WiPy & Pyboard/cc3000
+- testing on ~~WiPy &~~ Pyboard/cc3000
 - implement nano version for esp8266 (/urfb)

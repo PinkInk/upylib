@@ -1,9 +1,21 @@
 import rfb
 
 try:
-    from urandom import getrandbits
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    from random import getrandbits
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
 
 w, h, = 255, 255
 rvect = 4
@@ -42,7 +54,7 @@ class Bounce(rfb.RfbSession):
                                  self.masks, self.shifts
                                 )
         # vector must be mutable
-        self.large.vector = [getrandbits(rvect), getrandbits(rvect)]
+        self.large.vector = [rand()//60, rand()//60]
         self.large.update = update
 
         self.small = rfb.RRESubRect( # inner square
@@ -54,7 +66,7 @@ class Bounce(rfb.RfbSession):
                                     self.masks, self.shifts
                                    )
         # vector must be mutable
-        self.small.vector = [getrandbits(rvect), getrandbits(rvect)]
+        self.small.vector = [rand()//60, rand()//60]
         self.small.update = update
 
         self.large.subrectangles.append( self.small )
