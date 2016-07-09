@@ -1,21 +1,7 @@
-try:
-    import usocket as socket
-except:
-    import socket
-from rfb.session import *
-from rfb.servermsgs import *
-from rfb.encodings import *
-
-try: # mpy/cpython compat in main loop
-    BlockingIOError
-except:
-    class BlockingIOError(Exception):
-        pass
-    class ConnectionAbortedError(Exception):
-        pass
-    class ConnectionResetError(Exception):
-        pass
-
+import usocket as socket
+# from rfb.session import *
+# from rfb.servermsgs import *
+# from rfb.encodings import *
 
 class RfbServer():
 
@@ -23,20 +9,17 @@ class RfbServer():
                  w, h, 
                  name = b'rfb', 
                  handler = RfbSession,
-                 addr = ('0.0.0.0', 5900), #mpy doesn't like b'' 
+                 addr = ('0.0.0.0', 5900),
                  backlog = 3,
                 ):
         self.w = w
         self.h = h
-        # rfb session init fails with 0 length name
-        if len(name) < 1:
-            raise ValueError('name cannot be empty')
-        self.name = name if type(name) is bytes else bytes(name,'utf-8')
+        self.name = name
         self.handler = handler
         self.sessions = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.setblocking(False) # unix mpy has no .settimeout(0)?
-        self.s.bind( socket.getaddrinfo(addr[0],addr[1])[0][-1] ) # req'd by mpy
+        self.s.setblocking(False)
+        self.s.bind( socket.getaddrinfo(addr[0],addr[1])[0][-1] )
         self.s.listen(backlog)
 
     def serve(self):
@@ -55,7 +38,7 @@ class RfbServer():
                     self.name
                 )
             )
-        except (OSError, BlockingIOError): # mpy, cpython 
+        except OSError
             pass
 
     def service(self):
@@ -70,5 +53,5 @@ class RfbServer():
                 except AttributeError:
                     pass
                 # session teardown
-                except (OSError, ConnectionAbortedError, ConnectionResetError):
+                except OSError:
                     del( self.sessions[idx] )

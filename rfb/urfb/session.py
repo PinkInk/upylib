@@ -1,18 +1,7 @@
-try:
-    # micropython
-    from utime import sleep_ms
-except:
-    from time import sleep
-    def sleep_ms(t):
-        sleep(t/1000)
-
-try:
-    from ustruct import pack
-except:
-    from struct import pack
-
-from rfb.clientmsgs import dispatch_msgs
-from rfb.servermsgs import ServerSetPixelFormat
+from utime import sleep_ms
+from ustruct import pack
+# from rfb.clientmsgs import dispatch_msgs
+# from rfb.servermsgs import ServerSetPixelFormat
 
 class RfbSession():
 
@@ -29,19 +18,19 @@ class RfbSession():
         self.masks = (channel_mask, channel_mask, channel_mask)
         self.shifts = (16,8,0)
         self.name = name
-        self._security = 1 # None/No Security
+        self.security = 1 # None/No Security
         self.encodings = [] # sent post init by client
 
         # HandShake
         self.send( b'RFB 003.003\n' )
         if self.recv(True) != b'RFB 003.003\n':
-            raise RfbSessionRejected('version proposal')
+            raise Exception('RFB rejected version proposal')
 
         # Security
         self.send( pack('>L', self.security) )
         # ignore instruction to disconnect other clients
         if self.recv(True)[0] not in (0,1):
-            raise RfbSessionRejected('no security')
+            raise Exception('RFB rejected no security')
 
         # ServerInit
         self.send(
@@ -56,19 +45,7 @@ class RfbSession():
         )
 
         # we *may* be sent encodings and pixel format
-        # we *must* process these messages before
-        # sending any rectangles, otherwise we don't
-        # know what encodings or pixel format client
-        # accepts
         self.service_msg_queue()
-
-        # send colourmap (not currently supported)
-        # must be sent after receiving pixel format
-        # any sent earlier ignorred by client
-    
-    @property
-    def security(self):
-        return self._security
 
     def recv(self, blocking=False):
         sleep_ms(100) #init fails at peer without this delay???
