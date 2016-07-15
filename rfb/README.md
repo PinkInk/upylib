@@ -74,10 +74,10 @@ a 255x255 pixel main window with title 'hello world'.
 _Note: the RFB protocol does not specify a default colour for pixels in the client buffer, initial state (normally white or black) can vary between RFB Client implementations, and cannot be assumed._
 
 **Custom servers are implemented by providing custom session handler 
-classes but sub-classing `rfb.RfbSession`.**
+classes by sub-classing `rfb.RfbSession`.**
 
 Each time the main server loop cycles `RfbSession.update()` is called and
-can be used to send rectangles of pixels encoded in various schemes to the
+can be used to send rectangles of pixels, encoded in various schemes, to the
 client.
 
 **Sub-class `RfbSession` and over-ride `RfbSession.update()` to send a random colour rectangle on each cycle**
@@ -205,9 +205,21 @@ which returns a string of 1's and 0's that can be rendered into a `RawRect`.
 import rfb
 from rfb.fonts.mono6x8 import mono6x8 as font
 try:
-    from urandom import getrandbits
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    from random import getrandbits
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
 
 class AlphabetSoup(rfb.RfbSession):
 
@@ -224,9 +236,9 @@ class AlphabetSoup(rfb.RfbSession):
 
     def update(self):
 
-        char = getrandbits(7)
-        self.rectangle.x = getrandbits(8)//font.w*font.w
-        self.rectangle.y = getrandbits(8)//font.h*font.h
+        char = rand()>>1
+        self.rectangle.x = rand()//font.w*font.w
+        self.rectangle.y = rand()//font.h*font.h
 
         # just skip this update if character isn't implemented
         # or x/y less font width/height outside buffer
