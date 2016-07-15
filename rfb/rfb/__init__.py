@@ -72,3 +72,4 @@ class RfbServer():
                 # session teardown
                 except (OSError, ConnectionAbortedError, ConnectionResetError):
                     del( self.sessions[idx] )
+

@@ -103,3 +103,4 @@ class RfbSession():
 
 class RfbSessionRejected(Exception):
     pass
+

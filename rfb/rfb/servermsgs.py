@@ -48,3 +48,4 @@ def ServerCutText(text):
         return b'\x03\x00' \
             + len(text) \
             + bytes(text, 'utf-8')
+

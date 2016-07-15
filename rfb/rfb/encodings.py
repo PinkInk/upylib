@@ -204,3 +204,4 @@ class RRERect(ColourRectangleBaseClass):
                     self.big, self.true, 
                     self.masks, self.shifts
                ) + b
+
