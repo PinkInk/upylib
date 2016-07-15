@@ -1,4 +1,4 @@
-#Remote Framebuffer Protocol for [MicroPython](www.micropython.org)
+#VNC's Remote Framebuffer Protocol for [MicroPython](www.micropython.org)
 
 _Unsecured_ [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) (RFB) server implementations (the protocol used by VNC) for [MicroPython](www.micropython.org) (and [cpython](http://www.python.org)).
 
@@ -8,7 +8,7 @@ for micropython ports with reasonable RAM reserves (tested on unix and WiPy), an
 - [**urfb**](urfb)<BR/>
 for the esp8266 micropython port. 
 
-Copy the directory to the library path of your module, or cpython, distribution.
+Copy required directory to the library path of your module, or cpython, distribution.
 
 ### Test and demo scripts
 
@@ -21,24 +21,12 @@ Copy the directory to the library path of your module, or cpython, distribution.
 | bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
 | esp_bounce.py | demo of urfb (still WIP) for esp8266 micropython port                               | urfb       | no      | no       | no       | yes         |
 
-###Known-Issues
-
-- ~~true colours reversed i.e. (b,g,r) instead of (r,g,b)~~ (resolved)
-- ~~indexed (colourmap) colour does not work~~ (resolved by removing support for it)
-
-###TO-DO
-
-- complete and cleanup documentation
-- testing on ~~WiPy &~~ Pyboard/cc3000
-- ~~implement nano version for esp8266 (/urfb)~~ (still being refined)
-- replace font.getbitmap_str with a generator function that returns booleans
-
-### rfb/urfb features
+### Features
 
 **rfb** supports;
 
 - multiple concurrent RFB Client sessions on micropython and cpython
-- **true** (RGB8) ~~and indexed~~ colour
+- **true** colour
 - sending messages ('encodings') to the RFB Client;
     - **FrameBufferUpdate**_s_
         - **RawRect**_angle_ of pixels
@@ -64,7 +52,7 @@ _i.e. it does not support sending buffer text, bell rings, RawRect's, CopyRect's
 
 It is recommended to;
 
-- compile the module into firmware
+- compile the module into firmware as a frozen-module
 - conserve RAM in user RfbSession sub-classes
 - increase clock frequency to 160MHz (`machine.freq(160000000)`)
 
@@ -85,23 +73,14 @@ a 255x255 pixel main window with title 'hello world'.
 
 _Note: the RFB protocol does not specify a default colour for pixels in the client buffer, initial state (normally white or black) can vary between RFB Client implementations, and cannot be assumed._
 
-**Start building a custom session handler** which doesn't (yet) do any more than the above example;
-
-```python
-import rfb
-
-class my_session(rfb.RfbSession):
-    pass
-
-svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
-svr.serve()
-```
+**Custom servers are implemented by providing custom session handler 
+classes but sub-classing `rfb.RfbSession`.**
 
 Each time the main server loop cycles `RfbSession.update()` is called and
 can be used to send rectangles of pixels encoded in various schemes to the
 client.
 
-**Over-ride `RfbSession.update()` and send a random rectangle on each cycle**
+**Sub-class `RfbSession` and over-ride `RfbSession.update()` to send a random colour rectangle on each cycle**
 using RRERect encoding (an efficient encoding that tells the client to display
 a rectangle of a single colour, without sending every pixel).;
 
