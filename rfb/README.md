@@ -21,6 +21,9 @@ Copy required directory to the library path of your module, or cpython, distribu
 | bounce.py     | demonstration of RRERect/SubRect animation                                          | rfb        | yes     | yes      | yes      | no          |
 | esp_bounce.py | demo of urfb (still WIP) for esp8266 micropython port                               | urfb       | no      | no       | no       | yes         |
 
+Note: these scripts (excepting esp_bounce.py) have generally been tuned to work on and test the WiPy, on cpython or micropython on platforms with 
+greater ram reserves, run parameters can be increased.  Also; WiPy random number generation, used by many of the scripts, is not very random. 
+
 ### Features
 
 **rfb** supports;
