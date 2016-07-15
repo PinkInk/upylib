@@ -1,5 +1,5 @@
 # from ustruct import pack
-from struct import pack
+from ustruct import pack
 
 RRERECT = 2
 
