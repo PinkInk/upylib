@@ -1,4 +1,4 @@
-#VNC's Remote Framebuffer Protocol for [MicroPython](www.micropython.org)
+#VNC's Remote Framebuffer Protocol for [MicroPython](http://www.micropython.org)
 
 _Unsecured_ [Remote Framebuffer Protocol](https://github.com/rfbproto/rfbproto/blob/master/rfbproto.rst) (RFB) server implementations (the protocol used by VNC) for [MicroPython](www.micropython.org) (and [cpython](http://www.python.org)).
 
