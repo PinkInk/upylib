@@ -8,11 +8,9 @@ for micropython ports with reasonable RAM reserves (tested on unix and WiPy), an
 - [**urfb**](urfb)<BR/>
 for the esp8266 micropython port. 
 
-###Installation
+Copy the directory to the library path of your module, or cpython, distribution.
 
-Copy the directory (less README.md) to the library path of your module, or cpython, distribution.
-
-### Examples
+### Test and demo scripts
 
 |               |                                                                                     | target lib | cpython | mpy unix | mpy wipy | mpy esp8266 |
 |---------------|-------------------------------------------------------------------------------------|------------|---------|----------|----------|-------------|
@@ -34,7 +32,6 @@ Copy the directory (less README.md) to the library path of your module, or cpyth
 - testing on ~~WiPy &~~ Pyboard/cc3000
 - ~~implement nano version for esp8266 (/urfb)~~ (still being refined)
 - replace font.getbitmap_str with a generator function that returns booleans
-- re-implement indexed (colourmap) colour
 
 ### rfb/urfb features
 
@@ -71,7 +68,9 @@ It is recommended to;
 - conserve RAM in user RfbSession sub-classes
 - increase clock frequency to 160MHz (`machine.freq(160000000)`)
 
-###Usage
+Refer `esp_bounce.py` as an example.
+
+###Examples
 
 **Set up and serve a simple 'do nothing' RFB server bound to port 5900 (RFB Protocol default);**
 
@@ -108,11 +107,25 @@ a rectangle of a single colour, without sending every pixel).;
 
 ```python
 import rfb
-# import the getrandbits for micropython or cpython
+
+# deal with different options for random numbers available 
+# across python and various micropython ports 
 try:
-    from urandom import getrandbits
+    # wipy port
+    from os import urandom
+    def rand():
+        return urandom(1)[0] 
 except:
-    from random import getrandbits
+    try:
+        # unix port
+        from urandom import getrandbits
+        def rand():
+            return getrandbits(8)
+    except:
+        # cpython
+        from random import getrandbits
+        def rand():
+            return getrandbits(8)
 
 class my_session(rfb.RfbSession):
 
@@ -123,14 +136,14 @@ class my_session(rfb.RfbSession):
     
     def update(self):
         # choose random dimensions;
-        x,y = getrandbits(8), getrandbits(8)
-        w = h = getrandbits(5)
+        x,y = rand(), rand()
+        w = h = rand()>>3
         # co-erce x,y to ensure rectangle doesn't overflow
         # framebuffer size (client will error out if it does)
         x = x if x<self.w-w else x-w
         y = y if y<self.h-h else y-h
         # choose random colour;
-        bgcolour = (getrandbits(8), getrandbits(8), getrandbits(8))
+        bgcolour = (rand(), rand(), rand())
         self.rectangles.append(
             rfb.RRERect(
                 x, y, 
@@ -155,7 +168,7 @@ svr = rfb.RfbServer(255, 255, handler=my_session, name=b'custom')
 svr.serve()
 ```
 
-Overridding `RfbSession.update()` is useful for animations, but can be freely
+Overridding `RfbSession.update()` is useful for updates that occur in a loop, but can be freely
 mixed with sending server messages in response to events (client messages).
 
 Client messages can be responded to by attaching methods to the session
@@ -291,7 +304,7 @@ accept and setup new sessions and service existing ones.
 therefore **accept()** and **service()** are exposed in order that they can be called
 at user discretion within a custom main loop.
 
-### RfbServer class
+### RfbSession class
 
 Initialisation of `RfbSession` objects is normally handled by `RfbServer`.
 
@@ -335,7 +348,7 @@ This is negotiated between server and client during session init.
 
 **RfbSession.true** == True
 
-Session is true-colour? (alternative; indexed (colourmap) is not implemented).  
+Session is true-colour?  
 
 **RfbSession.masks**
 
@@ -359,8 +372,8 @@ If the client sends a list of rectangle encodings that it supports (it normally
 will) this list will be populated with them.
 
 This list can be checked for the constants `rfb.RAWRECT`, `rfb.COPYRECT` and `rfb.RRERECT`
-(corresponding to the rectangle encodings `rfb.RawRect`, `rfb.CopyRect and `rfb.RRERect`)
-in order to ensure that the Client supports any given encoding.
+(corresponding to the rectangle encodings `rfb.RawRect`, `rfb.CopyRect` and `rfb.RRERect`)
+in order to check that the Client supports any given encoding.
 
 However; VNC/RFB Clients are **required** to implement all three encodings included
 in this library, hence checking is superfluous (until proven otherwise).
@@ -382,7 +395,7 @@ Send bytes to the RFB Client (shortcut to RfbSession.conn.send()).
 Dispatch queue of messages from RFB Client to optional user-implemented handler methods;
 
 - **ClientSetPixelFormat**(self, bpp, depth, big, true, masks, shifts)<BR/>
-  _Called when Client asks to set pixel format, unlikely to be overridden by user implementation, used during session init to signal client pixel properties_
+  _Called when Client asks to set pixel format, unlikely to be overridden by user implementation, used during session init to signal client pixel properties._
 
 ```python
 rfb.RfbSession.ClientSetPixelFormat(self,
@@ -396,21 +409,22 @@ rfb.RfbSession.ClientSetPixelFormat(self,
 ```
 
 - **ClientSetEncodings**(self, encodings)<BR/>
-  _Called when Client asks to set encodings - Unlikely to be overridden by user implementation, used during session init to signal client supported encodings_
+  _Called when Client asks to set encodings._<BR/>
+  _Unlikely to be overridden by user implementation, used during session init to signal client supported encodings._
 - **ClientFrameBufferUpdateRequest**(self, incr, x, y, w, h)<BR/>
-  _Called when the client requests a frame-buffer update, normally ignorred as updates can be sent whether a request is pending service or not_
+  _Called when the client requests a frame-buffer update, normally ignorred as updates can be sent whether a request is pending service or not._
 - **ClientKeyEvent**(self, down, key)<BR/>
-  _Called on RFB Client keyboard event, when client window has focus_
+  _Called on RFB Client keyboard event, when client window has focus._
 - **ClientPointerEvent**(self, buttons, x, y)
-  _Called on RFB Client mouse event, when client window has focus_
+  _Called on RFB Client mouse event, when client window has focus._
 - **ClientCutText**(self, text)
-  _Called when copy-buffer text is pasted into the Client window_
+  _Called when copy-buffer text is pasted into the Client window._
 - **ClientOtherMsg**(self, msg)
-  _Called when the session receives a message it doesn't know how to handle - if implemented must return the length of the message encoding_
+  _Called when the session receives a message it doesn't know how to handle - if implemented must return the length of the message encoding._
 
 ### Server Messages
 
-Server messages take relevant arguments and return bytes representation encoded as
+Server messages return bytes encoded as
 required by the RFB Protocol, to be sent to the VNC/RFB Client by **RfbSession.send()**.
 
 **ServerSetPixelFormat(bpp, depth, big, true, masks, shifts)**
@@ -433,12 +447,12 @@ Send text to the VNC/RFB Clients copy buffer.
 
 ### Encodings
 
-The RFB protocol allows for sending arbitary rectangles of updated pixels to the 
-Remote Framebuffer, with a number of differenet encodings with different purposes.
+The RFB protocol allows for sending arbitary rectangles of pixels to the 
+Remote Framebuffer, via a number of differenet encodings with different purposes.
 
 Only a small subset of simple/efficient Encoding specified in the RFB Protocol are implemented.
 
-#### RawRect class
+### RawRect class
 
 A rectangle of specific pixel colours, each of which can be individually set or flood filled, before sending to the VNC/RFB Client.
 
@@ -470,9 +484,9 @@ Return bytes encoding of the rectangle.
 
 Normally called by `ServerFrameBufferUpdate(rectangles)` for each member of `rectangles` list.
 
-#### CopyRect class
+### CopyRect class
 
-An efficient Encoding which instructs the client to copy a rectangle existing pixels from one point in the remote framebuffer to another.
+An efficient Encoding which instructs the client to copy a rectangle of existing pixels from one point in the remote framebuffer to another.
 
 ```python
 rfb.CopyRect(
@@ -482,7 +496,7 @@ rfb.CopyRect(
 )
 ``` 
 
-#### RRERect class, and RRESubRect class
+### RRERect class, and RRESubRect class
 
 An efficient Encoding which instructs the client to paint an arbitary rectangle
 of coloured pixels, optionally overlaid with RRESubRect's of different colours.
@@ -511,3 +525,48 @@ rfb.RRESubRect(
     masks, shifts # session masks and shifts 3-tuples 
 )
 ```
+
+### Font Classes
+
+4x6 (mono4x6) and a 6x8 (mono6x8) mono-spaced bitmap fonts are implemented.
+
+The normal way to import and use a font is;
+
+```python
+from rfb.fonts.mono6x8 import mono6x8 as font
+```
+
+**font.w & font.h**
+
+Width and height of each character in the font.
+
+**font.bitmaps**
+
+The font data.
+
+**font.count()**
+
+The number of implemented characters in the font.
+
+Fonts implement ascii characters from 32 (ascii space), the range of
+implemented ascii characters is 32 to `32+font.count()`.
+
+**font.getbitmap_str(character)**
+
+Return a string of 1's and 0's representing black and white pixels in the 
+requested ascii character code.
+
+The normal way to set pixels in a RawRect of the same width and height as
+characters in the font is;
+
+```python
+bits = font.getbitmap_str(char)
+for idx, bit in enumerate(bits):
+    rect.setpixel(
+        idx%font.w, ifx//font.w,
+        (255,255,255) if int(bit) else (0,0,0)
+    )
+```
+
+Refer `typewriter.py` for a functional example.
+
