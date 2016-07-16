@@ -1,4 +1,4 @@
-#Simple Network Management Protocol v1 packet codec, for [Micropython](www.micropython.org)
+#Simple Network Management Protocol v1 packet codec, for [Micropython](http://www.micropython.org)
 
 Codes and decodes SNMP v1 packets received from, or to send on, the network.
 
