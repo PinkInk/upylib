@@ -104,26 +104,22 @@ for i in o:
     print(i, o[i])
 print(b)
 
-import binascii
+from binascii import *
 
-response = b"HTTP/1.x 101 Switching Protocols"
+response = b"HTTP/1.x 101 Switching Protocols\r\n"
 
+c=b"dGhlIHNhbXBsZSBub25jZQ==258EAFA5-E914-47DA-95CA-C5AB0DC85B11"  
+
+# generate options
 options = {}
 # server should reject sessions who's Origin doesn't want to process
 # Options["Origin"] # RFC doesn't specifically say this required, but probably is
-
 # options["Host"] = o["Host"] # RFC doesn't specifically say this required, but probably is
-options["Upgrade"] = b'websocket'
-options["Connection"] = b'Upgrade'
-
-# -----------------------------------------------------
-# TODO: fix test understand
-key = binascii.a2b_base64( o["Sec-WebSocket-Key"] ) + magic
-key = sha1(key)
-key = binascii.b2a_base64( key )
-options["Sec-WebSocket-Accept"] = sha1( o["Sec-WebSocket-Key"]+magic )
-# -----------------------------------------------------
-
+options["Upgrade"] = b"websocket"
+options["Connection"] = b"Upgrade"
+# unclear why this process appends an unexpected \n
+options["Sec-WebSocket-Accept"] = \
+    b2a_base64(unhexlify(sha1(o["Sec-WebSocket-Key"] + magic)))[:-1]
 if "Sec-Websocket-Extensions" in o:
     # client should fail connection on mismatch
     options["Sec-WebSocket-Extensions"] = o["Sec-WebSocket-Extensions"]
@@ -131,5 +127,52 @@ if "Sec-WebSocket-Protocol" in o:
     # client should fail connection on mismatch
     options["Sec-WebSocket-Protocol"] = o["Sec-WebSocket-Protocol"]
 
-print(response)
-print(options)
+opts = b""
+for key in options:
+    opts += bytes(key,"utf-8") + b": " + options[key] + b"\r\n"
+
+print(opts)
+
+conn.send(response + opts + b"\r\n")
+
+resp = conn.recv(1024) # should receive 'ping'
+
+def bytes_to_int(b): #big-endian
+    i = 0
+    for b8 in b:
+        i <<= 8
+        i += b8
+    return i
+
+# bitfields, not using ucstruct for c compat
+# and due to subsequent variable length fields
+def parse_websocket_frame(frame):
+    mf = memoryview(frame)
+    ptr = 0
+    fin = bool( mf[ptr] & (1<<7) )
+    # ignore bitfields reserved for future
+    opcode = mf[ptr] & 0b1111
+    ptr += 1
+    use_mask = bool( mf[ptr] & (1<<7) )
+    length = mf[ptr] & 0x7f
+    if length == 126:
+        length = bytes_to_int( mf[ptr+1:ptr+1+2] )
+        ptr += 1+2
+    elif length == 127:
+        length = bytes_to_int( mf[ptr+1:ptr+1+4] )
+        ptr += 1+4
+    else:
+        ptr += 1
+    mask = mf[ptr:ptr+4]
+    ptr += 4
+    if use_mask:
+        # client to server msg
+        msg = "" # what about non text messages?
+        for i in range(len(mf[ptr:])):
+            msg += chr( mf[ptr+i]^mask[i%4] )
+    else:
+        # server to client msg
+        msg = mf[ptr:]
+    return fin, opcode, msg 
+    
+print( parse_websocket_frame(resp) )
