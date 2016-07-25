@@ -189,6 +189,13 @@ conn.send(b)
 resp = conn.recv(1024) # should receive 'ping'
 print( parse_websocket_frame(resp) )
 
+OP_CONT = 0 # continuation frame
+OP_TEXT = 1 # text frame
+OP_BIN = 2 # binary frame
+OP_CLOSE = 8 # close connection
+OP_PING = 9 # ping frame
+OP_PONG = 10 # pong frame
+
 def make_websocket_frame(fin, opcode, use_mask, msg):
     b = bytes([(fin<<7) + opcode ])
     if len(msg) < 126:
@@ -203,18 +210,25 @@ def make_websocket_frame(fin, opcode, use_mask, msg):
         pass # this is a svr msg
     return b + msg
 
-b = make_websocket_frame(True, 1, False, b"bing bong")
+b = make_websocket_frame(True, OP_TEXT, False, b"bing bong")
 conn.send(b)
 
-b = make_websocket_frame(True, 1, False, b"hello lo")
+b = make_websocket_frame(True, OP_TEXT, False, b"hello lo")
 conn.send(b)
 
-b = make_websocket_frame(True, 1, False, b"good buddy")
+b = make_websocket_frame(True, OP_TEXT, False, b"good buddy")
 conn.send(b)
 
+# control frame ping
+conn.send(make_websocket_frame(True, OP_PING, False, b"poodles"))
+# should receive a pong (opcode == 0xA == 10) with same payload
+resp = conn.recv(1024) # should receive 'ping'
+print( parse_websocket_frame(resp) )
 
-# control frame close (connection)
-b = bytes([0b10001000,0])
-conn.send(b)
+conn.send(make_websocket_frame(True, OP_CLOSE, False, b""))
+
+# # control frame close (connection)
+# b = bytes([0b10001000,0])
+# conn.send(b)
 
 
