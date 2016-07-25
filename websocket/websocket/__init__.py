@@ -31,7 +31,7 @@ page = b'''
                 }
 
                 conn.onmessage = function (msg) {
-                    document.getElementById("console").innerHTML += msg+"<BR/>";
+                    document.getElementById("console").innerHTML += "msg: "+msg.data+"<BR/>";    
                 }
 
             }
@@ -144,8 +144,6 @@ def bytes_to_int(b): #big-endian
         i += b8
     return i
 
-# bitfields, not using ucstruct for c compat
-# and due to subsequent variable length fields
 def parse_websocket_frame(frame):
     mf = memoryview(frame)
     ptr = 0
@@ -167,12 +165,56 @@ def parse_websocket_frame(frame):
     ptr += 4
     if use_mask:
         # client to server msg
+        # TODO : consistency; message should be bytes not str
         msg = "" # what about non text messages?
         for i in range(len(mf[ptr:])):
             msg += chr( mf[ptr+i]^mask[i%4] )
     else:
-        # server to client msg
+        # server to client msgs
         msg = mf[ptr:]
     return fin, opcode, msg 
     
 print( parse_websocket_frame(resp) )
+
+# control frame ping
+payload = b"wibble"
+b = bytes([0b10001001])
+# no mask, server msg
+b += bytes([len(payload)])
+b += payload
+
+conn.send(b)
+
+# should receive a pong (opcode == 0xA == 10) with same payload
+resp = conn.recv(1024) # should receive 'ping'
+print( parse_websocket_frame(resp) )
+
+def make_websocket_frame(fin, opcode, use_mask, msg):
+    b = bytes([(fin<<7) + opcode ])
+    if len(msg) < 126:
+        b += bytes([ (use_mask<<7) + len(msg) ])
+    elif len(msg) <= 0xffff:
+        # TODO : unuglify
+        b += bytes([ (use_mask<<7), len(msg)>>8, len(msg)&0xff ])
+    else: # 0xffff < len(msg) <= 0xffffffff
+        pass # TODO : do this bit
+    if use_mask:
+        # TODO : will we ever create a client msg???
+        pass # this is a svr msg
+    return b + msg
+
+b = make_websocket_frame(True, 1, False, b"bing bong")
+conn.send(b)
+
+b = make_websocket_frame(True, 1, False, b"hello lo")
+conn.send(b)
+
+b = make_websocket_frame(True, 1, False, b"good buddy")
+conn.send(b)
+
+
+# control frame close (connection)
+b = bytes([0b10001000,0])
+conn.send(b)
+
+
