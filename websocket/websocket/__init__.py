@@ -1,7 +1,7 @@
 # https://tools.ietf.org/html/rfc6455
 
 # length is a shortcut for not doing chunk encoding
-# TODO: understand chunk encoding
+# TODO: chunk encoding
 header = """HTTP/1.x 200 OK
 Connection: Keep-Alive
 Content-Type: text/html; charset=UTF-8
@@ -225,10 +225,14 @@ conn.send(make_websocket_frame(True, OP_PING, False, b"poodles"))
 resp = conn.recv(1024) # should receive 'ping'
 print( parse_websocket_frame(resp) )
 
+# send a multi frame message
+# js onmessage doesn't get called until last frame received  
+conn.send( make_websocket_frame(False, OP_TEXT, False, b"first part, ") )
+conn.send( make_websocket_frame(False, OP_CONT, False, b"second part, ") )
+conn.send( make_websocket_frame(True, OP_CONT, False, b"last part.") )
+
 conn.send(make_websocket_frame(True, OP_CLOSE, False, b""))
 
 # # control frame close (connection)
 # b = bytes([0b10001000,0])
 # conn.send(b)
-
-
