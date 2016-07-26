@@ -73,7 +73,7 @@ def parse_http_request(msg):
     return request, options, body
     
 
-from .sha1 import sha1
+from sha1 import sha1
 magic = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 import socket
