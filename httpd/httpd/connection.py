@@ -46,8 +46,11 @@ class HttpConnection():
         if hasattr(self, request_type):
             # method returns true if connection to be kept open
             return eval('self.'+request_type+'(request, options)')
-        # return nothing, which is false, connection dropped
+        else:
+            self.conn.close()
+            return False
     
     def GET(self, request, options):
         print(request, options)
+        return True
 

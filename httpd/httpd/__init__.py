@@ -29,7 +29,9 @@ class HttpServer():
     def serve(self):
         while True:
             # microcontroller should probably sleep here
+            # accept new connections
             self.accept()
+            # service established connections
             self.service()
     
     def accept(self):
@@ -40,5 +42,6 @@ class HttpServer():
     
     def service(self):
         for idx,connection in enumerate( self.connections ):
+            # drop connections that aren't Keep-Alive
             if not connection.service_requests():
                 del( self.connections[idx] )
