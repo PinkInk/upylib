@@ -8,4 +8,4 @@ Intention is to incorporate, as optional/loadable functionality into a wider
 http protocol server. 
 
 Uses [Python Sha-1](https://github.com/ajalt/python-sha1) module 
-Copyright (c) 2013-2015 AJ Alt (refer `websocket\sha1.py` for license). 
+Copyright (c) 2013-2015 AJ Alt (refer `sha1.py` for license). 
