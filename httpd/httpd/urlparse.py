@@ -1,4 +1,4 @@
-# Adapted from
+# Derived from
 # https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py
 # (c) Alex Cowan <acowan@gmail.com>
 
