@@ -1,4 +1,4 @@
-import http
+import httpd
 
-srv = http.HttpServer()
+srv = httpd.HttpServer()
 srv.serve()

@@ -1,4 +1,4 @@
-from http.connection import *
+from httpd.connection import *
 
 try:
     import usocket as socket
@@ -16,7 +16,7 @@ class HttpServer():
 
     def __init__(self,
                  handler = HttpConnection,
-                 addr = ('0.0.0.0', 80),
+                 addr = ("0.0.0.0", 80),
                  backlog = 3
                 ):
         self.handler = HttpConnection
@@ -28,20 +28,23 @@ class HttpServer():
     
     def serve(self):
         while True:
-            # microcontroller should probably sleep here
             # accept new connections
             self.accept()
             # service established connections
-            self.service()
+            self.service_queue()
     
     def accept(self):
         try:
-            self.connections.append( self.handler( self.s.accept() ) )
+            connection = self.handler( self.s.accept() )
+            if connection.service_requests():
+                # connection is to be kept-alive
+                self.connections.append( connection )
+            # else discarded
         except (OSError, BlockingIOError):
             pass
     
-    def service(self):
+    def service_queue(self):
         for idx,connection in enumerate( self.connections ):
-            # drop connections that aren't Keep-Alive
+            # drop connections that aren't to be kept-alive
             if not connection.service_requests():
                 del( self.connections[idx] )
