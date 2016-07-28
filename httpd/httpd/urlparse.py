@@ -13,6 +13,7 @@ def urlparse(url):
             if path.count("?") > 1:
                 raise Exception("malformed url, too many ?")
             path, query = path.split("?")
+    # TODO: use str.rfind() where appropriate to reduce slicing 
     file = path.split("/")[path.count("/")]
     if file.count("."):
         path = "/".join(
