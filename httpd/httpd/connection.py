@@ -8,6 +8,8 @@ try:
 except:
     from os import stat
 
+from .urlparse import urlparse
+
 # priority list of defaults to check via os.listdir?
 DEFAULT = "index.html"
 VER = b"HTTP/1.1"
@@ -66,12 +68,12 @@ class HttpConnection():
         if hasattr(self, request[0].upper()):
             return eval("self."+request[0].upper()+"(request, options)")
         else:
-            self.send( VER + b"403 Not Implemented\r\n\r\n")
+            self.send( VER + b" 403 Not Implemented\r\n\r\n")
             self.conn.close()
             return False
     
     def GET(self, request, options):
-        # TODO: default files in subdir
+        # TODO: use urlparse, and set default file in subdirs 
         path = self.default if request[1] == "/" else request[1][1:]
         ftype = path
         try:
@@ -81,10 +83,28 @@ class HttpConnection():
             self.conn.close()
             return False
         self.send( VER + b"200 OK\r\n\r\n")
+
         # TODO: binary files
-        with open(path, "r") as file:
-            for line in file:
-                self.send(bytes(line,"utf-8"))
+        # TODO: sendall() | write() (mpy specific)
+        # with open(path, "r") as file:
+            # for line in file:
+            #     self.send(bytes(line,"utf-8"))
+
+        buflen = 64
+        buf = bytearray(buflen)
+        # with open(path, "rb") as file:
+        file = open(path, "rb")
+        while True:
+            count = file.readinto(buf)
+            if count == buflen:
+                # self.conn.write(buf)
+                self.send(buf)
+            elif count == 0:
+                break
+            else:
+                # self.conn.write(buf[:count])
+                self.send(buf[:count])
+
         self.send(b"\r\n")
         if options["Connection"] and options["Connection"] == "Keep-Alive": 
             return True
