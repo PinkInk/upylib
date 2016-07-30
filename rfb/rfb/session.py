@@ -93,9 +93,7 @@ class RfbSession():
 
         if msg == b'': #closed by peer
             return False
-
         elif msg is not None:
-
             dispatch_msgs(self, msg)
 
         return True
