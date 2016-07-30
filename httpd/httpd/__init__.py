@@ -19,7 +19,7 @@ class HttpServer():
                  addr = ("0.0.0.0", 80),
                  backlog = 3
                 ):
-        self.handler = HttpConnection
+        self.handler = handler
         self.connections = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.setblocking(False)
@@ -45,6 +45,7 @@ class HttpServer():
     
     def service_queue(self):
         for idx,connection in enumerate( self.connections ):
+            print("is actually called!")
             # drop connections that aren't to be kept-alive
             if not connection.service_requests():
                 del( self.connections[idx] )
