@@ -42,25 +42,57 @@ class WebSocket:
         self.send(b"\r\n")
     
     def service_requests(self):
-        
+        pass
 
 
     def sendframe(self):
         f = self.conn.makefile(mode="wb")
     
+    # TODO: this should move to parse.py 
+    #       (or other websocket specific file)
+    #       be generalised for client<->server msgs
+    #       and return named tuple (from server) or bytes (to client)?
     def recvframe(self):
-        f = self.conn.makefile(mode="rb")
-
-
-    def recv(self, count=1024, blocking=False):
-        while blocking:
-            r = self.conn.recv(count)
-            if r is not None:
-                return r
-        try:
-            return self.conn.recv(count)
-        except:
-            pass
+        frame = self.recv()
+        mf = memoryview(frame)
+        ptr = 0
+        fin = bool( mf[ptr] & (1<<7) )
+        # ignore bitfields reserved for future
+        opcode = mf[ptr] & 0b1111
+        ptr += 1
+        use_mask = bool( mf[ptr] & (1<<7) )
+        length = mf[ptr] & 0x7f
+        if length == 126:
+            length = bytes_to_int( mf[ptr+1:ptr+1+2] )
+            ptr += 1+2
+        elif length == 127:
+            length = bytes_to_int( mf[ptr+1:ptr+1+4] )
+            ptr += 1+4
+        else:
+            ptr += 1
+        mask = mf[ptr:ptr+4]
+        ptr += 4
+        # TODO: client to server will always use_mask
+        if use_mask:
+            # client to server msg
+            # TODO : consistency; message should be bytes not str
+            msg = "" # what about non text messages?
+            for i in range(len(mf[ptr:])):
+                msg += chr( mf[ptr+i]^mask[i%4] )
+        else:
+            # server to client msgs
+            msg = mf[ptr:]
+        return fin, opcode, msg 
+        
+    def recv(self):
+        b = b""
+        while True:
+            count = self.conn.readinto( self.buf )
+            if count:
+                b += self.buf[:count]
+            else:
+                break
+        return b
 
     def send(self, b):
         if b:
