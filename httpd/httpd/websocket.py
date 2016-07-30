@@ -13,7 +13,6 @@ def bytes_to_int(b): #big-endian
 class WebSocket:
 
     MAGIC = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    RESPONSE = b"HTTP/1.x 101 Switching Protocols\r\n"
 
     def __init__(self, conn, request, buflen=128):
         self.conn,self.addr = conn
