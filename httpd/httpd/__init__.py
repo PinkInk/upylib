@@ -45,7 +45,6 @@ class HttpServer():
     
     def service_queue(self):
         for idx,connection in enumerate( self.connections ):
-            print("is actually called!")
             # drop connections that aren't to be kept-alive
             if not connection.service_requests():
                 del( self.connections[idx] )
