@@ -21,8 +21,8 @@ def MyRequestHandler(request, conn):
 
         conn.send( b"HTTP/1.1 200 OK\r\n\r\n" )
 
-        b = bytearray(128)
-        buf = memoryview(b)
+        _buf = bytearray(128)
+        buf = memoryview(_buf)
         with open(uri, "rb") as file:
             while True:
                 count = file.readinto(buf)
