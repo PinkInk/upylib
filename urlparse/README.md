@@ -1,10 +1,11 @@
 #Url parse module for [Micropython](http://www.micropython.org)
 
 Derived from 
-[urllib](https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py) for micropyhton 
-(c) Alex Cowan.
+[urllib](https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py) for 
+micropython (c) Alex Cowan.
 
-Passed a url returns a `namedtuple` of components;
+Passed a url returns a `namedtuple` of component parts according to the 
+template;
 
 ```
 scheme:[//host[:port]][/]path[/filename][?query]
@@ -26,5 +27,5 @@ Url(scheme='https', host='www.google.com', port='801', path='1/2', file='index.a
 ```
 
 ##TO-DO
-* implement full url schema `scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]`
+* implement full url schema `scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]` i.e. add `[user:password@]` and `[#fragment]`
 
