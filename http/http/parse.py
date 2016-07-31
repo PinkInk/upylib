@@ -38,7 +38,8 @@ def request(req, options, data=None):
     )
 
 
-Uri = namedtuple("Uri", ("path", "file", "query", "frag"))
+# browser does not send uri fragments to server
+Uri = namedtuple("Uri", ("path", "file", "query"))
 
 def uri(uri):
     if uri.count("/") and uri.count(".") and uri.rfind(".") > uri.rfind("/"):
@@ -54,11 +55,5 @@ def uri(uri):
         file,query = file.split("?")
     else:
         query = ""
-    if query.count("#"):
-        query,frag = query.split("#")
-    elif file.count("#"):
-        file,frag = file.split("#")
-    else:
-        frag = ""
-    return Uri(path, file, query, frag)
+    return Uri(path, file, query)
 
