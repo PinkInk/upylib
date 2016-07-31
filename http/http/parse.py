@@ -27,7 +27,6 @@ Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
 HttpVer = namedtuple("HttpVer", ("major", "minor"))
 
 def request(req, options, data=None):
-    print(req)
     method,path,ver = str(req.strip(), "utf-8").split(" ")
     return Request(
         method,
