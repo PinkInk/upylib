@@ -46,7 +46,7 @@ class WebSocket:
         # TODO: is memoryview waranted?
         self._buf = bytearray(buflen)
         self.buf = memoryview(self._buf)
-                
+
         # negotiate websocket
         # ASSUMES: caller tested is_websocket_request
         options = { "Upgrade": "websocket", "Connection": "Upgrade" }
