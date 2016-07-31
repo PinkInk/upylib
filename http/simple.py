@@ -5,37 +5,31 @@ except:
 
 import http
 
-class MyHttpConnection(http.HttpConnection):
 
-    def GET(self, request):
+def MyRequestHandler(request, conn):
 
-        uri = request.uri.path + "/" + request.uri.file
-        if uri == "/":
-            uri = self.DEFAULT
-        elif uri[0] == "/":
-            uri = uri[1:]
+    if request.method == "GET":
+        uri = request.uri.path \
+                + ("/" if request.uri.path else "") \
+                + (request.uri.file if request.uri.file else "index.html")
 
         try:
             stat(uri)
         except:
-            self.send( self.VER + b" 404 Not Found\r\n\r\n" )
-            self.conn.close()
-            return False
+            conn.send( b"HTTP/1.1 404 Not Found\r\n\r\n" )
+            return
 
-        self.send( self.VER + b"200 OK\r\n\r\n" )
+        conn.send( b"HTTP/1.1 200 OK\r\n\r\n" )
 
-        file = open(uri, "rb")
+        with open(uri, "rb") as file:
+            conn.send( file.read() )
 
-        while True:
-            count = file.readinto( self.buf )
-            if count:
-                self.send( self.buf[:count] )
-            else:
-                break
+        conn.send( b"\r\n" )
+    
+    else:
+        # catch all request types
+        conn.send(b"HTTP/1.1 403 Not Implemented\r\n\r\n")
+    
 
-        self.send( b"\r\n" )
-        self.conn.close()
-        return False    
-
-srv = http.HttpServer(handler=MyHttpConnection)
+srv = http.HttpServer(callback=MyRequestHandler)
 srv.serve()
