@@ -6,7 +6,7 @@ except:
 import http
 
 
-def MyRequestHandler(request, conn):
+def MyRequestHandler(request, conn, buffer=128):
 
     if request.method == "GET":
         uri = request.uri.path \
@@ -21,7 +21,7 @@ def MyRequestHandler(request, conn):
 
         conn.send( b"HTTP/1.1 200 OK\r\n\r\n" )
 
-        _buf = bytearray(128)
+        _buf = bytearray(buffer)
         buf = memoryview(_buf)
         with open(uri, "rb") as file:
             while True:
