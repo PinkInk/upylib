@@ -71,8 +71,6 @@ class HttpServer():
             
             request = parse.request( req, options, data )
 
-            print(request.scheme)
-
             if parse.is_websocket_request(request):
                 # websocket request
                 if self.websocket_handler: # silently ignore if no handler
