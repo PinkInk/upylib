@@ -11,7 +11,7 @@ def MyRequestHandler(request, conn):
     if request.method == "GET":
         uri = request.uri.path \
                 + ("/" if request.uri.path else "") \
-                + (request.uri.file if request.uri.file else "simple.html")
+                + (request.uri.file if request.uri.file else "index.html")
 
         try:
             stat(uri)

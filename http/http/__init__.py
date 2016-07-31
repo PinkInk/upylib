@@ -49,36 +49,39 @@ class HttpServer():
 
         # get request
         req = readline()
-        # get options and data
-        options,data = {}, b""
-        option_flag = True
-        line = readline()
-        while line:
-            if option_flag:
-                if line != b"\r\n":
-                    opt,val = str(line,"utf-8").split(":",1)
-                    options[ opt.strip() ] = val.strip()
-                else:
-                    option_flag = False
-            else:
-                data += line
-            line = readline()
-        
-        request = parse.request( req, options, data )
-
-        if parse.is_websocket_request(request):
-            # websocket request
-            if self.websocket_handler: # silently ignore if no handler
-                self.websockets.append(
-                    self.websocket_handler(request, conn)
-                )
-        else:
-            # http request
-            if self.callback:
-                self.callback(request, conn)
-            else:
-                conn.send(b"HTTP/1.1 403 Not Implemented\r\n\r\n")
+        if not req:
             conn.close()
+        else:
+            # get options and data
+            options,data = {}, b""
+            option_flag = True
+            line = readline()
+            while line:
+                if option_flag:
+                    if line != b"\r\n":
+                        opt,val = str(line,"utf-8").split(":",1)
+                        options[ opt.strip() ] = val.strip()
+                    else:
+                        option_flag = False
+                else:
+                    data += line
+                line = readline()
+            
+            request = parse.request( req, options, data )
+
+            if parse.is_websocket_request(request):
+                # websocket request
+                if self.websocket_handler: # silently ignore if no handler
+                    self.websockets.append(
+                        self.websocket_handler(request, conn)
+                    )
+            else:
+                # http request
+                if self.callback:
+                    self.callback(request, conn)
+                else:
+                    conn.send(b"HTTP/1.1 403 Not Implemented\r\n\r\n")
+                conn.close()
     
     def service_websockets(self):
         for idx,websocket in enumerate( self.websockets ):
