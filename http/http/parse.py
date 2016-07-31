@@ -10,9 +10,9 @@ def is_websocket_request(request):
     opts = request.options
     if "Sec-WebSocket-Key" in opts \
             and "Upgrade" in opts \
-                and opts["Upgrade"] == "websocket" \
+                and opts["Upgrade"].lower() == "websocket" \
             and "Connection" in opts \
-                and opts["Connection"] == "Upgrade" \
+                and opts["Connection"].lower() == "upgrade" \
             and "Sec-WebSocket-Version" in opts \
                 and opts["Sec-WebSocket-Version"] == "13" \
             and "Origin" in opts \
