@@ -5,7 +5,6 @@ except:
 
 
 Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
-# wipy doesn't support floats e.g. 1.1
 HttpVer = namedtuple("HttpVer", ("major", "minor"))
 
 def request(req, options, data=None):
