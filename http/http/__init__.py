@@ -2,6 +2,8 @@ try:
     import usocket as socket
 except:
     import socket
+    # used by websocket; map readinto to recv_into for mpy/cpy compat
+    socket.socket.readinto = socket.socket.recv_into
 
 import http.parse as parse
 
@@ -68,6 +70,8 @@ class HttpServer():
                 line = readline()
             
             request = parse.request( req, options, data )
+
+            print(request.scheme)
 
             if parse.is_websocket_request(request):
                 # websocket request
