@@ -27,6 +27,7 @@ Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
 HttpVer = namedtuple("HttpVer", ("major", "minor"))
 
 def request(req, options, data=None):
+    print(req)
     method,path,ver = str(req.strip(), "utf-8").split(" ")
     return Request(
         method,
@@ -37,7 +38,7 @@ def request(req, options, data=None):
     )
 
 
-Uri = namedtuple("Uri", ("path", "file"))
+Uri = namedtuple("Uri", ("path", "file", "query", "frag"))
 
 def uri(uri):
     if uri.count("/") and uri.count(".") and uri.rfind(".") > uri.rfind("/"):
@@ -48,5 +49,16 @@ def uri(uri):
         path,file = "", uri
     if path and path[0] == "/":
         path = path[1:]
-    return Uri(path, file)
+    # assume uri is valid and only contains one ?
+    if file.count("?"):
+        file,query = file.split("?")
+    else:
+        query = ""
+    if query.count("#"):
+        query,frag = query.split("#")
+    elif file.count("#"):
+        file,frag = file.split("#")
+    else:
+        frag = ""
+    return Uri(path, file, query, frag)
 
