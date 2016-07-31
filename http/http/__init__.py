@@ -15,11 +15,13 @@ except:
 class HttpServer():
 
     def __init__(self,
-                 handler = HttpConnection,
+                 http_handler = HttpConnection,
+                 websocket_handler = None,
                  addr = ("0.0.0.0", 80),
                  backlog = 3
                 ):
-        self.handler = handler
+        self.http_handler = http_handler
+        self.websocket_handler = websocket_handler
         self.connections = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.setblocking(False)
@@ -38,7 +40,7 @@ class HttpServer():
         # TODO: normal http request, close on complete (despite Connection: Keep-Alive)
         # TODO: websocket request, negotiate, add to websockets list
         try:
-            connection = self.handler( self.s.accept() )
+            connection = self.http_handler( self.s.accept() )
             if connection.service_requests():
                 # connection is to be kept-alive
                 self.connections.append( connection )
