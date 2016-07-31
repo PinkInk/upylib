@@ -1,19 +1,25 @@
-#extension : (mimetype, isbinary?)
-mimetypes = {
-    "htm"  :    ("text/html", False),
-    "html" :    ("text/html", False),
-    "css"  :    ("text/css", False),
-    "txt"  :    ("text/plain", False),
-    "xml"  :    ("application/xml", False),
-    "js"   :    ("application/x-javascript", False),
-    "pdf"  :    ("application/pdf", True),
-    "py"   :	("text/x-python", False),
-    "png"  :    ("image/png", True),
-    "gif"  :    ("image/gif", True),
-    "jpeg" :	("image/jpeg", True),
-    "jpg"  :    ("image/jpeg", True),
-    "bmp"  :	("image/x-ms-bmp", True),
+# extension : (mimetype, encoding)
+types_map = {
+    "htm"  :    ("text/html", None),
+    "html" :    ("text/html", None),
+    "css"  :    ("text/css", None),
+    "txt"  :    ("text/plain", None),
+    "xml"  :    ("application/xml", None),
+    "js"   :    ("application/x-javascript", None),
+    "pdf"  :    ("application/pdf", None),
+    "py"   :	("text/x-python", None),
+    "png"  :    ("image/png", None),
+    "gif"  :    ("image/gif", None),
+    "jpeg" :	("image/jpeg", None),
+    "jpg"  :    ("image/jpeg", None),
+    "bmp"  :	("image/x-ms-bmp", None),
 }
 
-def type(file):
-    return mimetypes[ file.split(".")[1] ]
+def guess_type(url):
+    # cpython mimetypes returns (None,None) 
+    # if url contains query or fragment ...
+    ext = url[ url.rfind(".")+1: ]
+    if ext in types_map:
+        return types_map[ext]
+    else:
+        return None,None
