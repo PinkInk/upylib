@@ -1,12 +1,12 @@
 #Url parse module for [Micropython](http://www.micropython.org)
 
 Derived from 
-[urllib](# https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py) for micropyhton 
+[urllib](https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py) for micropyhton 
 (c) Alex Cowan.
 
 Passed a url returns a `namedtuple` of components;
 
-```python
+```
 scheme:[//host[:port]][/]path[/filename][?query]
 ```
 
