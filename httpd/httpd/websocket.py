@@ -1,6 +1,10 @@
 import httpd.parse as parse
 from sha1 import sha1
-from binascii import *
+
+try:
+    from ubinascii import *
+except:
+    from binascii import *
 
 def bytes_to_int(b): #big-endian
     i = 0
@@ -83,6 +87,7 @@ class WebSocket:
             msg = mf[ptr:]
         return fin, opcode, msg 
         
+    # TODO: test!
     def recv(self):
         b = b""
         while True:
