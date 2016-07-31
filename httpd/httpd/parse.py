@@ -1,4 +1,7 @@
-from collections import namedtuple
+try:
+    from ucollections import namedtuple
+except:
+    from collections import namedtuple
 
 
 Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
@@ -6,43 +9,26 @@ Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
 HttpVer = namedtuple("HttpVer", ("major", "minor"))
 
 def request(req, options, data=None):
-    # return Request(*str(b.strip(), "utf-8").split(" "))
-    method,uri,ver = str(req.strip(), "utf-8").split(" ")
+    method,path,ver = str(req.strip(), "utf-8").split(" ")
     return Request(
         method,
-        url(uri),
+        uri(path),
         HttpVer(*map(int, ver.split("/")[1].split("."))),
         options,
         data
     )
 
 
-# urlparse derived from
-# https://github.com/lucien2k/wipy-urllib/blob/master/urllib.py
-# (c) Alex Cowan <acowan@gmail.com>
-# 
-# full url scheme:[//[user:password@]host[:port]][/]path[?query][#fragment]
-# implemented url scheme:[//host[:port]][/]path[/filename][?query]
-Url = namedtuple("Url", ("scheme", "host", "port", "path", "file", "query"))
+Uri = namedtuple("Uri", ("path", "file"))
 
-def url(url):
-    scheme,url = url.split("://") if url.count("://") else ("",url)
-    host = url.split("/")[0]
-    host,port = host.split(":") if host.count(":") else (host,"")
-    path,query = "/",""
-    if host != url:
-        path = path.join(url.split("/")[1:])
-        if path.count("?"):
-            if path.count("?") > 1:
-                raise Exception("malformed url, too many ?")
-            path, query = path.split("?")
-    if not path.count("/"):
-        path,file = "", path
-    elif path.rfind(".") > path.rfind("/"):
-        path,file = path[:path.rfind("/")], path[path.rfind("/")+1:]
+def uri(uri):
+    if uri.count("/") and uri.count(".") and uri.rfind(".") > uri.rfind("/"):
+        path,file = uri.rsplit("/", 1)
+    elif not uri.count("."):
+        path,file = uri,""
     else:
-        file = ""
-        if path[-1] == "/":
-            path = path[:-1]
-    path = path if path != "/" else ""
-    return Url(scheme, host, port, path, file, query)
+        path,file = "", uri
+    print(path,file)
+    if path and path[0] == "/":
+        path = path[1:]
+    return Uri(path, file)
