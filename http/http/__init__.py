@@ -1,9 +1,9 @@
-from http.connection import *
-
 try:
     import usocket as socket
 except:
     import socket
+
+import http.parse as parse
 
 try: # mpy/cpython compat in main loop
     BlockingIOError
@@ -15,14 +15,14 @@ except:
 class HttpServer():
 
     def __init__(self,
-                 http_handler = HttpConnection,
+                 callback = None,
                  websocket_handler = None,
                  addr = ("0.0.0.0", 80),
-                 backlog = 3
+                 backlog = 3,
                 ):
-        self.http_handler = http_handler
+        self.callback = callback
         self.websocket_handler = websocket_handler
-        self.connections = []
+        self.websockets = []
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.setblocking(False)
         self.s.bind( socket.getaddrinfo(addr[0], addr[1])[0][-1] )
@@ -32,25 +32,56 @@ class HttpServer():
         while True:
             # accept new connections
             self.accept()
-            # service established connections
-            self.service_queue()
+            # service websockets
+            self.service_websockets()
     
     def accept(self):
-        # TODO: process first request
-        # TODO: normal http request, close on complete (despite Connection: Keep-Alive)
-        # TODO: websocket request, negotiate, add to websockets list
         try:
-            connection = self.http_handler( self.s.accept() )
-            if connection.service_requests():
-                # connection is to be kept-alive
-                self.connections.append( connection )
-            # else discarded
+            conn, addr = self.s.accept()
         except (OSError, BlockingIOError):
-            pass
+            return
+
+        try: # micropython 
+            readline = conn.readline
+        except AttributeError: # cpython
+            f = conn.makefile(mode="rb")
+            readline = f.readline 
+
+        # get request
+        req = readline()
+        # get options and data
+        options,data = {}, b""
+        option_flag = True
+        line = readline()
+        while line:
+            if option_flag:
+                if line != b"\r\n":
+                    opt,val = str(line,"utf-8").split(":",1)
+                    options[ opt.strip() ] = val.strip()
+                else:
+                    option_flag = False
+            else:
+                data += line
+            line = readline()
+        
+        request = parse.request( req, options, data )
+
+        if parse.is_websocket_request(request):
+            # websocket request
+            if self.websocket_handler: # silently ignore if no handler
+                self.websockets.append(
+                    self.websocket_handler(request, conn)
+                )
+        else:
+            # http request
+            if self.callback:
+                self.callback(request, conn)
+            else:
+                conn.send(b"HTTP/1.1 403 Not Implemented\r\n\r\n")
+            conn.close()
     
-    def service_queue(self):
-        # TODO: replace by websocket handler
-        for idx,connection in enumerate( self.connections ):
-            # drop connections that aren't to be kept-alive
-            if not connection.service_requests():
-                del( self.connections[idx] )
+    def service_websockets(self):
+        for idx,websocket in enumerate( self.websockets ):
+            # drop websockets whos service_frames returns False
+            if not websocket.service_frames():
+                del( self.websockets[idx] )
