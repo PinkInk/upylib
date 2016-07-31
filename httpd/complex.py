@@ -5,20 +5,15 @@ except:
 
 import httpd
 
+from httpd.websocket import *
+
 class MyHttpConnection(httpd.HttpConnection):
 
-    def GET(self, request, options, data):
+    def GET(self, request):
 
-        # test an option which is unlikely unless this is a websocket request first
-        if "Sec-WebSocket-Key" in options \
-                and "Upgrade" in options and otions["Upgrade"] == "websocket" \
-                and "Connection" in options and options["Connection"] == "Upgrade" \
-                and "Sec-WebSocket-Version" and options["Sec-WebSocket-Version"] == "13" \
-                and "Origin" in options \
-                and "Host" in options \
-                and request.ver.major >= 1 and request.ver.minor >= 1:
+        if is_websocket_request(request):
             
-            # create a websocket
+            # create websocket
             pass
         
         else:
