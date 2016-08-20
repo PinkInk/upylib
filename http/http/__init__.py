@@ -51,7 +51,7 @@ class HttpServer():
 
         # get request
         req = readline()
-        if not req:
+        if not req: # is this ever true?
             conn.close()
         else:
             # get options and data
@@ -61,7 +61,7 @@ class HttpServer():
             while line:
                 if option_flag:
                     if line != b"\r\n":
-                        opt,val = str(line,"utf-8").split(":",1)
+                        opt,val = line.split(b":", 1)
                         options[ opt.strip() ] = val.strip()
                     else:
                         option_flag = False
@@ -86,6 +86,11 @@ class HttpServer():
                 conn.close()
     
     def service_websockets(self):
+
+        # DEBUG
+        if len(self.websockets) > 0: 
+            print(len(self.websockets))
+
         for idx,websocket in enumerate( self.websockets ):
             # drop websockets whos service_frames returns False
             if not websocket.service_frames():

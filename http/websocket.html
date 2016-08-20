@@ -11,11 +11,12 @@
                 document.getElementById("console").innerHTML += "created socket<BR/>";
 
                 conn.onopen = function () {
+                    document.getElementById("console").innerHTML += "onopen: send ping<BR/>";
                     conn.send("ping");
                 }
 
                 conn.onerror = function (error) {
-                    console.log("Websocket error: " + error);
+                   console.log("Websocket error: " + error);
                 }
 
                 conn.onmessage = function (msg) {

@@ -27,11 +27,12 @@ Request = namedtuple("Request", ("method", "uri", "ver", "options", "data"))
 HttpVer = namedtuple("HttpVer", ("major", "minor"))
 
 def request(req, options, data=None):
-    method,path,ver = str(req.strip(), "utf-8").split(" ")
+    # method,path,ver = str(req.strip(), "utf-8").split(" ")
+    method,path,ver = req.strip().split(b" ")
     return Request(
         method,
         uri(path),
-        HttpVer(*map(int, ver.split("/")[1].split("."))),
+        HttpVer(*map(int, ver.split(b"/")[1].split(b"."))),
         options,
         data
     )
@@ -41,18 +42,18 @@ def request(req, options, data=None):
 Uri = namedtuple("Uri", ("path", "file", "query"))
 
 def uri(uri):
-    if uri.count("/") and uri.count(".") and uri.rfind(".") > uri.rfind("/"):
-        path,file = uri.rsplit("/", 1)
-    elif not uri.count("."):
-        path,file = uri,""
+    if uri.count(b"/") and uri.count(b".") and uri.rfind(b".") > uri.rfind(b"/"):
+        path,file = uri.rsplit(b"/", 1)
+    elif not uri.count(b"."):
+        path,file = uri,b""
     else:
-        path,file = "", uri
-    if path and path[0] == "/":
+        path,file = b"", uri
+    if path and path[0] == b"/":
         path = path[1:]
     # assume uri is valid and only contains one ?
-    if file.count("?"):
-        file,query = file.split("?")
+    if file.count(b"?"):
+        file,query = file.split(b"?")
     else:
-        query = ""
+        query = b""
     return Uri(path, file, query)
 

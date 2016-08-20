@@ -4,15 +4,20 @@ except:
     from os import stat
 
 import http
-
+import http.websocket
 
 def MyRequestHandler(request, conn, buffer=128):
 
-    if request.method == "GET":
-        uri = request.uri.path \
-                + ("/" if request.uri.path else "") \
-                + (request.uri.file if request.uri.file else "index.html")
+    if request.method == b"GET":
 
+        print(request.uri.path, request.uri.file)
+
+        uri = request.uri.path \
+                + (b"/" if request.uri.path else b"") \
+                + (request.uri.file if request.uri.file else b"index.html")
+        
+        print(uri)
+        
         try:
             stat(uri)
         except:
@@ -38,5 +43,9 @@ def MyRequestHandler(request, conn, buffer=128):
         conn.send(b"HTTP/1.1 403 Not Implemented\r\n\r\n")
     
 
-srv = http.HttpServer(callback=MyRequestHandler)
+srv = http.HttpServer(
+            callback=MyRequestHandler,
+            websocket_handler = http.websocket.WebSocket,
+            addr = ("0.0.0.0", 8080)
+      )
 srv.serve()

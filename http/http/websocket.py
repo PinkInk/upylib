@@ -1,11 +1,14 @@
 # https://tools.ietf.org/html/rfc6455
 
-from sha1 import sha1
+try:
+    from uhashlib import sha1
+except:
+    from hashlib import sha1
 
 try:
-    from ubinascii import *
+    from ubinascii import b2a_base64
 except:
-    from binascii import *
+    from binascii import b2a_base64
 
 try:
     from ucollections import namedtuple
@@ -35,46 +38,53 @@ class WebSocketError(Exception):
 
 class WebSocket:
 
+    RHEAD = b"HTTP/1.1 101 Switching Protocols\r\n"
     MAGIC = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
     def __init__(self, request, conn, buflen=128):
+        print("bring up websocket ...") # DEBUG
         self.conn = conn
         self._buf = bytearray(buflen)
         self.buf = memoryview(self._buf)
 
         # negotiate websocket, assumes caller tested is_websocket_request
-        options = { "Upgrade": "websocket", "Connection": "Upgrade" }
-        options["Sec-WebSocket-Accept"] = \
-                b2a_base64(unhexlify(
-                    sha1(request.options["Sec-WebSocket-Key"] + self.MAGIC)
-                ))[:-1] # skip trailing newline
+        self.conn.send( self.RHEAD )
+        self.conn.send( b"Upgrade: websocket\r\nConnection: Upgrade" ) 
+
+        key = bytes( request.options["Sec-WebSocket-Key"], "utf-8" )
+        key.update( self.MAGIC )
+        self.conn.send( b"Sec-WebSocket-Accept: " + b2a_base64(key.digest)[:-1] )
+
         # client will fail if extensions or protocol don't match request
-        self.extensions = self.protocol = ""
         if "Sec-Websocket-Extensions" in request.options:
-            self.extensions = options["Sec-WebSocket-Extensions"] = \
-                request.options["Sec-WebSocket-Extensions"]
+            self.conn.send( 
+                b"Sec-WebSocket-Extensions: " + \
+                bytes(request.options["Sec-WebSocket-Extensions"], "utf-8") + \
+                b"\r\n" 
+            )
         if "Sec-WebSocket-Protocol" in request.options:
-            self.protocol = options["Sec-WebSocket-Protocol"] = \
-                bytes(request.options["Sec-WebSocket-Protocol"]
-        
-        self.conn.send("HTTP/1.1 101 Switching Protocols\r\n")
-        for key in options:
             self.conn.send(
-                bytes(key, "utf-8") + b":" \
-                + bytes(options[key], "utf-8") + b"\r\n"
+                b"Sec-WebSocket-Protocol" + \
+                bytes(request.options["Sec-WebSocket-Protocol"], "utf-8") + \
+                b"\r\n"
             )
         self.conn.send(b"\r\n")
+
+        print("websocket up ...")
     
     def service_frames(self):
+        print("starting servicing ...") # DEBUG
         frame = self.recvframe()
+        print("received a frame ...", frame) # DEBUG
         if frame:
             if frame.opcode == OP_PING:
+                print("send pong ...") # DEBUG
                 self.sendframe(OP_PONG, frame.msg)
             elif frame.opcode == OP_PONG:
                 pass # ignore
 
     def sendframe(self, opcode, msg, final=True):
-        b = bytes([(fin<<7) + opcode ])
+        b = bytes([(final<<7) + opcode ])
         length = len(msg)
         if length < 126:
             b += bytes([length])
@@ -91,7 +101,7 @@ class WebSocket:
         else:
             raise WebSocketError("Message too long")
         # server to client doesn't use mask, concat coerces str msg to bytes
-        self.send( b + msg )
+        self.conn.send( b + msg )
 
     def recvframe(self):
         frame = self.recv()
@@ -123,13 +133,21 @@ class WebSocket:
             else:
                 raise WebSocketError("Unmasked client websocket frame")
         
-    # TODO: test!
     def recv(self):
         b = b""
-        while True:
-            count = self.conn.readinto( self.buf )
-            if count:
-                b += self.buf[:count]
-            else:
-                break
+
+        # ??? binary ???
+
+        try: # micropython 
+            readline = self.conn.readline
+        except AttributeError: # cpython
+            f = self.conn.makefile(mode="rb")
+            readline = f.readline 
+
+        line = readline()
+        while line:
+            print(line)
+            b += line
+            line = readline()
+
         return b
