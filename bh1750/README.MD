@@ -3,8 +3,10 @@
 Adapted for Micropython from 
 [this RPi driver](https://gist.github.com/oskar456/95c66d564c58361ecf9f),
 only tested on the Micropython esp8266 port.  Supposedly returns current 
-ambient light lux value (lumen/m2).  Original source calculations not verified
-against manufacturer documentation.
+ambient light lux value (lumen/m2).  
+
+Note: I've not verified the original sources calculations against the 
+manufacturers documentation, as I'm only interested in relative change.
 
 ```python
 import machine, bh1750
