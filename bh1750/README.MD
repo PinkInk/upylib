@@ -1,4 +1,4 @@
-#Micropython bh1750 i2c digital light sensor
+#Micropython bh1750 i2c digital light sensor driver
 
 Adapted for Micropython from 
 [this RPi driver](https://gist.github.com/oskar456/95c66d564c58361ecf9f),
