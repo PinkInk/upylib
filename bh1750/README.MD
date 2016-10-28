@@ -19,3 +19,5 @@ s = bh1750.BH1750(i2c)
 while True:
     s.get_measurement()
 ```
+
+Refer comments in source for modes and options.
