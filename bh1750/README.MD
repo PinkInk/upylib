@@ -18,9 +18,24 @@ while True:
     s.luminance(BH1750.ONCE_HIRES_1)
 ```
 
+## Address
+
+Breakout modules typically offer an **addr** pin which, if left floating or pulled to ground, configure the sensor to use its default I2C address of 0x23;
+
+```python
+s = BH1750(i2c) # addr defaults to 0x23, or;
+s = BH1750(i2c, 0x23) # specify addr explicitly
+```
+
+If this address conflicts with another device on the bus **addr** pin can be pulled high and the sensor will use the alternative address 0x5c;
+
+```python
+s = BH1750(i2c, 0x5c) # use alternative i2c address
+```
+
 ## Modes
 
-**HIRES modes are recommended by the manufacturers documentation to reduce noize (but take longer to sample).**
+**HIRES modes are recommended by the manufacturers to reduce noize (but take longer to sample).**
 
 CONT_LOWRES - continuous low resolution (4lx), sampling takes ~24ms
 
