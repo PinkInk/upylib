@@ -1,12 +1,13 @@
-import machine, bh1750
+import machine
+from bh1750 import BH1750
 
 # init eps8266 i2c
 scl = machine.Pin(5)
 sda = machine.Pin(4)
 i2c = machine.I2C(scl,sda)
 
-s = bh1750.BH1750(i2c)
+s = BH1750(i2c)
 
 while True:
-    s.get_measurement(mode=s.ONCE_HIRES_2)
+    s.luminance(BH1750.ONCE_HIRES_1)
 

@@ -1,24 +1,35 @@
-#Micropython bh1750 i2c digital light sensor driver
+# Micropython bh1750 i2c digital light sensor driver
 
-Adapted for Micropython from 
-[this RPi driver](https://gist.github.com/oskar456/95c66d564c58361ecf9f),
-only tested on the Micropython esp8266 port.  
+Samples ambient light level/luminance in lumens per m2 (lux).
 
-Supposedly returns current ambient lumens per m2 (lux) but please note
-that I've not verified the source calcs against manufacturers docs.
+Only tested on the esp8266 micropython port.
 
 ```python
-import machine, bh1750
+import machine
+from bh1750 import BH1750
 
-# init eps8266 i2c
 scl = machine.Pin(5)
 sda = machine.Pin(4)
 i2c = machine.I2C(scl,sda)
 
-s = bh1750.BH1750(i2c)
+s = BH1750(i2c)
 
 while True:
-    s.get_measurement()
+    s.luminance(BH1750.ONCE_HIRES_1)
 ```
 
-Refer comments in source for modes and options.
+## Modes
+
+**HIRES modes are recommended by the manufacturers documentation to reduce noize (but take longer to sample).**
+
+CONT_LOWRES - continuous low resolution (4lx), sampling takes ~24ms
+
+CONT_HIRES_1 - continuous high resolution (1lx), sampling takes ~180ms
+
+CONT_HIRES_2 - continuous very high resolution (.5lx), sampling takes ~180ms
+
+ONCE_HIRES_1 - one shot low resolution (4lx), sampling takes ~24ms, sensor is powered down after reading
+
+ONCE_HIRES_2 - one shot high resolution (1lx), sampling takes ~180ms, sensor is powered down after reading
+
+ONCE_LOWRES - one shot very high resolution (.5lx), sampling takes ~180ms, sensor is powered down after reading
