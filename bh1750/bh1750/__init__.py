@@ -1,6 +1,12 @@
+"""
+Micropython BH1750 ambient light sensor driver.
+"""
+
 from utime import sleep_ms
 
+
 class BH1750():
+    """Micropython BH1750 ambient light sensor driver."""
 
     PWR_OFF = 0x00
     PWR_ON = 0x01
@@ -23,20 +29,25 @@ class BH1750():
         self.reset()
 
     def off(self):
+        """Turn sensor off."""
         self.set_mode(self.PWR_OFF)
 
     def on(self):
+        """Turn sensor on."""
         self.set_mode(self.PWR_ON)
 
     def reset(self):
+        """Reset sensor, turn on first if required."""
         self.on()
         self.set_mode(self.RESET)
 
     def set_mode(self, mode):
+        """Set sensor mode."""
         self.mode = mode
         self.bus.writeto(self.addr, bytes([self.mode]))
 
     def luminance(self, mode):
+        """Sample luminance (in lux), using specified sensor mode."""
         # continuous modes
         if mode & 0x10 and mode != self.mode:
             self.set_mode(mode)
