@@ -100,7 +100,7 @@ def tobytes_len(l):
         return bytes([l])
     else:
         b = bytes()
-        while l>0:
+        while l > 0:
             b = bytes([l&0xff]) + b
             l //= 0x100
         return bytes([0x80+len(b)]) + b
