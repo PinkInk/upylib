@@ -42,6 +42,6 @@ s = BH1750(i2c, 0x5c) # use alternative i2c address
 | CONT_LOWRES | Continuous, low resolution (4lx), sampling takes ~24ms, sensor remains on after reading. |
 | CONT_HIRES_1 | Continuous, high resolution (1lx), sampling takes ~180ms, sensor remains on after reading. |
 | CONT_HIRES_2 | Continuous, very high resolution (.5lx), sampling takes ~180ms, sensor remains on after reading. |
-| ONCE_HIRES_1 | One-shot, low resolution (4lx), sampling takes ~24ms, sensor is powered down after reading |
-| ONCE_HIRES_2 | One-shot, high resolution (1lx), sampling takes ~180ms, sensor is powered down after reading |
-| ONCE_LOWRES | One-shot, very high resolution (.5lx), sampling takes ~180ms, sensor is powered down after reading |
+| ONCE_HIRES_1 | One-shot, low resolution (4lx), sampling takes ~24ms, sensor powered down after reading |
+| ONCE_HIRES_2 | One-shot, high resolution (1lx), sampling takes ~180ms, sensor powered down after reading |
+| ONCE_LOWRES | One-shot, very high resolution (.5lx), sampling takes ~180ms, sensor powered down after reading |
